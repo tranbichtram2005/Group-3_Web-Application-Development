@@ -1,2 +1,2 @@
 # Group 3_Web Application Development
-Đồ án cuối kỳ học phần Phát triển Ứng dụng Web – Website bán vé máy bay (Flight Booking E-commerce)
+ĐỒ ÁN CUỐI KỲ HỌC PHẦN PHÁT TRIỂN ỨNG DỤNG WEB – XÂY DỰNG WEBSITE QUẢN LÝ SÀN THƯƠNG MẠI ĐIỆN TỬ C2C
