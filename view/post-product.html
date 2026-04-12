@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng tin bán - 2Life</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="navbar">
+        <a href="index.html" class="logo" style="text-decoration: none;">2Life</a>
+        <div class="search-bar">
+            <input type="text" placeholder="Tìm kiếm đồ cũ giá hời...">
+        </div>
+        <div class="nav-actions">
+            <span class="icon">👤 Tài khoản</span>
+            <button class="btn-secondary">Quản lý tin</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="post-header">
+            <h1 class="page-title">Đăng tin bán sản phẩm</h1>
+            <p style="color: var(--text-secondary);">Vui lòng điền đầy đủ thông tin để người mua dễ dàng tìm thấy sản phẩm của bạn.</p>
+        </div>
+
+        <div class="post-form-wrapper">
+            
+            <form action="#" class="post-layout">
+                
+                <div class="upload-section">
+                    <label class="form-label">Hình ảnh sản phẩm (Tối đa 5 ảnh)</label>
+                    <div class="upload-box">
+                        <div class="upload-icon">📸</div>
+                        <p>Kéo thả ảnh vào đây hoặc</p>
+                        <button type="button" class="btn-secondary" style="margin-top: 10px;">Chọn ảnh từ máy</button>
+                        <p class="upload-hint">Hỗ trợ định dạng JPG, PNG. Tối đa 5MB/ảnh.</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Tên sản phẩm <span style="color: red;">*</span></label>
+                        <input type="text" class="form-control" placeholder="VD: Áo khoác da bò Vintage size L">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Danh mục <span style="color: red;">*</span></label>
+                            <select class="form-control">
+                                <option value="">-- Chọn danh mục --</option>
+                                <option value="fashion">Thời trang</option>
+                                <option value="electronics">Điện tử</option>
+                                <option value="furniture">Nội thất</option>
+                                <option value="books">Sách</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Tình trạng <span style="color: red;">*</span></label>
+                            <select class="form-control">
+                                <option value="">-- Chọn tình trạng --</option>
+                                <option value="new">Mới 100% (Nguyên seal)</option>
+                                <option value="99">Như mới (99%)</option>
+                                <option value="90">Đã sử dụng (90%)</option>
+                                <option value="old">Cũ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Giá bán (VNĐ) <span style="color: red;">*</span></label>
+                        <input type="number" class="form-control" placeholder="VD: 550000">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mô tả chi tiết <span style="color: red;">*</span></label>
+                        <textarea class="form-control" rows="6" placeholder="Mô tả ưu điểm, khuyết điểm, lý do bán... càng chi tiết càng dễ chốt đơn."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" style="padding: 15px 30px;">Hủy bỏ</button>
+                        <button type="submit" class="btn-primary" style="padding: 15px 40px; font-size: 16px;">🚀 Đăng tin ngay</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </main>
+
+</body>
+</html>
