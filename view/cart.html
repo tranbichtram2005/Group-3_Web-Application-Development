@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng - 2Life</title>
+    <link rel="stylesheet" href="../layout/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="navbar">
+        <a href="index.html" class="logo" style="text-decoration: none;">2Life</a>
+        <div class="search-bar">
+            <input type="text" placeholder="Tìm kiếm đồ cũ giá hời...">
+        </div>
+        <div class="nav-actions">
+            <span class="icon">👤 Tài khoản</span>
+            <button class="btn-primary">Đăng tin bán</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1 class="page-title">Giỏ hàng của bạn</h1>
+
+        <div class="cart-layout">
+            
+            <div class="cart-items-container">
+                
+                <div class="cart-item">
+                    <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=200&q=80" alt="Áo khoác">
+                    <div class="item-info">
+                        <h3>Áo khoác da bò Vintage</h3>
+                        <p class="seller-name">Người bán: Nguyễn Văn A</p>
+                    </div>
+                    <div class="item-quantity">
+                        <button class="qty-btn">-</button>
+                        <input type="text" value="1" class="qty-input" readonly>
+                        <button class="qty-btn">+</button>
+                    </div>
+                    <div class="item-price">550.000đ</div>
+                    <button class="btn-remove">Xóa</button>
+                </div>
+
+                <div class="cart-item">
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=200&q=80" alt="Tai nghe">
+                    <div class="item-info">
+                        <h3>Tai nghe Chụp tai (Pass nhanh)</h3>
+                        <p class="seller-name">Người bán: Trần B</p>
+                    </div>
+                    <div class="item-quantity">
+                        <button class="qty-btn">-</button>
+                        <input type="text" value="1" class="qty-input" readonly>
+                        <button class="qty-btn">+</button>
+                    </div>
+                    <div class="item-price">1.200.000đ</div>
+                    <button class="btn-remove">Xóa</button>
+                </div>
+
+            </div>
+
+            <div class="cart-summary">
+                <h3>Tóm tắt đơn hàng</h3>
+                
+                <div class="summary-row">
+                    <span>Tạm tính (2 sản phẩm):</span>
+                    <span>1.750.000đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span>Thỏa thuận</span>
+                </div>
+                
+                <div class="summary-row summary-total">
+                    <span>Tổng cộng:</span>
+                    <span class="total-price">1.750.000đ</span>
+                </div>
+
+                <button class="btn-primary btn-large" style="width: 100%; margin-top: 20px;">Tiến hành Thanh toán</button>
+                <p class="security-note">🔒 Thanh toán an toàn, bảo vệ người mua 100%</p>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>
