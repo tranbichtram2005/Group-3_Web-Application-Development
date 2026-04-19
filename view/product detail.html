@@ -4,70 +4,1120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết sản phẩm - 2Life</title>
-    <link rel="stylesheet" href="../layout/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS riêng -->
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* =====================================================
+           GIỮ NGUYÊN BIẾN MÀU TỪ style.css GỐC
+           ===================================================== */
+        :root {
+            --bg-main:        #FAF7F2;
+            --bg-section:     #D6EEF8;
+            --bg-card:        #EFE6DD;
+            --nav-color:      #1F3C5A;
+            --btn-primary:    #FF7A3D;
+            --btn-secondary:  #4DA8DA;
+            --btn-hover:      #A7D0E8;
+            --text-primary:   #2B2B2B;
+            --text-secondary: #6B6B6B;
+            --border-color:   #D9D9D9;
+            --tag-color:      #7C8C6B;
+            --error-color:    #FF5E5B;
+        }
+
+        /* =====================================================
+           BASE
+           ===================================================== */
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* =====================================================
+           NAVBAR 2LIFE (Bootstrap wrapper)
+           ===================================================== */
+        .navbar-2life {
+            background-color: var(--nav-color);
+            padding: 12px 0;
+        }
+        .navbar-2life .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--btn-primary);
+            text-decoration: none;
+        }
+        .navbar-2life .search-input {
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 8px 18px;
+            width: 100%;
+            outline: none;
+            font-size: 14px;
+        }
+        .navbar-2life .search-input:focus {
+            border-color: var(--btn-primary);
+            box-shadow: 0 0 0 3px rgba(255,122,61,.15);
+        }
+        .navbar-2life .nav-link-text {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .navbar-2life .nav-link-text:hover { color: var(--btn-hover); }
+
+        /* === DROPDOWN OVERRIDE (fix vỡ layout) === */
+        .nav-dropdown { position: relative; }
+        .nav-dropdown-menu {
+            display: none;
+            position: absolute !important;
+            top: calc(100% + 10px);
+            right: 0;
+            left: auto;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.14);
+            min-width: 240px;
+            width: 240px;
+            z-index: 9999;
+            overflow: hidden;
+            white-space: normal;
+            float: none;
+        }
+        .nav-dropdown:hover > .nav-dropdown-menu { display: block; }
+        .nav-dropdown-item {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            font-size: 13px;
+            color: var(--text-primary) !important;
+            text-decoration: none;
+            border-bottom: 1px solid var(--border-color);
+            transition: background .15s;
+            width: 100%;
+        }
+        .nav-dropdown-item:last-child { border-bottom: none; }
+        .nav-dropdown-item:hover { background: var(--bg-main) !important; color: var(--btn-primary) !important; }
+        .nav-dropdown-item i { font-size: 15px; color: var(--btn-secondary); flex-shrink: 0; }
+        .nav-dropdown-item .item-sub { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 1px; }
+
+        /* =====================================================
+           BUTTONS (giữ style gốc)
+           ===================================================== */
+        .btn-2life-primary {
+            background-color: var(--btn-primary);
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 22px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: .25s;
+            cursor: pointer;
+        }
+        .btn-2life-primary:hover { background-color: var(--error-color); color: #fff; }
+
+        .btn-2life-secondary {
+            background-color: var(--btn-secondary);
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 22px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: .25s;
+            cursor: pointer;
+        }
+        .btn-2life-secondary:hover { background-color: var(--btn-hover); color: var(--text-primary); }
+
+        .btn-2life-outline {
+            background-color: transparent;
+            color: var(--btn-primary);
+            border: 1.5px solid var(--btn-primary);
+            border-radius: 25px;
+            padding: 9px 22px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: .25s;
+            cursor: pointer;
+        }
+        .btn-2life-outline:hover { background-color: var(--btn-primary); color: #fff; }
+
+        /* =====================================================
+           BREADCRUMB
+           ===================================================== */
+        .breadcrumb-2life {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 16px 0 8px;
+        }
+        .breadcrumb-2life a { color: var(--text-secondary); text-decoration: none; }
+        .breadcrumb-2life a:hover { color: var(--btn-primary); text-decoration: underline; }
+        .breadcrumb-2life .sep { margin: 0 6px; }
+
+        /* =====================================================
+           BADGE / TAG (giữ style gốc)
+           ===================================================== */
+        .tag-2life {
+            display: inline-block;
+            background-color: var(--tag-color);
+            color: #fff;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 4px;
+        }
+        .tag-blue { background-color: var(--btn-secondary); }
+        .tag-orange { background-color: var(--btn-primary); }
+        .tag-red { background-color: var(--error-color); }
+
+        /* =====================================================
+           CARD CHUNG
+           ===================================================== */
+        .card-2life {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        .card-white {
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        /* =====================================================
+           ẢNH CHÍNH
+           ===================================================== */
+        #mainImg {
+            width: 100%;
+            height: 420px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: .3s;
+        }
+        .thumb-gallery {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .thumb-gallery img {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            opacity: .65;
+            transition: .2s;
+        }
+        .thumb-gallery img:hover,
+        .thumb-gallery img.active-thumb {
+            opacity: 1;
+            border-color: var(--btn-primary);
+        }
+        .img-wrapper { position: relative; }
+        .img-badge {
+            position: absolute;
+            top: 12px; left: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 5px;
+        }
+        .img-badge-condition { background: var(--tag-color); color: #fff; }
+        .img-badge-hot { background: var(--btn-primary); color: #fff; top: 12px; left: auto; right: 12px; }
+
+        /* =====================================================
+           GIÁ
+           ===================================================== */
+        .price-large {
+            font-size: 34px;
+            font-weight: 700;
+            color: var(--btn-primary);
+        }
+        .price-original {
+            font-size: 16px;
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+        .price-badge {
+            display: inline-block;
+            background: #fff3ee;
+            color: var(--btn-primary);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 5px;
+            border: 1px solid var(--btn-primary);
+        }
+
+        /* =====================================================
+           THÔNG SỐ KỸ THUẬT
+           ===================================================== */
+        .spec-table td {
+            padding: 7px 4px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        .spec-table tr:last-child td { border-bottom: none; }
+        .spec-label { color: var(--text-secondary); width: 44%; }
+        .spec-value { font-weight: 600; color: var(--text-primary); }
+
+        /* =====================================================
+           SELLER CARD
+           ===================================================== */
+        .seller-avatar {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .seller-stat-box {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 8px;
+            text-align: center;
+        }
+        .seller-stat-box .num { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .seller-stat-box .lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+        /* =====================================================
+           ACTION BUTTONS (full width trên mobile)
+           ===================================================== */
+        .action-group { display: flex; gap: 12px; }
+        .action-group .btn-2life-secondary,
+        .action-group .btn-2life-primary { flex: 1; padding: 14px; font-size: 15px; border-radius: 12px; }
+
+        /* =====================================================
+           SAFETY BOX
+           ===================================================== */
+        .safety-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .safety-item i { color: var(--tag-color); font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+
+        /* =====================================================
+           ĐÁNH GIÁ
+           ===================================================== */
+        .review-item {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .review-item:last-child { border-bottom: none; }
+        .rev-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background-color: var(--bg-section);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 13px;
+            color: var(--nav-color);
+            flex-shrink: 0;
+        }
+        .stars-orange { color: #F5A623; font-size: 13px; letter-spacing: -.5px; }
+
+        /* =====================================================
+           RATING BAR
+           ===================================================== */
+        .rating-bar-track {
+            height: 7px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            flex: 1;
+        }
+        .rating-bar-fill { height: 100%; background: #F5A623; border-radius: 4px; }
+
+        /* =====================================================
+           RELATED PRODUCTS
+           ===================================================== */
+        .related-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform .25s, box-shadow .25s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .related-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 18px rgba(0,0,0,.09);
+            color: inherit;
+        }
+        .related-card img { width: 100%; height: 130px; object-fit: cover; }
+        .related-card .rc-info { padding: 10px 12px; }
+        .related-card .rc-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .related-card .rc-price { font-size: 14px; font-weight: 700; color: var(--btn-primary); margin-top: 3px; }
+        .related-card .rc-loc { font-size: 11px; color: var(--text-secondary); }
+
+        /* =====================================================
+           MAP PLACEHOLDER
+           ===================================================== */
+        .map-placeholder {
+            height: 130px;
+            background: var(--bg-section);
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            color: var(--text-secondary);
+            font-size: 13px;
+            gap: 6px;
+        }
+
+        /* =====================================================
+           Q&A
+           ===================================================== */
+        .qa-item { padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+        .qa-item:last-child { border-bottom: none; }
+        .qa-question { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .qa-answer { font-size: 13px; color: var(--text-secondary); margin-top: 4px; padding-left: 14px; border-left: 3px solid var(--btn-primary); }
+        .qa-meta { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* =====================================================
+           SIDEBAR STICKY
+           ===================================================== */
+        @media (min-width: 992px) {
+            .sidebar-sticky { position: sticky; top: 20px; }
+        }
+
+        /* =====================================================
+           RESPONSIVE FIXES
+           ===================================================== */
+        @media (max-width: 575px) {
+            #mainImg { height: 280px; }
+            .price-large { font-size: 26px; }
+            .action-group { flex-direction: column; }
+        }
+
+        /* =====================================================
+           FOOTER
+           ===================================================== */
+        footer {
+            background-color: var(--nav-color);
+            color: #ccc;
+            font-size: 13px;
+            margin-top: 60px;
+        }
+        footer a { color: #A7D0E8; text-decoration: none; }
+        footer a:hover { color: var(--btn-primary); }
+        footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primary); }
+
+        /* =====================================================
+           UTILITY
+           ===================================================== */
+        .divider { border-top: 1px solid var(--border-color); margin: 16px 0; }
+        .section-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px; }
+        .like-share-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+        .icon-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 6px 14px; font-size: 13px;
+            cursor: pointer; color: var(--text-secondary); transition: .2s;
+        }
+        .icon-btn:hover { border-color: var(--btn-primary); color: var(--btn-primary); }
+        .icon-btn.active { background: #fff3ee; border-color: var(--btn-primary); color: var(--btn-primary); }
+    </style>
 </head>
 <body>
+<!-- ============================================================
+     NAVBAR CHÍNH
+     ============================================================ -->
+<header class="navbar-2life">
+    <div class="container-fluid px-3 px-md-4">
+        <div class="row align-items-center g-2">
 
-    <header class="navbar">
-        <a href="index.html" class="logo" style="text-decoration: none;">2Life</a>
-        <div class="search-bar">
-            <input type="text" placeholder="Tìm kiếm đồ cũ giá hời...">
-        </div>
-        <div class="nav-actions">
-            <span class="icon">👤 Tài khoản</span>
-            <button class="btn-primary">Đăng tin bán</button>
-        </div>
-    </header>
+            <!-- Logo -->
+            <div class="col-6 col-md-2">
+                <a href="index.html" class="logo">2Life</a>
+            </div>
 
-    <main class="container">
-        
-        <div class="breadcrumb">
-            Trang chủ > Thời trang > Áo khoác Vintage
-        </div>
-
-        <div class="product-detail-wrapper">
-            
-            <div class="product-images">
-                <img class="main-img" src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80" alt="Áo khoác Vintage chính">
-                
-                <div class="thumb-gallery">
-                    <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=200&q=80" class="active-thumb">
-                    <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=200&q=80">
+            <!-- Search (ẩn trên xs, hiện từ sm) -->
+            <div class="col-md-5 d-none d-md-block">
+                <div class="d-flex align-items-center" style="background:#fff;border-radius:25px;padding:4px 4px 4px 16px;border:1px solid var(--border-color);">
+                    <input type="text" placeholder="Tìm kiếm đồ cũ giá hời..." style="flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--text-primary);">
+                    <button class="btn-2life-primary" style="border-radius:20px;padding:7px 18px;white-space:nowrap;flex-shrink:0">
+                        <i class="bi bi-search"></i>
+                    </button>
                 </div>
             </div>
 
-            <div class="product-info">
-                <h1 class="detail-title">Áo khoác da bò Vintage chuẩn form (Độ mới 90%)</h1>
-                <p class="price-large">550.000đ</p>
-                
-                <div class="tags-group">
-                    <span class="tag">Giao dịch trực tiếp</span>
-                    <span class="tag" style="background-color: var(--btn-secondary);"> Có thể thương lượng</span>
-                </div>
+            <!-- Nav actions -->
+            <div class="col-6 col-md-5 d-flex justify-content-end align-items-center gap-2 gap-md-3">
 
-                <div class="seller-card">
-                    <img class="seller-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Avatar">
-                    <div class="seller-details">
-                        <h4>Nguyễn Văn A <span style="color: var(--btn-secondary);">✔ Đã xác thực</span></h4>
-                        <p>Tham gia: 3 tháng trước | Điểm uy tín: 4.8/5</p>
+                <!-- Giỏ hàng -->
+                <a href="#" class="nav-link-text position-relative" title="Giỏ hàng">
+                    <i class="bi bi-cart3" style="font-size:18px"></i>
+                    <span class="nav-badge">3</span>
+                    <span class="d-none d-lg-inline ms-1">Giỏ hàng</span>
+                </a>
+
+                <!-- Quản lý đơn hàng + Yêu thích — dropdown -->
+                <div class="nav-dropdown d-none d-sm-block">
+                    <a href="#" class="nav-link-text" title="Quản lý">
+                        <i class="bi bi-grid-3x3-gap" style="font-size:16px"></i>
+                        <span class="d-none d-lg-inline">Quản lý</span>
+                        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+                    </a>
+                    <div class="nav-dropdown-menu">
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-bag-check"></i>
+                            <div>
+                                <span>Đơn hàng của tôi</span>
+                                <span class="item-sub">Theo dõi & quản lý đơn</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-heart"></i>
+                            <div>
+                                <span>Sản phẩm yêu thích</span>
+                                <span class="item-sub">Danh sách đã lưu</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-clock-history"></i>
+                            <div>
+                                <span>Đã xem gần đây</span>
+                                <span class="item-sub">Lịch sử duyệt sản phẩm</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-wallet2"></i>
+                            <div>
+                                <span>Ví của tôi</span>
+                                <span class="item-sub">Số dư & lịch sử giao dịch</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-star"></i>
+                            <div>
+                                <span>Đánh giá của tôi</span>
+                                <span class="item-sub">Xem & viết đánh giá</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
-                <div class="description-box">
-                    <h3>Mô tả sản phẩm:</h3>
-                    <p>Mình dọn tủ nên cần pass lại chiếc áo khoác da vintage này. Áo mặc rất ít, da bò thật càng mặc càng bóng. Form áo oversize phù hợp cho bạn nào từ 60kg - 75kg.<br><br>
-                    Cam kết áo không rách, xước hay mốc. Có thể qua xem trực tiếp tại nhà mình nhé.</p>
+                <!-- Thông báo -->
+                <a href="#" class="nav-link-text position-relative d-none d-sm-flex" title="Thông báo">
+                    <i class="bi bi-bell" style="font-size:17px"></i>
+                    <span class="nav-badge">5</span>
+                    <span class="d-none d-lg-inline ms-1">Thông báo</span>
+                </a>
+
+                <!-- CSKH — dropdown -->
+                <div class="nav-dropdown d-none d-md-block">
+                    <a href="#" class="nav-link-text">
+                        <i class="bi bi-headset" style="font-size:16px"></i>
+                        <span class="d-none d-lg-inline">Hỗ trợ</span>
+                        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+                    </a>
+                    <div class="nav-dropdown-menu cskh-dropdown-menu">
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-chat-dots" style="color:#2ecc71"></i>
+                            <div>
+                                <span><span class="live-dot"></span>Chat trực tuyến</span>
+                                <span class="item-sub">Phản hồi trong vài phút</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-telephone"></i>
+                            <div>
+                                <span>Hotline 1800 2Life</span>
+                                <span class="item-sub">Miễn phí · T2–T7, 8h–21h</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-question-circle"></i>
+                            <div>
+                                <span>Trung tâm trợ giúp</span>
+                                <span class="item-sub">FAQ & hướng dẫn</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-flag"></i>
+                            <div>
+                                <span>Báo cáo vi phạm</span>
+                                <span class="item-sub">Gian lận, hàng giả, lừa đảo</span>
+                            </div>
+                        </a>
+                    </div>
                 </div>
 
-                <div class="action-group">
-                    <button class="btn-secondary btn-large">💬 Chat với người bán</button>
-                    <button class="btn-primary btn-large">🛒 Mua ngay</button>
-                </div>
+                <!-- Tài khoản -->
+                <a href="#" class="nav-link-text">
+                    <i class="bi bi-person-circle" style="font-size:18px"></i>
+                    <span class="d-none d-lg-inline">Tài khoản</span>
+                </a>
+
+                <!-- Đăng tin (mobile) -->
+                <button class="btn-2life-primary d-md-none" style="padding:8px 12px">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+
+            <!-- Search bar on mobile -->
+            <div class="col-12 d-md-none">
+                <input type="text" class="search-input" placeholder="Tìm kiếm đồ cũ giá hời...">
             </div>
 
         </div>
-    </main>
+    </div>
+</header>
 
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<main class="container" style="max-width:1140px;padding-top:8px;padding-bottom:40px">
+
+    <!-- BREADCRUMB -->
+    <nav class="breadcrumb-2life">
+        <a href="#">Trang chủ</a><span class="sep">/</span>
+        <a href="#">Thời trang</a><span class="sep">/</span>
+        <a href="#">Áo khoác</a><span class="sep">/</span>
+        <span>Áo khoác da bò Vintage</span>
+    </nav>
+
+    <!-- MAIN LAYOUT: 2 cột lớn -->
+    <div class="row g-4">
+
+        <!-- ==========================================
+             CỘT TRÁI — ẢNH + NỘI DUNG
+             ========================================== -->
+        <div class="col-12 col-lg-8">
+
+            <!-- SECTION 1: Gallery + Thông tin cốt lõi -->
+            <div class="row g-4 mb-4">
+
+                <!-- Gallery ảnh -->
+                <div class="col-12 col-md-6">
+                    <div class="img-wrapper">
+                        <img id="mainImg"
+                             src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80"
+                             alt="Áo khoác Vintage chính">
+                        <span class="img-badge img-badge-condition">Độ mới 90%</span>
+                        <span class="img-badge img-badge-hot">🔥 Hot</span>
+                    </div>
+
+                    <div class="thumb-gallery">
+                        <img class="active-thumb"
+                             src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=200&q=80"
+                             alt="thumb 1"
+                             onclick="switchImg(this,'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80')">
+                        <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=200&q=80"
+                             alt="thumb 2"
+                             onclick="switchImg(this,'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&q=80')">
+                        <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=200&q=80"
+                             alt="thumb 3"
+                             onclick="switchImg(this,'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80')">
+                        <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=200&q=80"
+                             alt="thumb 4"
+                             onclick="switchImg(this,'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80')">
+                    </div>
+
+                    <!-- Like / Share / Report -->
+                    <div class="like-share-bar mt-3">
+                        <button class="icon-btn" id="wishBtn" onclick="toggleWish(this)">
+                            <i class="bi bi-heart"></i> Lưu
+                        </button>
+                        <button class="icon-btn">
+                            <i class="bi bi-share"></i> Chia sẻ
+                        </button>
+                        <button class="icon-btn">
+                            <i class="bi bi-flag"></i> Báo cáo
+                        </button>
+                        <span class="ms-auto" style="font-size:12px;color:var(--text-secondary);align-self:center">
+                            <i class="bi bi-eye"></i> 312 lượt xem
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Thông tin cốt lõi -->
+                <div class="col-12 col-md-6">
+                    <!-- Trạng thái / Badge -->
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <span class="tag-2life">Thời trang</span>
+                        <span class="tag-2life tag-blue">Có thể thương lượng</span>
+                        <span class="tag-2life" style="background:#E8F5E9;color:#388E3C;border:1px solid #A5D6A7">Còn hàng</span>
+                    </div>
+
+                    <h1 style="font-size:22px;font-weight:700;line-height:1.35;color:var(--text-primary);margin-bottom:10px">
+                        Áo khoác da bò Vintage chuẩn form (Độ mới 90%)
+                    </h1>
+
+                    <!-- Giá -->
+                    <div class="d-flex align-items-baseline gap-2 flex-wrap mb-3">
+                        <span class="price-large">550.000đ</span>
+                        <span class="price-original">750.000đ</span>
+                        <span class="price-badge">-27%</span>
+                    </div>
+
+                    <!-- Meta: ngày đăng, khu vực, mã tin -->
+                    <div class="d-flex flex-column gap-1 mb-3" style="font-size:13px;color:var(--text-secondary)">
+                        <span><i class="bi bi-clock me-1"></i>Đăng 2 ngày trước</span>
+                        <span><i class="bi bi-geo-alt me-1"></i>Hoàn Kiếm, Hà Nội</span>
+                        <span><i class="bi bi-tag me-1"></i>Mã tin: <strong>#2L-045892</strong></span>
+                        <span><i class="bi bi-hourglass-split me-1"></i>Còn hiệu lực: <strong>28 ngày</strong></span>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Thông số kỹ thuật -->
+                    <div class="section-label">Thông số sản phẩm</div>
+                    <table class="spec-table w-100">
+                        <tr>
+                            <td class="spec-label">Tình trạng</td>
+                            <td class="spec-value">Đã dùng — 90% như mới</td>
+                        </tr>
+                        <tr>
+                            <td class="spec-label">Chất liệu</td>
+                            <td class="spec-value">Da bò thật (Full-grain)</td>
+                        </tr>
+                        <tr>
+                            <td class="spec-label">Màu sắc</td>
+                            <td class="spec-value">Nâu đậm (Tan Brown)</td>
+                        </tr>
+                        <tr>
+                            <td class="spec-label">Size</td>
+                            <td class="spec-value">L — phù hợp 60–75 kg</td>
+                        </tr>
+                        <tr>
+                            <td class="spec-label">Thương hiệu</td>
+                            <td class="spec-value">No Brand (Vintage)</td>
+                        </tr>
+                        <tr>
+                            <td class="spec-label">Xuất xứ</td>
+                            <td class="spec-value">Nhật (hàng si tuyển)</td>
+                        </tr>
+                        <tr>
+                            <td class="spec-label">Khu vực giao dịch</td>
+                            <td class="spec-value">Hà Nội (ship toàn quốc)</td>
+                        </tr>
+                        <tr>
+                            <td class="spec-label">Hình thức thanh toán</td>
+                            <td class="spec-value">Tiền mặt / Chuyển khoản</td>
+                        </tr>
+                    </table>
+
+                    <!-- Action buttons (hiện trên mobile ở đây) -->
+                    <div class="action-group mt-3 d-md-none">
+                        <button class="btn-2life-secondary">
+                            <i class="bi bi-chat-dots me-1"></i>Chat người bán
+                        </button>
+                        <button class="btn-2life-primary">
+                            <i class="bi bi-bag-check me-1"></i>Mua ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: Mô tả chi tiết -->
+            <div class="card-2life p-4 mb-4">
+                <div class="section-label">Mô tả từ người bán</div>
+                <p style="font-size:14px;color:var(--text-secondary);line-height:1.75" id="descText">
+                    Mình dọn tủ nên cần pass lại chiếc áo khoác da vintage này. Áo mặc rất ít, da bò thật càng mặc càng bóng và lên form đẹp hơn theo thời gian.
+                    <br><br>
+                    Form áo oversize phù hợp cho bạn nào từ 60kg – 75kg. Mặc vào dáng đứng rất chuẩn, không bị rộng quá hay chật quá.
+                    <br><br>
+                    <strong style="color:var(--text-primary)">Tình trạng thực tế:</strong><br>
+                    — Không rách, không xước, không mốc.<br>
+                    — Đường chỉ còn nguyên vẹn.<br>
+                    — Khóa kéo chạy êm, không kẹt.<br>
+                    — Mùi da tự nhiên, không mùi lạ.<br><br>
+                    Cam kết ảnh thật 100%, không chụp filter. Bạn có thể qua xem trực tiếp tại nhà mình tại Hoàn Kiếm, Hà Nội. Nếu ở xa có thể video call xem trước khi chốt đơn.
+                </p>
+                <button class="icon-btn mt-1" onclick="toggleDesc(this)">
+                    <i class="bi bi-chevron-down me-1"></i>Xem thêm
+                </button>
+            </div>
+
+            <!-- SECTION 3: Bản đồ khu vực -->
+            <div class="card-2life p-4 mb-4">
+                <div class="section-label">Khu vực giao dịch</div>
+                <div class="d-flex align-items-center gap-2 mb-3" style="font-size:14px">
+                    <i class="bi bi-geo-alt-fill" style="color:var(--btn-primary)"></i>
+                    <strong>Hoàn Kiếm, Hà Nội</strong>
+                    <span style="color:var(--text-secondary)">— có thể gặp trực tiếp</span>
+                </div>
+                <div class="map-placeholder">
+                    <i class="bi bi-map" style="font-size:28px;color:var(--btn-secondary)"></i>
+                    <span>Bản đồ khu vực (Tích hợp Google Maps API)</span>
+                    <span style="font-size:11px">Hoàn Kiếm, Hà Nội, Việt Nam</span>
+                </div>
+            </div>
+
+            <!-- SECTION 4: Đánh giá người bán -->
+            <div class="card-2life p-4 mb-4">
+                <div class="section-label">Đánh giá người bán</div>
+
+                <!-- Tổng quan rating -->
+                <div class="row g-3 align-items-center mb-4">
+                    <div class="col-auto text-center">
+                        <div style="font-size:42px;font-weight:700;color:var(--text-primary);line-height:1">4.8</div>
+                        <div class="stars-orange mt-1">★★★★★</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">18 đánh giá</div>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex align-items-center gap-2 mb-1" style="font-size:12px;color:var(--text-secondary)">
+                            <span style="width:18px">5★</span>
+                            <div class="rating-bar-track"><div class="rating-bar-fill" style="width:83%"></div></div>
+                            <span style="width:14px">15</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-1" style="font-size:12px;color:var(--text-secondary)">
+                            <span style="width:18px">4★</span>
+                            <div class="rating-bar-track"><div class="rating-bar-fill" style="width:11%"></div></div>
+                            <span style="width:14px">2</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-1" style="font-size:12px;color:var(--text-secondary)">
+                            <span style="width:18px">3★</span>
+                            <div class="rating-bar-track"><div class="rating-bar-fill" style="width:6%"></div></div>
+                            <span style="width:14px">1</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-1" style="font-size:12px;color:var(--text-secondary)">
+                            <span style="width:18px">2★</span>
+                            <div class="rating-bar-track"><div class="rating-bar-fill" style="width:0%"></div></div>
+                            <span style="width:14px">0</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2" style="font-size:12px;color:var(--text-secondary)">
+                            <span style="width:18px">1★</span>
+                            <div class="rating-bar-track"><div class="rating-bar-fill" style="width:0%"></div></div>
+                            <span style="width:14px">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danh sách review -->
+                <div class="review-item">
+                    <div class="d-flex align-items-start gap-2 mb-1">
+                        <div class="rev-avatar">TH</div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong style="font-size:13px">Trần Huy</strong>
+                                <span style="font-size:11px;color:var(--text-secondary)">14/04/2025</span>
+                            </div>
+                            <div class="stars-orange">★★★★★</div>
+                        </div>
+                    </div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin:6px 0 0;line-height:1.6">
+                        Người bán rất nhiệt tình và trung thực, áo đúng như mô tả. Giao dịch nhanh gọn, sẽ mua lại lần sau!
+                    </p>
+                </div>
+
+                <div class="review-item">
+                    <div class="d-flex align-items-start gap-2 mb-1">
+                        <div class="rev-avatar" style="background:var(--bg-card)">ML</div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong style="font-size:13px">Minh Linh</strong>
+                                <span style="font-size:11px;color:var(--text-secondary)">02/03/2025</span>
+                            </div>
+                            <div class="stars-orange">★★★★<span style="color:var(--border-color)">★</span></div>
+                        </div>
+                    </div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin:6px 0 0;line-height:1.6">
+                        Áo đẹp, da bò xịn thật. Trừ 1 sao vì giao hàng chậm hơn dự kiến 1 ngày. Nhưng tổng thể hài lòng!
+                    </p>
+                </div>
+
+                <div class="review-item">
+                    <div class="d-flex align-items-start gap-2 mb-1">
+                        <div class="rev-avatar" style="background:#D6EEF8;color:var(--nav-color)">BT</div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong style="font-size:13px">Bảo Trâm</strong>
+                                <span style="font-size:11px;color:var(--text-secondary)">18/01/2025</span>
+                            </div>
+                            <div class="stars-orange">★★★★★</div>
+                        </div>
+                    </div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin:6px 0 0;line-height:1.6">
+                        Mua cho người yêu, bạn ấy rất thích. Da thật và dày, không bị mùi. Cảm ơn shop!
+                    </p>
+                </div>
+
+                <button class="btn-2life-outline w-100 mt-3" style="font-size:13px;border-radius:8px">
+                    Xem tất cả 18 đánh giá <i class="bi bi-chevron-right ms-1"></i>
+                </button>
+            </div>
+
+            <!-- SECTION 5: Hỏi & Đáp -->
+            <div class="card-2life p-4 mb-4">
+                <div class="section-label">Hỏi &amp; Đáp (4)</div>
+
+                <div class="qa-item">
+                    <div class="qa-question"><i class="bi bi-question-circle me-1" style="color:var(--btn-secondary)"></i>Áo size L này có phù hợp chiều cao 1m75 không bạn?</div>
+                    <div class="qa-answer">Bạn 1m75 mặc size L sẽ rất vừa, form oversize vừa phải, không ngắn tay nhé!</div>
+                    <div class="qa-meta"><i class="bi bi-person-circle me-1"></i>Người bán trả lời · 1 ngày trước</div>
+                </div>
+
+                <div class="qa-item">
+                    <div class="qa-question"><i class="bi bi-question-circle me-1" style="color:var(--btn-secondary)"></i>Có thể ship về TP.HCM không? Phí ship khoảng bao nhiêu?</div>
+                    <div class="qa-answer">Có ship toàn quốc qua GHTK hoặc GHN. Phí ship HCM tầm 45.000đ – 60.000đ tùy loại.</div>
+                    <div class="qa-meta"><i class="bi bi-person-circle me-1"></i>Người bán trả lời · 2 ngày trước</div>
+                </div>
+
+                <!-- Form đặt câu hỏi -->
+                <div class="mt-3 d-flex gap-2">
+                    <input type="text" class="form-control" placeholder="Đặt câu hỏi cho người bán..." style="border-radius:8px;font-size:13px;border-color:var(--border-color)">
+                    <button class="btn-2life-primary" style="border-radius:8px;white-space:nowrap;padding:8px 16px;font-size:13px">Gửi</button>
+                </div>
+            </div>
+
+            <!-- SECTION 6: Sản phẩm tương tự -->
+            <div class="mb-4">
+                <div class="section-label">Sản phẩm tương tự</div>
+                <div class="row g-3">
+                    <div class="col-6 col-sm-4 col-md-3">
+                        <a href="#" class="related-card">
+                            <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=400&q=80" alt="">
+                            <div class="rc-info">
+                                <div class="rc-title">Áo khoác jean Unisex</div>
+                                <div class="rc-price">320.000đ</div>
+                                <div class="rc-loc"><i class="bi bi-geo-alt" style="font-size:10px"></i> Đống Đa, HN</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-4 col-md-3">
+                        <a href="#" class="related-card">
+                            <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=400&q=80" alt="">
+                            <div class="rc-info">
+                                <div class="rc-title">Bomber Jacket Cổ Điển</div>
+                                <div class="rc-price">480.000đ</div>
+                                <div class="rc-loc"><i class="bi bi-geo-alt" style="font-size:10px"></i> Cầu Giấy, HN</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-4 col-md-3">
+                        <a href="#" class="related-card">
+                            <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=400&q=80" alt="">
+                            <div class="rc-info">
+                                <div class="rc-title">Áo Blazer Nữ Vintage</div>
+                                <div class="rc-price">280.000đ</div>
+                                <div class="rc-loc"><i class="bi bi-geo-alt" style="font-size:10px"></i> Hai Bà Trưng, HN</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-4 col-md-3">
+                        <a href="#" class="related-card">
+                            <img src="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=400&q=80" alt="">
+                            <div class="rc-info">
+                                <div class="rc-title">Áo Len Cổ Lọ Y2K</div>
+                                <div class="rc-price">190.000đ</div>
+                                <div class="rc-loc"><i class="bi bi-geo-alt" style="font-size:10px"></i> Hoàng Mai, HN</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end col-lg-8 -->
+
+        <!-- ==========================================
+             CỘT PHẢI — SIDEBAR
+             ========================================== -->
+        <div class="col-12 col-lg-4">
+            <div class="sidebar-sticky">
+
+                <!-- Action buttons (ẩn trên mobile — đã hiển thị ở trên) -->
+                <div class="card-white p-4 mb-3 d-none d-md-block">
+                    <div class="action-group mb-3">
+                        <button class="btn-2life-secondary">
+                            <i class="bi bi-chat-dots me-1"></i>Chat người bán
+                        </button>
+                        <button class="btn-2life-primary">
+                            <i class="bi bi-bag-check me-1"></i>Mua ngay
+                        </button>
+                    </div>
+                    <button class="btn-2life-outline w-100" style="border-radius:10px;padding:11px">
+                        <i class="bi bi-heart me-1"></i> Thêm vào yêu thích
+                    </button>
+                    <div class="divider"></div>
+                    <p style="font-size:12px;color:var(--text-secondary);text-align:center">
+                        <i class="bi bi-shield-check me-1" style="color:var(--tag-color)"></i>
+                        Kiểm tra hàng trước khi thanh toán
+                    </p>
+                </div>
+
+                <!-- Thông tin người bán -->
+                <div class="card-white p-4 mb-3">
+                    <div class="section-label">Thông tin người bán</div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img class="seller-avatar"
+                             src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"
+                             alt="Avatar Nguyễn Văn A">
+                        <div>
+                            <div style="font-size:15px;font-weight:700">Nguyễn Văn A
+                                <span style="color:var(--btn-secondary);font-size:12px;font-weight:400">✔ Đã xác thực</span>
+                            </div>
+                            <div class="stars-orange" style="font-size:12px">★★★★★ <span style="color:var(--text-secondary)">4.8 · 18 đánh giá</span></div>
+                            <div style="font-size:12px;color:var(--text-secondary)">Tham gia 3 tháng trước</div>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <div class="seller-stat-box">
+                                <div class="num">24</div>
+                                <div class="lbl">Tin đăng</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="seller-stat-box">
+                                <div class="num">18</div>
+                                <div class="lbl">Đã bán</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="seller-stat-box">
+                                <div class="num">98%</div>
+                                <div class="lbl">Phản hồi</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-secondary)" class="mb-3">
+                        <span><i class="bi bi-check-circle-fill me-1" style="color:var(--tag-color)"></i>Đã xác minh SĐT</span>&nbsp;&nbsp;
+                        <span><i class="bi bi-check-circle-fill me-1" style="color:var(--tag-color)"></i>Đã xác minh Email</span>
+                    </div>
+                    <button class="btn-2life-outline w-100" style="border-radius:8px;padding:9px;font-size:13px">
+                        Xem tất cả tin đăng <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+
+                <!-- Giao dịch an toàn -->
+                <div class="card-white p-4 mb-3">
+                    <div class="section-label">Mua bán an toàn</div>
+                    <div class="safety-item"><i class="bi bi-check-circle-fill"></i>Kiểm tra kỹ sản phẩm trước khi thanh toán</div>
+                    <div class="safety-item"><i class="bi bi-check-circle-fill"></i>Ưu tiên gặp mặt trực tiếp ở nơi công cộng</div>
+                    <div class="safety-item"><i class="bi bi-check-circle-fill"></i>Không chuyển tiền trước khi nhận và kiểm tra hàng</div>
+                    <div class="safety-item"><i class="bi bi-check-circle-fill"></i>Cảnh giác với giá quá rẻ bất thường</div>
+                    <div class="safety-item"><i class="bi bi-check-circle-fill"></i>Báo cáo ngay nếu phát hiện dấu hiệu lừa đảo</div>
+                    <div class="divider"></div>
+                    <button class="icon-btn w-100 justify-content-center" style="color:var(--error-color);border-color:var(--error-color)">
+                        <i class="bi bi-flag"></i> Báo cáo tin đăng này
+                    </button>
+                </div>
+
+                <!-- Tags / Danh mục liên quan -->
+                <div class="card-white p-4">
+                    <div class="section-label">Danh mục &amp; Tags</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="tag-2life" style="cursor:pointer">Thời trang</span>
+                        <span class="tag-2life" style="cursor:pointer">Áo khoác</span>
+                        <span class="tag-2life" style="cursor:pointer;background:var(--btn-secondary)">Vintage</span>
+                        <span class="tag-2life" style="cursor:pointer">Da bò</span>
+                        <span class="tag-2life" style="cursor:pointer">Hà Nội</span>
+                        <span class="tag-2life" style="cursor:pointer">Đồ cũ</span>
+                    </div>
+                </div>
+
+            </div>
+        </div><!-- end col-lg-4 sidebar -->
+
+    </div><!-- end row -->
+</main>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="pt-5 pb-3">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-3">
+                <div class="footer-logo mb-2">2Life</div>
+                <p style="font-size:13px;line-height:1.7">Nền tảng mua bán đồ cũ C2C — kết nối người mua và người bán toàn quốc. Tái sử dụng — Tiết kiệm — Bền vững.</p>
+            </div>
+            <div class="col-6 col-md-2">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Danh mục</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="#">Thời trang</a>
+                    <a href="#">Điện tử</a>
+                    <a href="#">Đồ gia dụng</a>
+                    <a href="#">Xe cộ</a>
+                    <a href="#">Sách vở</a>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Hỗ trợ</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="#">Trung tâm trợ giúp</a>
+                    <a href="#">Mua bán an toàn</a>
+                    <a href="#">Chính sách</a>
+                    <a href="#">Liên hệ</a>
+                </div>
+            </div>
+            <div class="col-12 col-md-5">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Nhận thông báo hàng mới</div>
+                <div class="d-flex gap-2">
+                    <input type="email" placeholder="Email của bạn" style="flex:1;padding:9px 14px;border-radius:8px;border:1px solid #4A6785;background:rgba(255,255,255,.07);color:#fff;font-size:13px;outline:none">
+                    <button class="btn-2life-primary" style="border-radius:8px;white-space:nowrap;font-size:13px">Đăng ký</button>
+                </div>
+            </div>
+        </div>
+        <div style="border-top:1px solid #2e5278;padding-top:20px;font-size:12px;text-align:center">
+            © 2025 2Life Marketplace — Nhóm 3, Học phần Phát triển Ứng dụng Web
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    /* Chuyển ảnh chính khi click thumbnail */
+    function switchImg(thumb, src) {
+        document.getElementById('mainImg').src = src;
+        document.querySelectorAll('.thumb-gallery img').forEach(i => i.classList.remove('active-thumb'));
+        thumb.classList.add('active-thumb');
+    }
+
+    /* Toggle yêu thích */
+    function toggleWish(btn) {
+        btn.classList.toggle('active');
+        const icon = btn.querySelector('i');
+        if (btn.classList.contains('active')) {
+            icon.className = 'bi bi-heart-fill';
+            btn.innerHTML = icon.outerHTML + ' Đã lưu';
+        } else {
+            icon.className = 'bi bi-heart';
+            btn.innerHTML = icon.outerHTML + ' Lưu';
+        }
+    }
+
+    /* Xem thêm / rút gọn mô tả */
+    function toggleDesc(btn) {
+        const expanded = btn.getAttribute('data-expanded') === 'true';
+        if (!expanded) {
+            btn.setAttribute('data-expanded', 'true');
+            btn.innerHTML = '<i class="bi bi-chevron-up me-1"></i>Thu gọn';
+        } else {
+            btn.setAttribute('data-expanded', 'false');
+            btn.innerHTML = '<i class="bi bi-chevron-down me-1"></i>Xem thêm';
+        }
+    }
+</script>
 </body>
 </html>
