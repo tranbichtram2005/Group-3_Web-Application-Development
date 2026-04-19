@@ -482,118 +482,355 @@ button {
 }
 
 /* ========================================================
-   CSS MỚI THÊM CHO TRANG ĐĂNG TIN (post-product.html)
+   CSS MỚI DÀNH RIÊNG CHO TRANG ĐĂNG TIN (BOOTSTRAP VER)
    ======================================================== */
 
-.post-header {
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.post-form-wrapper {
-    background-color: white; /* Khung trắng nổi bật trên nền xám nhẹ */
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 40px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.03); /* Đổ bóng cực nhẹ cho sang */
-}
-
-/* Chia đôi màn hình Form */
-.post-layout {
-    display: flex;
-    gap: 40px;
-}
-
-/* --- CỘT TRÁI: UPLOAD ẢNH --- */
-.upload-section {
-    flex: 1; /* Chiếm 1 phần */
-}
-
-/* Ô tải ảnh bằng viền đứt quãng (Dashed) */
+/* Khung Upload Ảnh/Video */
 .upload-box {
     border: 2px dashed var(--border-color);
     background-color: var(--bg-main);
     border-radius: 12px;
-    padding: 50px 20px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 300px;
     cursor: pointer;
     transition: 0.3s;
+    min-height: 180px; /* Chiều cao tối thiểu để 2 ô cân đối */
 }
-
-/* Đổi màu viền khi đưa chuột vào (Hover) để báo hiệu có thể click */
 .upload-box:hover {
     border-color: var(--btn-primary);
     background-color: var(--bg-card);
 }
+.video-box { border-style: dotted; }
+.upload-icon { font-size: 40px; }
 
-.upload-icon {
-    font-size: 40px;
-    margin-bottom: 15px;
-}
-
-.upload-hint {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 15px;
-}
-
-/* --- CỘT PHẢI: FORM ĐIỀN THÔNG TIN --- */
-.form-section {
-    flex: 2; /* Chiếm 2 phần (rộng hơn cột ảnh) */
-    display: flex;
-    flex-direction: column;
-    gap: 20px; /* Khoảng cách giữa các ô nhập liệu */
-}
-
-/* Nhãn (Tên trường) */
-.form-label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: var(--text-primary);
-}
-
-/* Cài đặt chung cho Input, Select, Textarea */
-.form-control {
-    width: 100%;
+/* Định dạng lại Input/Select Form cho tệp thiết kế cũ */
+.form-control, .form-select {
     padding: 12px 15px;
-    border: 1px solid var(--border-color);
+    border-color: var(--border-color);
     border-radius: 8px;
     font-size: 15px;
-    background-color: #fff;
-    color: var(--text-primary);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 3px rgba(255, 122, 61, 0.1);
+}
+
+/* Các Nút đặc biệt trong Form */
+.btn-ai {
+    background: linear-gradient(45deg, #a855f7, #ec4899);
+    border: none;
     transition: 0.3s;
-    outline: none; /* Bỏ viền đen mặc định của trình duyệt */
 }
+.btn-ai:hover { opacity: 0.8; }
 
-/* Khi người dùng click vào ô nhập liệu (Focus) */
-.form-control:focus {
-    border-color: var(--btn-primary); /* Đổi viền thành màu cam */
-    box-shadow: 0 0 0 3px rgba(255, 122, 61, 0.1); /* Tỏa sáng nhẹ màu cam */
+.btn-location {
+    background-color: #e2e8f0;
+    transition: 0.3s;
 }
+.btn-location:hover { background-color: #cbd5e1; }
 
-/* Chỉ dành riêng cho Textarea: Cho phép kéo giãn chiều dọc, cấm kéo chiều ngang */
-textarea.form-control {
-    resize: vertical;
+.btn-cancel:hover { color: var(--error-color) !important; text-decoration: underline; }
+.btn-preview:hover { background-color: var(--bg-section); }
+.btn-support:hover { opacity: 0.8; }
+
+/* Kẻ viền nét đứt cho danh sách hướng dẫn ở Sidebar */
+.border-dashed { border-bottom-style: dashed !important; }
+.guide-list a { color: var(--btn-secondary) !important; }
+.guide-list a:hover { color: var(--btn-hover) !important; text-decoration: underline !important; }
+
+/* ========================================================
+   SHARED LAYOUT — NAVBAR & FOOTER (dùng chung mọi trang)
+   ======================================================== */
+
+/* --- Navbar 2Life (Bootstrap wrapper) --- */
+.navbar-2life {
+    background-color: var(--nav-color);
+    padding: 12px 0;
 }
-
-/* Cấu trúc hàng ngang (Cho Danh mục & Tình trạng đứng cạnh nhau) */
-.form-row {
+.navbar-2life .logo {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--btn-primary);
+    text-decoration: none;
+}
+.navbar-2life .search-input {
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    padding: 8px 18px;
+    width: 100%;
+    outline: none;
+    font-size: 14px;
+}
+.navbar-2life .search-input:focus {
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 3px rgba(255,122,61,.15);
+}
+.nav-link-text {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
     display: flex;
-    gap: 20px;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+.nav-link-text:hover { color: var(--btn-hover); }
+
+/* Badge thông báo nhỏ trên icon */
+.nav-badge {
+    position: absolute;
+    top: -6px; right: -8px;
+    background: var(--btn-primary);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
 }
 
-/* Nhóm nút bấm dưới cùng */
-.form-actions {
-    display: flex;
-    justify-content: flex-end; /* Đẩy các nút sang bên phải */
-    gap: 15px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
+/* --- Dropdown navbar --- */
+.nav-dropdown { position: relative; }
+.nav-dropdown-menu {
+    display: none;
+    position: absolute !important;
+    top: calc(100% + 10px);
+    right: 0; left: auto;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.14);
+    min-width: 240px;
+    width: 240px;
+    z-index: 9999;
+    overflow: hidden;
 }
+.nav-dropdown:hover > .nav-dropdown-menu { display: block; }
+.nav-dropdown-item {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    font-size: 13px;
+    color: var(--text-primary) !important;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-color);
+    transition: background .15s;
+    width: 100%;
+}
+.nav-dropdown-item:last-child { border-bottom: none; }
+.nav-dropdown-item:hover { background: var(--bg-main) !important; color: var(--btn-primary) !important; }
+.nav-dropdown-item i { font-size: 15px; color: var(--btn-secondary); flex-shrink: 0; }
+.nav-dropdown-item .item-sub { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 1px; }
+
+/* --- Shared Buttons (đồng nhất với product_detail) --- */
+.btn-2life-primary {
+    background-color: var(--btn-primary);
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: .25s;
+    cursor: pointer;
+}
+.btn-2life-primary:hover { background-color: var(--error-color); color: #fff; }
+
+.btn-2life-secondary {
+    background-color: var(--btn-secondary);
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: .25s;
+    cursor: pointer;
+}
+.btn-2life-secondary:hover { background-color: var(--btn-hover); color: var(--text-primary); }
+
+.btn-2life-outline {
+    background-color: transparent;
+    color: var(--btn-secondary);
+    border: 1.5px solid var(--btn-secondary);
+    border-radius: 25px;
+    padding: 9px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: .25s;
+    cursor: pointer;
+}
+.btn-2life-outline:hover { background-color: var(--btn-secondary); color: #fff; }
+
+/* --- Shared Cards --- */
+.card-white {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+/* --- Shared Utilities --- */
+.section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+.breadcrumb-2life {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 16px 0 8px;
+}
+.breadcrumb-2life a { color: var(--text-secondary); text-decoration: none; }
+.breadcrumb-2life a:hover { color: var(--btn-primary); text-decoration: underline; }
+.breadcrumb-2life .sep { margin: 0 6px; }
+
+/* --- Sidebar sticky (dùng chung) --- */
+@media (min-width: 992px) {
+    .sidebar-sticky { position: sticky; top: 20px; }
+}
+
+/* --- Footer (dùng chung) --- */
+footer {
+    background-color: var(--nav-color);
+    color: #ccc;
+    font-size: 13px;
+    margin-top: 60px;
+}
+footer a { color: #A7D0E8; text-decoration: none; }
+footer a:hover { color: var(--btn-primary); }
+footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primary); }
+
+
+/* ========================================================
+   POST-PRODUCT PAGE — Chỉ dùng cho trang đăng tin
+   ======================================================== */
+
+/* Container chính */
+.post-main {
+    max-width: 1100px;
+    padding-top: 8px;
+    padding-bottom: 60px;
+}
+
+/* Tiêu đề section trong form */
+.post-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.post-section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background-color: var(--btn-primary);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Upload boxes */
+.upload-box {
+    border: 2px dashed var(--border-color);
+    background-color: var(--bg-main);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: .3s;
+    min-height: 180px;
+}
+.upload-box:hover {
+    border-color: var(--btn-primary);
+    background-color: var(--bg-card);
+}
+.video-box { border-style: dotted; }
+.upload-icon { font-size: 2.2rem; color: var(--text-secondary); }
+
+/* Form controls — override Bootstrap để match màu thương hiệu */
+.post-main .form-control,
+.post-main .form-select {
+    padding: 10px 14px;
+    border-color: var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+}
+.post-main .form-control:focus,
+.post-main .form-select:focus {
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 3px rgba(255,122,61,.1);
+}
+
+/* Nút lấy vị trí */
+.btn-location {
+    background-color: #e2e8f0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .25s;
+    white-space: nowrap;
+    color: var(--text-primary);
+}
+.btn-location:hover { background-color: #cbd5e1; }
+
+/* Nút AI */
+.btn-ai {
+    background: linear-gradient(45deg, #a855f7, #ec4899);
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .25s;
+    color: #fff;
+}
+.btn-ai:hover { opacity: .85; }
+
+/* Nút Lưu nháp */
+.btn-draft {
+    background-color: #fff;
+    border: 1.5px solid var(--border-color);
+    border-radius: 25px;
+    padding: 9px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .25s;
+    color: var(--text-primary);
+}
+.btn-draft:hover { border-color: var(--text-secondary); background-color: var(--bg-main); }
+
+/* Nút Trở về */
+.btn-cancel {
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 9px 4px;
+    transition: .2s;
+}
+.btn-cancel:hover { color: var(--error-color); text-decoration: underline; }
+
+/* Guide list sidebar */
+.guide-list .border-dashed { border-bottom-style: dashed !important; }
+.guide-link { font-size: 13px; color: var(--btn-secondary); }
+.guide-link:hover { color: var(--btn-hover); text-decoration: underline !important; }
