@@ -1,87 +1,1593 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giỏ hàng - 2Life</title>
-    <link rel="stylesheet" href="../layout/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS riêng -->
+    <link rel="stylesheet" href="style.css">
+
+
+    <style>
+        /* =====================================================
+           BIẾN MÀU
+           ===================================================== */
+        :root {
+            --bg-main:        #FAF7F2;
+            --bg-section:     #D6EEF8;
+            --bg-card:        #EFE6DD;
+            --nav-color:      #1F3C5A;
+            --btn-primary:    #FF7A3D;
+            --btn-secondary:  #4DA8DA;
+            --btn-hover:      #A7D0E8;
+            --text-primary:   #2B2B2B;
+            --text-secondary: #6B6B6B;
+            --border-color:   #D9D9D9;
+            --tag-color:      #7C8C6B;
+            --error-color:    #FF5E5B;
+        }
+
+
+        /* =====================================================
+           BASE
+           ===================================================== */
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+
+        /* =====================================================
+           NAVBAR 2LIFE
+           ===================================================== */
+        .navbar-2life {
+            background-color: var(--nav-color);
+            padding: 12px 0;
+        }
+        .navbar-2life .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--btn-primary);
+            text-decoration: none;
+        }
+        .navbar-2life .search-input {
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 8px 18px;
+            width: 100%;
+            outline: none;
+            font-size: 14px;
+        }
+        .navbar-2life .search-input:focus {
+            border-color: var(--btn-primary);
+            box-shadow: 0 0 0 3px rgba(255,122,61,.15);
+        }
+        .navbar-2life .nav-link-text {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .navbar-2life .nav-link-text:hover { color: var(--btn-hover); }
+
+
+        /* === DROPDOWN OVERRIDE (fix vỡ layout) === */
+        .nav-dropdown { position: relative; }
+        .nav-dropdown-menu {
+            display: none;
+            position: absolute !important;
+            top: calc(100% + 10px);
+            right: 0;
+            left: auto;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.14);
+            min-width: 240px;
+            width: 240px;
+            z-index: 9999;
+            overflow: hidden;
+            white-space: normal;
+            float: none;
+        }
+        .nav-dropdown:hover > .nav-dropdown-menu { display: block; }
+        .nav-dropdown-item {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            font-size: 13px;
+            color: var(--text-primary) !important;
+            text-decoration: none;
+            border-bottom: 1px solid var(--border-color);
+            transition: background .15s;
+            width: 100%;
+        }
+        .nav-dropdown-item:last-child { border-bottom: none; }
+        .nav-dropdown-item:hover { background: var(--bg-main) !important; color: var(--btn-primary) !important; }
+        .nav-dropdown-item i { font-size: 15px; color: var(--btn-secondary); flex-shrink: 0; }
+        .nav-dropdown-item .item-sub { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 1px; }
+
+
+        /* =====================================================
+           BUTTONS
+           ===================================================== */
+        .btn-2life-primary {
+            background-color: var(--btn-primary);
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 22px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: .25s;
+            cursor: pointer;
+        }
+        .btn-2life-primary:hover { background-color: var(--error-color); color: #fff; }
+
+
+        .btn-2life-secondary {
+            background-color: var(--btn-secondary);
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 22px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: .25s;
+            cursor: pointer;
+        }
+        .btn-2life-secondary:hover { background-color: var(--btn-hover); color: var(--text-primary); }
+
+
+        /* =====================================================
+           FOOTER
+           ===================================================== */
+        footer {
+            background-color: var(--nav-color);
+            color: #ccc;
+            font-size: 13px;
+            margin-top: 60px;
+        }
+        footer a { color: #A7D0E8; text-decoration: none; }
+        footer a:hover { color: var(--btn-primary); }
+        footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primary); }
+
+
+        /* =====================================================
+           CART PAGE — GIỮ NGUYÊN STYLE GỐC, chỉ dùng Bootstrap grid
+           ===================================================== */
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+
+        /* Cart item card */
+        .cart-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 16px;
+        }
+        .cart-item img {
+            width: 96px;
+            height: 96px;
+            object-fit: cover;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        .item-info { flex: 1; min-width: 0; }
+        .item-info h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .seller-name { font-size: 13px; color: var(--text-secondary); }
+
+
+        /* Quantity control */
+        .item-quantity {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            flex-shrink: 0;
+        }
+        .qty-btn {
+            width: 34px;
+            height: 34px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 0;
+            padding: 0;
+            line-height: 1;
+            color: var(--text-primary);
+            transition: background .15s;
+        }
+        .qty-btn:hover { background-color: var(--bg-section); }
+        .qty-input {
+            width: 38px;
+            height: 34px;
+            text-align: center;
+            border: none;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 14px;
+            outline: none;
+        }
+
+
+        /* Price */
+        .item-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--btn-primary);
+            min-width: 110px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+
+        /* Remove button */
+        .btn-remove {
+            background: none;
+            border: none;
+            color: var(--error-color);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+        .btn-remove:hover { background: #fff0f0; }
+
+
+        /* Summary card */
+        .cart-summary {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px;
+            position: sticky;
+            top: 20px;
+        }
+        .cart-summary h3 {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .summary-total {
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            margin-top: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+        .total-price {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--btn-primary);
+        }
+        .security-note {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 14px;
+        }
+
+
+        /* Empty state */
+        .cart-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .cart-empty i { font-size: 56px; color: var(--border-color); margin-bottom: 16px; display: block; }
+
+
+        /* Responsive */
+        @media (max-width: 575px) {
+            .cart-item { flex-wrap: wrap; }
+            .item-price { text-align: left; }
+            .item-quantity { order: 3; }
+        }
+    </style>
 </head>
 <body>
 
-    <header class="navbar">
-        <a href="index.html" class="logo" style="text-decoration: none;">2Life</a>
-        <div class="search-bar">
-            <input type="text" placeholder="Tìm kiếm đồ cũ giá hời...">
-        </div>
-        <div class="nav-actions">
-            <span class="icon">👤 Tài khoản</span>
-            <button class="btn-primary">Đăng tin bán</button>
-        </div>
-    </header>
 
-    <main class="container">
-        <h1 class="page-title">Giỏ hàng của bạn</h1>
 
-        <div class="cart-layout">
-            
-            <div class="cart-items-container">
-                
-                <div class="cart-item">
-                    <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=200&q=80" alt="Áo khoác">
-                    <div class="item-info">
-                        <h3>Áo khoác da bò Vintage</h3>
-                        <p class="seller-name">Người bán: Nguyễn Văn A</p>
-                    </div>
-                    <div class="item-quantity">
-                        <button class="qty-btn">-</button>
-                        <input type="text" value="1" class="qty-input" readonly>
-                        <button class="qty-btn">+</button>
-                    </div>
-                    <div class="item-price">550.000đ</div>
-                    <button class="btn-remove">Xóa</button>
-                </div>
 
-                <div class="cart-item">
-                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=200&q=80" alt="Tai nghe">
-                    <div class="item-info">
-                        <h3>Tai nghe Chụp tai (Pass nhanh)</h3>
-                        <p class="seller-name">Người bán: Trần B</p>
-                    </div>
-                    <div class="item-quantity">
-                        <button class="qty-btn">-</button>
-                        <input type="text" value="1" class="qty-input" readonly>
-                        <button class="qty-btn">+</button>
-                    </div>
-                    <div class="item-price">1.200.000đ</div>
-                    <button class="btn-remove">Xóa</button>
-                </div>
+<!-- ============================================================
+     NAVBAR CHÍNH
+     ============================================================ -->
+<header class="navbar-2life">
+    <div class="container-fluid px-3 px-md-4">
+        <div class="row align-items-center g-2">
 
+
+            <!-- Logo -->
+            <div class="col-6 col-md-2">
+                <a href="index.html" class="logo">2Life</a>
             </div>
 
+
+            <!-- Search -->
+            <div class="col-md-5 d-none d-md-block">
+                <div class="d-flex align-items-center" style="background:#fff;border-radius:25px;padding:4px 4px 4px 16px;border:1px solid var(--border-color);">
+                    <input type="text" placeholder="Tìm kiếm đồ cũ giá hời..." style="flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--text-primary);">
+                    <button class="btn-2life-primary" style="border-radius:20px;padding:7px 18px;white-space:nowrap;flex-shrink:0">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- Nav actions -->
+            <div class="col-6 col-md-5 d-flex justify-content-end align-items-center gap-2 gap-md-3">
+
+
+                <!-- Giỏ hàng (active vì đang ở trang này) -->
+                <a href="cart.html" class="nav-link-text position-relative" title="Giỏ hàng" style="color:var(--btn-primary)">
+                    <i class="bi bi-cart3-fill" style="font-size:18px"></i>
+                    <span class="nav-badge">2</span>
+                    <span class="d-none d-lg-inline ms-1">Giỏ hàng</span>
+                </a>
+
+
+                <!-- Quản lý — dropdown -->
+                <div class="nav-dropdown d-none d-sm-block">
+                    <a href="#" class="nav-link-text" title="Quản lý">
+                        <i class="bi bi-grid-3x3-gap" style="font-size:16px"></i>
+                        <span class="d-none d-lg-inline">Quản lý</span>
+                        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+                    </a>
+                    <div class="nav-dropdown-menu">
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-bag-check"></i>
+                            <div>
+                                <span>Đơn hàng của tôi</span>
+                                <span class="item-sub">Theo dõi & quản lý đơn</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-heart"></i>
+                            <div>
+                                <span>Sản phẩm yêu thích</span>
+                                <span class="item-sub">Danh sách đã lưu</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-clock-history"></i>
+                            <div>
+                                <span>Đã xem gần đây</span>
+                                <span class="item-sub">Lịch sử duyệt sản phẩm</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-wallet2"></i>
+                            <div>
+                                <span>Ví của tôi</span>
+                                <span class="item-sub">Số dư & lịch sử giao dịch</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-star"></i>
+                            <div>
+                                <span>Đánh giá của tôi</span>
+                                <span class="item-sub">Xem & viết đánh giá</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+
+                <!-- Thông báo -->
+                <a href="#" class="nav-link-text position-relative d-none d-sm-flex" title="Thông báo">
+                    <i class="bi bi-bell" style="font-size:17px"></i>
+                    <span class="nav-badge">5</span>
+                    <span class="d-none d-lg-inline ms-1">Thông báo</span>
+                </a>
+
+
+                <!-- CSKH — dropdown -->
+                <div class="nav-dropdown d-none d-md-block">
+                    <a href="#" class="nav-link-text">
+                        <i class="bi bi-headset" style="font-size:16px"></i>
+                        <span class="d-none d-lg-inline">Hỗ trợ</span>
+                        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+                    </a>
+                    <div class="nav-dropdown-menu cskh-dropdown-menu">
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-chat-dots" style="color:#2ecc71"></i>
+                            <div>
+                                <span><span class="live-dot"></span>Chat trực tuyến</span>
+                                <span class="item-sub">Phản hồi trong vài phút</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-telephone"></i>
+                            <div>
+                                <span>Hotline 1800 2Life</span>
+                                <span class="item-sub">Miễn phí · T2–T7, 8h–21h</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-question-circle"></i>
+                            <div>
+                                <span>Trung tâm trợ giúp</span>
+                                <span class="item-sub">FAQ & hướng dẫn</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-flag"></i>
+                            <div>
+                                <span>Báo cáo vi phạm</span>
+                                <span class="item-sub">Gian lận, hàng giả, lừa đảo</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+
+                <!-- Tài khoản -->
+                <a href="#" class="nav-link-text">
+                    <i class="bi bi-person-circle" style="font-size:18px"></i>
+                    <span class="d-none d-lg-inline">Tài khoản</span>
+                </a>
+
+
+                <!-- Mobile: đăng tin -->
+                <button class="btn-2life-primary d-md-none" style="padding:8px 12px">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+
+
+            <!-- Search bar mobile -->
+            <div class="col-12 d-md-none">
+                <input type="text" class="search-input" placeholder="Tìm kiếm đồ cũ giá hời...">
+            </div>
+
+
+        </div>
+    </div>
+</header>
+
+
+<!-- ============================================================
+     MAIN CONTENT — GIỎ HÀNG
+     ============================================================ -->
+<main class="container-fluid px-3 px-md-4" style="max-width:1140px;padding-top:28px;padding-bottom:40px">
+
+
+    <!-- Breadcrumb -->
+    <nav style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+        <a href="#" style="color:var(--text-secondary);text-decoration:none">Trang chủ</a>
+        <span style="margin:0 6px">/</span>
+        <span>Giỏ hàng</span>
+    </nav>
+
+
+    <h1 class="page-title">
+        <i class="bi bi-cart3 me-2" style="color:var(--btn-primary)"></i>Giỏ hàng của bạn
+    </h1>
+
+
+    <div class="row g-4 align-items-start">
+
+
+        <!-- ===================== CỘT TRÁI: SẢN PHẨM ===================== -->
+        <div class="col-12 col-lg-8">
+
+
+            <!-- Chọn tất cả -->
+            <div class="d-flex align-items-center justify-content-between mb-3" style="font-size:13px;color:var(--text-secondary)">
+                <label class="d-flex align-items-center gap-2" style="cursor:pointer">
+                    <input type="checkbox" id="checkAll" onchange="toggleAll(this)" style="width:15px;height:15px;accent-color:var(--btn-primary)">
+                    <span>Chọn tất cả (2 sản phẩm)</span>
+                </label>
+                <button onclick="removeSelected()" style="background:none;border:none;color:var(--error-color);font-size:13px;cursor:pointer;padding:0">
+                    <i class="bi bi-trash me-1"></i>Xóa đã chọn
+                </button>
+            </div>
+
+
+            <!-- Sản phẩm 1 -->
+            <div class="cart-item">
+                <input type="checkbox" class="item-check" style="width:15px;height:15px;accent-color:var(--btn-primary);flex-shrink:0" onchange="updateSummary()">
+                <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=200&q=80" alt="Áo khoác">
+                <div class="item-info">
+                    <h3>Áo khoác da bò Vintage</h3>
+                    <p class="seller-name"><i class="bi bi-person-circle me-1"></i>Người bán: Nguyễn Văn A</p>
+                    <span style="font-size:11px;background:#E8F5E9;color:#388E3C;padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block">Còn hàng</span>
+                </div>
+                <div class="item-quantity">
+                    <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                    <input type="text" value="1" class="qty-input" readonly data-price="550000">
+                    <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <div class="item-price">550.000đ</div>
+                <button class="btn-remove" onclick="removeItem(this)"><i class="bi bi-trash"></i></button>
+            </div>
+
+
+            <!-- Sản phẩm 2 -->
+            <div class="cart-item">
+                <input type="checkbox" class="item-check" style="width:15px;height:15px;accent-color:var(--btn-primary);flex-shrink:0" onchange="updateSummary()">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=200&q=80" alt="Tai nghe">
+                <div class="item-info">
+                    <h3>Tai nghe Chụp tai (Pass nhanh)</h3>
+                    <p class="seller-name"><i class="bi bi-person-circle me-1"></i>Người bán: Trần B</p>
+                    <span style="font-size:11px;background:#E8F5E9;color:#388E3C;padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block">Còn hàng</span>
+                </div>
+                <div class="item-quantity">
+                    <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                    <input type="text" value="1" class="qty-input" readonly data-price="1200000">
+                    <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <div class="item-price">1.200.000đ</div>
+                <button class="btn-remove" onclick="removeItem(this)"><i class="bi bi-trash"></i></button>
+            </div>
+
+
+            <!-- Gợi ý tiếp tục mua -->
+            <div style="margin-top:32px">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:14px">
+                    Có thể bạn cũng thích
+                </div>
+                <div class="row g-3">
+                    <div class="col-6 col-sm-3">
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;transition:.25s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                            <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=300&q=80" style="width:100%;height:110px;object-fit:cover" alt="">
+                            <div style="padding:10px 12px">
+                                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Áo khoác jean Unisex</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--btn-primary);margin-top:3px">320.000đ</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;transition:.25s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                            <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=300&q=80" style="width:100%;height:110px;object-fit:cover" alt="">
+                            <div style="padding:10px 12px">
+                                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bomber Jacket Cổ Điển</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--btn-primary);margin-top:3px">480.000đ</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;transition:.25s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                            <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=300&q=80" style="width:100%;height:110px;object-fit:cover" alt="">
+                            <div style="padding:10px 12px">
+                                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Áo Blazer Nữ Vintage</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--btn-primary);margin-top:3px">280.000đ</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;transition:.25s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                            <img src="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=300&q=80" style="width:100%;height:110px;object-fit:cover" alt="">
+                            <div style="padding:10px 12px">
+                                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Áo Len Cổ Lọ Y2K</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--btn-primary);margin-top:3px">190.000đ</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ===================== CỘT PHẢI: TÓM TẮT ===================== -->
+        <div class="col-12 col-lg-4">
             <div class="cart-summary">
-                <h3>Tóm tắt đơn hàng</h3>
-                
+                <h3><i class="bi bi-receipt me-2" style="color:var(--btn-secondary)"></i>Tóm tắt đơn hàng</h3>
+
+
                 <div class="summary-row">
-                    <span>Tạm tính (2 sản phẩm):</span>
-                    <span>1.750.000đ</span>
+                    <span>Tạm tính (<span id="itemCount">2</span> sản phẩm):</span>
+                    <span id="subtotal">1.750.000đ</span>
                 </div>
                 <div class="summary-row">
                     <span>Phí vận chuyển:</span>
-                    <span>Thỏa thuận</span>
+                    <span style="color:var(--tag-color);font-weight:600">Thỏa thuận</span>
                 </div>
-                
+                <div class="summary-row">
+                    <span>Giảm giá:</span>
+                    <span style="color:#388E3C;font-weight:600">—</span>
+                </div>
+
+
                 <div class="summary-row summary-total">
                     <span>Tổng cộng:</span>
-                    <span class="total-price">1.750.000đ</span>
+                    <span class="total-price" id="totalPrice">1.750.000đ</span>
                 </div>
 
-                <button class="btn-primary btn-large" style="width: 100%; margin-top: 20px;">Tiến hành Thanh toán</button>
-                <p class="security-note">🔒 Thanh toán an toàn, bảo vệ người mua 100%</p>
+
+                <!-- Mã giảm giá -->
+                <div class="d-flex gap-2 mt-3 mb-3">
+                    <input type="text" placeholder="Nhập mã giảm giá..." style="flex:1;padding:9px 13px;border:1px solid var(--border-color);border-radius:8px;font-size:13px;outline:none;color:var(--text-primary)">
+                    <button class="btn-2life-secondary" style="border-radius:8px;padding:9px 14px;font-size:13px;white-space:nowrap">Áp dụng</button>
+                </div>
+
+
+                <button class="btn-2life-primary" style="width:100%;border-radius:10px;padding:14px;font-size:15px;font-weight:700">
+                    <i class="bi bi-lock-fill me-2"></i>Thanh toán ngay
+                </button>
+                <a href="#" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:var(--btn-secondary);text-decoration:none">
+                    <i class="bi bi-arrow-left me-1"></i>Tiếp tục mua sắm
+                </a>
+                <p class="security-note">
+                    <i class="bi bi-shield-check me-1" style="color:var(--tag-color)"></i>
+                    Kiểm tra hàng trước khi thanh toán
+                </p>
+
+
+                <div style="border-top:1px solid var(--border-color);margin-top:16px;padding-top:14px">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:10px">Phương thức thanh toán</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div style="border:1px solid var(--border-color);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text-secondary)"><i class="bi bi-cash me-1"></i>Tiền mặt</div>
+                        <div style="border:1px solid var(--border-color);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text-secondary)"><i class="bi bi-bank me-1"></i>Chuyển khoản</div>
+                        <div style="border:1px solid var(--border-color);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text-secondary)"><i class="bi bi-wallet2 me-1"></i>Ví điện tử</div>
+                    </div>
+                </div>
             </div>
-
         </div>
-    </main>
 
+
+    </div>
+</main>
+
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="pt-5 pb-3">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-3">
+                <div class="footer-logo mb-2">2Life</div>
+                <p style="font-size:13px;line-height:1.7">Nền tảng mua bán đồ cũ C2C — kết nối người mua và người bán toàn quốc. Tái sử dụng — Tiết kiệm — Bền vững.</p>
+            </div>
+            <div class="col-6 col-md-2">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Danh mục</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="#">Thời trang</a>
+                    <a href="#">Điện tử</a>
+                    <a href="#">Đồ gia dụng</a>
+                    <a href="#">Xe cộ</a>
+                    <a href="#">Sách vở</a>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Hỗ trợ</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="#">Trung tâm trợ giúp</a>
+                    <a href="#">Mua bán an toàn</a>
+                    <a href="#">Chính sách</a>
+                    <a href="#">Liên hệ</a>
+                </div>
+            </div>
+            <div class="col-12 col-md-5">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Nhận thông báo hàng mới</div>
+                <div class="d-flex gap-2">
+                    <input type="email" placeholder="Email của bạn" style="flex:1;padding:9px 14px;border-radius:8px;border:1px solid #4A6785;background:rgba(255,255,255,.07);color:#fff;font-size:13px;outline:none">
+                    <button class="btn-2life-primary" style="border-radius:8px;white-space:nowrap;font-size:13px">Đăng ký</button>
+                </div>
+            </div>
+        </div>
+        <div style="border-top:1px solid #2e5278;padding-top:20px;font-size:12px;text-align:center">
+            © 2025 2Life Marketplace — Nhóm 3, Học phần Phát triển Ứng dụng Web
+        </div>
+    </div>
+</footer>
+
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+    /* ---- Tăng / giảm số lượng ---- */
+    function changeQty(btn, delta) {
+        const input = btn.closest('.item-quantity').querySelector('.qty-input');
+        const price = parseInt(input.dataset.price);
+        let val = parseInt(input.value) + delta;
+        if (val < 1) val = 1;
+        input.value = val;
+        // Cập nhật giá hiển thị
+        const priceEl = btn.closest('.cart-item').querySelector('.item-price');
+        priceEl.textContent = (price * val).toLocaleString('vi-VN') + 'đ';
+        updateSummary();
+    }
+
+
+    /* ---- Xóa item ---- */
+    function removeItem(btn) {
+        const item = btn.closest('.cart-item');
+        item.style.transition = 'opacity .3s, transform .3s';
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(30px)';
+        setTimeout(() => { item.remove(); updateSummary(); }, 300);
+    }
+
+
+    /* ---- Chọn tất cả ---- */
+    function toggleAll(master) {
+        document.querySelectorAll('.item-check').forEach(c => c.checked = master.checked);
+        updateSummary();
+    }
+
+
+    /* ---- Xóa đã chọn ---- */
+    function removeSelected() {
+        document.querySelectorAll('.item-check:checked').forEach(c => {
+            const item = c.closest('.cart-item');
+            item.style.transition = 'opacity .3s';
+            item.style.opacity = '0';
+            setTimeout(() => { item.remove(); updateSummary(); }, 300);
+        });
+    }
+
+
+    /* ---- Cập nhật tóm tắt ---- */
+    function updateSummary() {
+        const items = document.querySelectorAll('.cart-item');
+        let total = 0;
+        items.forEach(item => {
+            const input = item.querySelector('.qty-input');
+            const qty = parseInt(input.value);
+            const price = parseInt(input.dataset.price);
+            total += qty * price;
+        });
+        document.getElementById('itemCount').textContent = items.length;
+        document.getElementById('subtotal').textContent = total.toLocaleString('vi-VN') + 'đ';
+        document.getElementById('totalPrice').textContent = total.toLocaleString('vi-VN') + 'đ';
+
+
+        // Cập nhật badge giỏ hàng
+        const badge = document.querySelector('.nav-badge');
+        if (badge) badge.textContent = items.length;
+    }
+</script>
 </body>
 </html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng - 2Life</title>
+
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS riêng -->
+    <link rel="stylesheet" href="style.css">
+
+
+    <style>
+        /* =====================================================
+           BIẾN MÀU
+           ===================================================== */
+        :root {
+            --bg-main:        #FAF7F2;
+            --bg-section:     #D6EEF8;
+            --bg-card:        #EFE6DD;
+            --nav-color:      #1F3C5A;
+            --btn-primary:    #FF7A3D;
+            --btn-secondary:  #4DA8DA;
+            --btn-hover:      #A7D0E8;
+            --text-primary:   #2B2B2B;
+            --text-secondary: #6B6B6B;
+            --border-color:   #D9D9D9;
+            --tag-color:      #7C8C6B;
+            --error-color:    #FF5E5B;
+        }
+
+
+        /* =====================================================
+           BASE
+           ===================================================== */
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+
+        /* =====================================================
+           NAVBAR 2LIFE
+           ===================================================== */
+        .navbar-2life {
+            background-color: var(--nav-color);
+            padding: 12px 0;
+        }
+        .navbar-2life .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--btn-primary);
+            text-decoration: none;
+        }
+        .navbar-2life .search-input {
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 8px 18px;
+            width: 100%;
+            outline: none;
+            font-size: 14px;
+        }
+        .navbar-2life .search-input:focus {
+            border-color: var(--btn-primary);
+            box-shadow: 0 0 0 3px rgba(255,122,61,.15);
+        }
+        .navbar-2life .nav-link-text {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .navbar-2life .nav-link-text:hover { color: var(--btn-hover); }
+
+
+        /* === DROPDOWN OVERRIDE (fix vỡ layout) === */
+        .nav-dropdown { position: relative; }
+        .nav-dropdown-menu {
+            display: none;
+            position: absolute !important;
+            top: calc(100% + 10px);
+            right: 0;
+            left: auto;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.14);
+            min-width: 240px;
+            width: 240px;
+            z-index: 9999;
+            overflow: hidden;
+            white-space: normal;
+            float: none;
+        }
+        .nav-dropdown:hover > .nav-dropdown-menu { display: block; }
+        .nav-dropdown-item {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            font-size: 13px;
+            color: var(--text-primary) !important;
+            text-decoration: none;
+            border-bottom: 1px solid var(--border-color);
+            transition: background .15s;
+            width: 100%;
+        }
+        .nav-dropdown-item:last-child { border-bottom: none; }
+        .nav-dropdown-item:hover { background: var(--bg-main) !important; color: var(--btn-primary) !important; }
+        .nav-dropdown-item i { font-size: 15px; color: var(--btn-secondary); flex-shrink: 0; }
+        .nav-dropdown-item .item-sub { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 1px; }
+
+
+        /* =====================================================
+           BUTTONS
+           ===================================================== */
+        .btn-2life-primary {
+            background-color: var(--btn-primary);
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 22px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: .25s;
+            cursor: pointer;
+        }
+        .btn-2life-primary:hover { background-color: var(--error-color); color: #fff; }
+
+
+        .btn-2life-secondary {
+            background-color: var(--btn-secondary);
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 22px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: .25s;
+            cursor: pointer;
+        }
+        .btn-2life-secondary:hover { background-color: var(--btn-hover); color: var(--text-primary); }
+
+
+        /* =====================================================
+           FOOTER
+           ===================================================== */
+        footer {
+            background-color: var(--nav-color);
+            color: #ccc;
+            font-size: 13px;
+            margin-top: 60px;
+        }
+        footer a { color: #A7D0E8; text-decoration: none; }
+        footer a:hover { color: var(--btn-primary); }
+        footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primary); }
+
+
+        /* =====================================================
+           CART PAGE — GIỮ NGUYÊN STYLE GỐC, chỉ dùng Bootstrap grid
+           ===================================================== */
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+
+        /* Cart item card */
+        .cart-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 16px;
+        }
+        .cart-item img {
+            width: 96px;
+            height: 96px;
+            object-fit: cover;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        .item-info { flex: 1; min-width: 0; }
+        .item-info h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .seller-name { font-size: 13px; color: var(--text-secondary); }
+
+
+        /* Quantity control */
+        .item-quantity {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            flex-shrink: 0;
+        }
+        .qty-btn {
+            width: 34px;
+            height: 34px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 0;
+            padding: 0;
+            line-height: 1;
+            color: var(--text-primary);
+            transition: background .15s;
+        }
+        .qty-btn:hover { background-color: var(--bg-section); }
+        .qty-input {
+            width: 38px;
+            height: 34px;
+            text-align: center;
+            border: none;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 14px;
+            outline: none;
+        }
+
+
+        /* Price */
+        .item-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--btn-primary);
+            min-width: 110px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+
+        /* Remove button */
+        .btn-remove {
+            background: none;
+            border: none;
+            color: var(--error-color);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+        .btn-remove:hover { background: #fff0f0; }
+
+
+        /* Summary card */
+        .cart-summary {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px;
+            position: sticky;
+            top: 20px;
+        }
+        .cart-summary h3 {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .summary-total {
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            margin-top: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+        .total-price {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--btn-primary);
+        }
+        .security-note {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 14px;
+        }
+
+
+        /* Empty state */
+        .cart-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .cart-empty i { font-size: 56px; color: var(--border-color); margin-bottom: 16px; display: block; }
+
+
+        /* Responsive */
+        @media (max-width: 575px) {
+            .cart-item { flex-wrap: wrap; }
+            .item-price { text-align: left; }
+            .item-quantity { order: 3; }
+        }
+    </style>
+</head>
+<body>
+
+
+
+
+<!-- ============================================================
+     NAVBAR CHÍNH
+     ============================================================ -->
+<header class="navbar-2life">
+    <div class="container-fluid px-3 px-md-4">
+        <div class="row align-items-center g-2">
+
+
+            <!-- Logo -->
+            <div class="col-6 col-md-2">
+                <a href="index.html" class="logo">2Life</a>
+            </div>
+
+
+            <!-- Search -->
+            <div class="col-md-5 d-none d-md-block">
+                <div class="d-flex align-items-center" style="background:#fff;border-radius:25px;padding:4px 4px 4px 16px;border:1px solid var(--border-color);">
+                    <input type="text" placeholder="Tìm kiếm đồ cũ giá hời..." style="flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--text-primary);">
+                    <button class="btn-2life-primary" style="border-radius:20px;padding:7px 18px;white-space:nowrap;flex-shrink:0">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- Nav actions -->
+            <div class="col-6 col-md-5 d-flex justify-content-end align-items-center gap-2 gap-md-3">
+
+
+                <!-- Giỏ hàng (active vì đang ở trang này) -->
+                <a href="cart.html" class="nav-link-text position-relative" title="Giỏ hàng" style="color:var(--btn-primary)">
+                    <i class="bi bi-cart3-fill" style="font-size:18px"></i>
+                    <span class="nav-badge">2</span>
+                    <span class="d-none d-lg-inline ms-1">Giỏ hàng</span>
+                </a>
+
+
+                <!-- Quản lý — dropdown -->
+                <div class="nav-dropdown d-none d-sm-block">
+                    <a href="#" class="nav-link-text" title="Quản lý">
+                        <i class="bi bi-grid-3x3-gap" style="font-size:16px"></i>
+                        <span class="d-none d-lg-inline">Quản lý</span>
+                        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+                    </a>
+                    <div class="nav-dropdown-menu">
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-bag-check"></i>
+                            <div>
+                                <span>Đơn hàng của tôi</span>
+                                <span class="item-sub">Theo dõi & quản lý đơn</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-heart"></i>
+                            <div>
+                                <span>Sản phẩm yêu thích</span>
+                                <span class="item-sub">Danh sách đã lưu</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-clock-history"></i>
+                            <div>
+                                <span>Đã xem gần đây</span>
+                                <span class="item-sub">Lịch sử duyệt sản phẩm</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-wallet2"></i>
+                            <div>
+                                <span>Ví của tôi</span>
+                                <span class="item-sub">Số dư & lịch sử giao dịch</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-star"></i>
+                            <div>
+                                <span>Đánh giá của tôi</span>
+                                <span class="item-sub">Xem & viết đánh giá</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+
+                <!-- Thông báo -->
+                <a href="#" class="nav-link-text position-relative d-none d-sm-flex" title="Thông báo">
+                    <i class="bi bi-bell" style="font-size:17px"></i>
+                    <span class="nav-badge">5</span>
+                    <span class="d-none d-lg-inline ms-1">Thông báo</span>
+                </a>
+
+
+                <!-- CSKH — dropdown -->
+                <div class="nav-dropdown d-none d-md-block">
+                    <a href="#" class="nav-link-text">
+                        <i class="bi bi-headset" style="font-size:16px"></i>
+                        <span class="d-none d-lg-inline">Hỗ trợ</span>
+                        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+                    </a>
+                    <div class="nav-dropdown-menu cskh-dropdown-menu">
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-chat-dots" style="color:#2ecc71"></i>
+                            <div>
+                                <span><span class="live-dot"></span>Chat trực tuyến</span>
+                                <span class="item-sub">Phản hồi trong vài phút</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-telephone"></i>
+                            <div>
+                                <span>Hotline 1800 2Life</span>
+                                <span class="item-sub">Miễn phí · T2–T7, 8h–21h</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-question-circle"></i>
+                            <div>
+                                <span>Trung tâm trợ giúp</span>
+                                <span class="item-sub">FAQ & hướng dẫn</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-flag"></i>
+                            <div>
+                                <span>Báo cáo vi phạm</span>
+                                <span class="item-sub">Gian lận, hàng giả, lừa đảo</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+
+                <!-- Tài khoản -->
+                <a href="#" class="nav-link-text">
+                    <i class="bi bi-person-circle" style="font-size:18px"></i>
+                    <span class="d-none d-lg-inline">Tài khoản</span>
+                </a>
+
+
+                <!-- Mobile: đăng tin -->
+                <button class="btn-2life-primary d-md-none" style="padding:8px 12px">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+
+
+            <!-- Search bar mobile -->
+            <div class="col-12 d-md-none">
+                <input type="text" class="search-input" placeholder="Tìm kiếm đồ cũ giá hời...">
+            </div>
+
+
+        </div>
+    </div>
+</header>
+
+
+<!-- ============================================================
+     MAIN CONTENT — GIỎ HÀNG
+     ============================================================ -->
+<main class="container-fluid px-3 px-md-4" style="max-width:1140px;padding-top:28px;padding-bottom:40px">
+
+
+    <!-- Breadcrumb -->
+    <nav style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+        <a href="#" style="color:var(--text-secondary);text-decoration:none">Trang chủ</a>
+        <span style="margin:0 6px">/</span>
+        <span>Giỏ hàng</span>
+    </nav>
+
+
+    <h1 class="page-title">
+        <i class="bi bi-cart3 me-2" style="color:var(--btn-primary)"></i>Giỏ hàng của bạn
+    </h1>
+
+
+    <div class="row g-4 align-items-start">
+
+
+        <!-- ===================== CỘT TRÁI: SẢN PHẨM ===================== -->
+        <div class="col-12 col-lg-8">
+
+
+            <!-- Chọn tất cả -->
+            <div class="d-flex align-items-center justify-content-between mb-3" style="font-size:13px;color:var(--text-secondary)">
+                <label class="d-flex align-items-center gap-2" style="cursor:pointer">
+                    <input type="checkbox" id="checkAll" onchange="toggleAll(this)" style="width:15px;height:15px;accent-color:var(--btn-primary)">
+                    <span>Chọn tất cả (2 sản phẩm)</span>
+                </label>
+                <button onclick="removeSelected()" style="background:none;border:none;color:var(--error-color);font-size:13px;cursor:pointer;padding:0">
+                    <i class="bi bi-trash me-1"></i>Xóa đã chọn
+                </button>
+            </div>
+
+
+            <!-- Sản phẩm 1 -->
+            <div class="cart-item">
+                <input type="checkbox" class="item-check" style="width:15px;height:15px;accent-color:var(--btn-primary);flex-shrink:0" onchange="updateSummary()">
+                <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=200&q=80" alt="Áo khoác">
+                <div class="item-info">
+                    <h3>Áo khoác da bò Vintage</h3>
+                    <p class="seller-name"><i class="bi bi-person-circle me-1"></i>Người bán: Nguyễn Văn A</p>
+                    <span style="font-size:11px;background:#E8F5E9;color:#388E3C;padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block">Còn hàng</span>
+                </div>
+                <div class="item-quantity">
+                    <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                    <input type="text" value="1" class="qty-input" readonly data-price="550000">
+                    <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <div class="item-price">550.000đ</div>
+                <button class="btn-remove" onclick="removeItem(this)"><i class="bi bi-trash"></i></button>
+            </div>
+
+
+            <!-- Sản phẩm 2 -->
+            <div class="cart-item">
+                <input type="checkbox" class="item-check" style="width:15px;height:15px;accent-color:var(--btn-primary);flex-shrink:0" onchange="updateSummary()">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=200&q=80" alt="Tai nghe">
+                <div class="item-info">
+                    <h3>Tai nghe Chụp tai (Pass nhanh)</h3>
+                    <p class="seller-name"><i class="bi bi-person-circle me-1"></i>Người bán: Trần B</p>
+                    <span style="font-size:11px;background:#E8F5E9;color:#388E3C;padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block">Còn hàng</span>
+                </div>
+                <div class="item-quantity">
+                    <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                    <input type="text" value="1" class="qty-input" readonly data-price="1200000">
+                    <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <div class="item-price">1.200.000đ</div>
+                <button class="btn-remove" onclick="removeItem(this)"><i class="bi bi-trash"></i></button>
+            </div>
+
+
+            <!-- Gợi ý tiếp tục mua -->
+            <div style="margin-top:32px">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:14px">
+                    Có thể bạn cũng thích
+                </div>
+                <div class="row g-3">
+                    <div class="col-6 col-sm-3">
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;transition:.25s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                            <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=300&q=80" style="width:100%;height:110px;object-fit:cover" alt="">
+                            <div style="padding:10px 12px">
+                                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Áo khoác jean Unisex</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--btn-primary);margin-top:3px">320.000đ</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;transition:.25s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                            <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=300&q=80" style="width:100%;height:110px;object-fit:cover" alt="">
+                            <div style="padding:10px 12px">
+                                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bomber Jacket Cổ Điển</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--btn-primary);margin-top:3px">480.000đ</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;transition:.25s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                            <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=300&q=80" style="width:100%;height:110px;object-fit:cover" alt="">
+                            <div style="padding:10px 12px">
+                                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Áo Blazer Nữ Vintage</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--btn-primary);margin-top:3px">280.000đ</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;overflow:hidden;transition:.25s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                            <img src="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=300&q=80" style="width:100%;height:110px;object-fit:cover" alt="">
+                            <div style="padding:10px 12px">
+                                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Áo Len Cổ Lọ Y2K</div>
+                                <div style="font-size:13px;font-weight:700;color:var(--btn-primary);margin-top:3px">190.000đ</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ===================== CỘT PHẢI: TÓM TẮT ===================== -->
+        <div class="col-12 col-lg-4">
+            <div class="cart-summary">
+                <h3><i class="bi bi-receipt me-2" style="color:var(--btn-secondary)"></i>Tóm tắt đơn hàng</h3>
+
+
+                <div class="summary-row">
+                    <span>Tạm tính (<span id="itemCount">2</span> sản phẩm):</span>
+                    <span id="subtotal">1.750.000đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span style="color:var(--tag-color);font-weight:600">Thỏa thuận</span>
+                </div>
+                <div class="summary-row">
+                    <span>Giảm giá:</span>
+                    <span style="color:#388E3C;font-weight:600">—</span>
+                </div>
+
+
+                <div class="summary-row summary-total">
+                    <span>Tổng cộng:</span>
+                    <span class="total-price" id="totalPrice">1.750.000đ</span>
+                </div>
+
+
+                <!-- Mã giảm giá -->
+                <div class="d-flex gap-2 mt-3 mb-3">
+                    <input type="text" placeholder="Nhập mã giảm giá..." style="flex:1;padding:9px 13px;border:1px solid var(--border-color);border-radius:8px;font-size:13px;outline:none;color:var(--text-primary)">
+                    <button class="btn-2life-secondary" style="border-radius:8px;padding:9px 14px;font-size:13px;white-space:nowrap">Áp dụng</button>
+                </div>
+
+
+                <button class="btn-2life-primary" style="width:100%;border-radius:10px;padding:14px;font-size:15px;font-weight:700">
+                    <i class="bi bi-lock-fill me-2"></i>Thanh toán ngay
+                </button>
+                <a href="#" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:var(--btn-secondary);text-decoration:none">
+                    <i class="bi bi-arrow-left me-1"></i>Tiếp tục mua sắm
+                </a>
+                <p class="security-note">
+                    <i class="bi bi-shield-check me-1" style="color:var(--tag-color)"></i>
+                    Kiểm tra hàng trước khi thanh toán
+                </p>
+
+
+                <div style="border-top:1px solid var(--border-color);margin-top:16px;padding-top:14px">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:10px">Phương thức thanh toán</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div style="border:1px solid var(--border-color);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text-secondary)"><i class="bi bi-cash me-1"></i>Tiền mặt</div>
+                        <div style="border:1px solid var(--border-color);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text-secondary)"><i class="bi bi-bank me-1"></i>Chuyển khoản</div>
+                        <div style="border:1px solid var(--border-color);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text-secondary)"><i class="bi bi-wallet2 me-1"></i>Ví điện tử</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</main>
+
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="pt-5 pb-3">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-3">
+                <div class="footer-logo mb-2">2Life</div>
+                <p style="font-size:13px;line-height:1.7">Nền tảng mua bán đồ cũ C2C — kết nối người mua và người bán toàn quốc. Tái sử dụng — Tiết kiệm — Bền vững.</p>
+            </div>
+            <div class="col-6 col-md-2">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Danh mục</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="#">Thời trang</a>
+                    <a href="#">Điện tử</a>
+                    <a href="#">Đồ gia dụng</a>
+                    <a href="#">Xe cộ</a>
+                    <a href="#">Sách vở</a>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Hỗ trợ</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="#">Trung tâm trợ giúp</a>
+                    <a href="#">Mua bán an toàn</a>
+                    <a href="#">Chính sách</a>
+                    <a href="#">Liên hệ</a>
+                </div>
+            </div>
+            <div class="col-12 col-md-5">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Nhận thông báo hàng mới</div>
+                <div class="d-flex gap-2">
+                    <input type="email" placeholder="Email của bạn" style="flex:1;padding:9px 14px;border-radius:8px;border:1px solid #4A6785;background:rgba(255,255,255,.07);color:#fff;font-size:13px;outline:none">
+                    <button class="btn-2life-primary" style="border-radius:8px;white-space:nowrap;font-size:13px">Đăng ký</button>
+                </div>
+            </div>
+        </div>
+        <div style="border-top:1px solid #2e5278;padding-top:20px;font-size:12px;text-align:center">
+            © 2025 2Life Marketplace — Nhóm 3, Học phần Phát triển Ứng dụng Web
+        </div>
+    </div>
+</footer>
+
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+    /* ---- Tăng / giảm số lượng ---- */
+    function changeQty(btn, delta) {
+        const input = btn.closest('.item-quantity').querySelector('.qty-input');
+        const price = parseInt(input.dataset.price);
+        let val = parseInt(input.value) + delta;
+        if (val < 1) val = 1;
+        input.value = val;
+        // Cập nhật giá hiển thị
+        const priceEl = btn.closest('.cart-item').querySelector('.item-price');
+        priceEl.textContent = (price * val).toLocaleString('vi-VN') + 'đ';
+        updateSummary();
+    }
+
+
+    /* ---- Xóa item ---- */
+    function removeItem(btn) {
+        const item = btn.closest('.cart-item');
+        item.style.transition = 'opacity .3s, transform .3s';
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(30px)';
+        setTimeout(() => { item.remove(); updateSummary(); }, 300);
+    }
+
+
+    /* ---- Chọn tất cả ---- */
+    function toggleAll(master) {
+        document.querySelectorAll('.item-check').forEach(c => c.checked = master.checked);
+        updateSummary();
+    }
+
+
+    /* ---- Xóa đã chọn ---- */
+    function removeSelected() {
+        document.querySelectorAll('.item-check:checked').forEach(c => {
+            const item = c.closest('.cart-item');
+            item.style.transition = 'opacity .3s';
+            item.style.opacity = '0';
+            setTimeout(() => { item.remove(); updateSummary(); }, 300);
+        });
+    }
+
+
+    /* ---- Cập nhật tóm tắt ---- */
+    function updateSummary() {
+        const items = document.querySelectorAll('.cart-item');
+        let total = 0;
+        items.forEach(item => {
+            const input = item.querySelector('.qty-input');
+            const qty = parseInt(input.value);
+            const price = parseInt(input.dataset.price);
+            total += qty * price;
+        });
+        document.getElementById('itemCount').textContent = items.length;
+        document.getElementById('subtotal').textContent = total.toLocaleString('vi-VN') + 'đ';
+        document.getElementById('totalPrice').textContent = total.toLocaleString('vi-VN') + 'đ';
+
+
+        // Cập nhật badge giỏ hàng
+        const badge = document.querySelector('.nav-badge');
+        if (badge) badge.textContent = items.length;
+    }
+</script>
+</body>
+</html>
+
