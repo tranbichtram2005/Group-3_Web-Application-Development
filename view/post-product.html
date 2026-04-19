@@ -4,91 +4,396 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng tin bán - 2Life</title>
-    <link rel="stylesheet" href="../layout/style.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons (đồng bộ với product_detail) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS chung -->
+    <link rel="stylesheet" href="../layout/style.css">
 </head>
 <body>
 
-    <header class="navbar">
-        <a href="index.html" class="logo" style="text-decoration: none;">2Life</a>
-        <div class="search-bar">
-            <input type="text" placeholder="Tìm kiếm đồ cũ giá hời...">
-        </div>
-        <div class="nav-actions">
-            <span class="icon">👤 Tài khoản</span>
-            <button class="btn-secondary">Quản lý tin</button>
-        </div>
-    </header>
+<!-- ============================================================
+     NAVBAR — đồng nhất với product_detail.html
+     ============================================================ -->
+<header class="navbar-2life">
+    <div class="container-fluid px-3 px-md-4">
+        <div class="row align-items-center g-2">
 
-    <main class="container">
-        <div class="post-header">
-            <h1 class="page-title">Đăng tin bán sản phẩm</h1>
-            <p style="color: var(--text-secondary);">Vui lòng điền đầy đủ thông tin để người mua dễ dàng tìm thấy sản phẩm của bạn.</p>
-        </div>
+            <!-- Logo -->
+            <div class="col-6 col-md-2">
+                <a href="index.html" class="logo">2Life</a>
+            </div>
 
-        <div class="post-form-wrapper">
-            
-            <form action="#" class="post-layout">
-                
-                <div class="upload-section">
-                    <label class="form-label">Hình ảnh sản phẩm (Tối đa 5 ảnh)</label>
-                    <div class="upload-box">
-                        <div class="upload-icon">📸</div>
-                        <p>Kéo thả ảnh vào đây hoặc</p>
-                        <button type="button" class="btn-secondary" style="margin-top: 10px;">Chọn ảnh từ máy</button>
-                        <p class="upload-hint">Hỗ trợ định dạng JPG, PNG. Tối đa 5MB/ảnh.</p>
+            <!-- Search (ẩn trên xs, hiện từ md) -->
+            <div class="col-md-5 d-none d-md-block">
+                <div class="d-flex align-items-center" style="background:#fff;border-radius:25px;padding:4px 4px 4px 16px;border:1px solid var(--border-color);">
+                    <input type="text" placeholder="Tìm kiếm đồ cũ giá hời..." style="flex:1;border:none;outline:none;font-size:14px;background:transparent;color:var(--text-primary);">
+                    <button class="btn-2life-primary" style="border-radius:20px;padding:7px 18px;white-space:nowrap;flex-shrink:0">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Nav actions -->
+            <div class="col-6 col-md-5 d-flex justify-content-end align-items-center gap-2 gap-md-3">
+
+                <!-- Giỏ hàng -->
+                <a href="#" class="nav-link-text position-relative" title="Giỏ hàng">
+                    <i class="bi bi-cart3" style="font-size:18px"></i>
+                    <span class="nav-badge">3</span>
+                    <span class="d-none d-lg-inline ms-1">Giỏ hàng</span>
+                </a>
+
+                <!-- Quản lý — dropdown -->
+                <div class="nav-dropdown d-none d-sm-block">
+                    <a href="#" class="nav-link-text" title="Quản lý">
+                        <i class="bi bi-grid-3x3-gap" style="font-size:16px"></i>
+                        <span class="d-none d-lg-inline">Quản lý</span>
+                        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+                    </a>
+                    <div class="nav-dropdown-menu">
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-bag-check"></i>
+                            <div>
+                                <span>Đơn hàng của tôi</span>
+                                <span class="item-sub">Theo dõi & quản lý đơn</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-heart"></i>
+                            <div>
+                                <span>Sản phẩm yêu thích</span>
+                                <span class="item-sub">Danh sách đã lưu</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-clock-history"></i>
+                            <div>
+                                <span>Đã xem gần đây</span>
+                                <span class="item-sub">Lịch sử duyệt sản phẩm</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-megaphone"></i>
+                            <div>
+                                <span>Quản lý tin đăng</span>
+                                <span class="item-sub">Xem & chỉnh sửa tin của bạn</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-wallet2"></i>
+                            <div>
+                                <span>Ví của tôi</span>
+                                <span class="item-sub">Số dư & lịch sử giao dịch</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
-                <div class="form-section">
-                    
-                    <div class="form-group">
-                        <label class="form-label">Tên sản phẩm <span style="color: red;">*</span></label>
+                <!-- Thông báo -->
+                <a href="#" class="nav-link-text position-relative d-none d-sm-flex" title="Thông báo">
+                    <i class="bi bi-bell" style="font-size:17px"></i>
+                    <span class="nav-badge">5</span>
+                    <span class="d-none d-lg-inline ms-1">Thông báo</span>
+                </a>
+
+                <!-- Hỗ trợ — dropdown -->
+                <div class="nav-dropdown d-none d-md-block">
+                    <a href="#" class="nav-link-text">
+                        <i class="bi bi-headset" style="font-size:16px"></i>
+                        <span class="d-none d-lg-inline">Hỗ trợ</span>
+                        <i class="bi bi-chevron-down" style="font-size:10px;opacity:.7"></i>
+                    </a>
+                    <div class="nav-dropdown-menu">
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-chat-dots" style="color:#2ecc71"></i>
+                            <div>
+                                <span>Chat trực tuyến</span>
+                                <span class="item-sub">Phản hồi trong vài phút</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-telephone"></i>
+                            <div>
+                                <span>Hotline 1800 2Life</span>
+                                <span class="item-sub">Miễn phí · T2–T7, 8h–21h</span>
+                            </div>
+                        </a>
+                        <a href="#" class="nav-dropdown-item">
+                            <i class="bi bi-question-circle"></i>
+                            <div>
+                                <span>Trung tâm trợ giúp</span>
+                                <span class="item-sub">FAQ & hướng dẫn</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Tài khoản -->
+                <a href="#" class="nav-link-text">
+                    <i class="bi bi-person-circle" style="font-size:18px"></i>
+                    <span class="d-none d-lg-inline">Tài khoản</span>
+                </a>
+
+                <!-- Đăng tin nhanh (mobile) -->
+                <button class="btn-2life-primary d-md-none" style="padding:8px 12px">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+
+            <!-- Search bar on mobile -->
+            <div class="col-12 d-md-none">
+                <input type="text" class="search-input" placeholder="Tìm kiếm đồ cũ giá hời...">
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<main class="container post-main">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-2life">
+        <a href="#">Trang chủ</a><span class="sep">/</span>
+        <a href="#">Tài khoản</a><span class="sep">/</span>
+        <span>Đăng tin bán sản phẩm</span>
+    </nav>
+
+    <!-- Page heading -->
+    <div class="text-center mb-4 mb-md-5">
+        <h1 class="fw-bold fs-2">Đăng tin bán sản phẩm</h1>
+        <p class="text-secondary mt-2">Vui lòng điền đầy đủ thông tin để người mua dễ dàng tìm thấy sản phẩm của bạn.</p>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ================================================
+             CỘT TRÁI — FORM ĐĂNG TIN
+             ================================================ -->
+        <div class="col-12 col-lg-8">
+            <form action="#">
+
+                <!-- SECTION 1: Hình ảnh & Video -->
+                <div class="card-white p-3 p-md-4 mb-4">
+                    <h2 class="post-section-title">
+                        <span class="post-section-num">1</span> Hình ảnh &amp; Video
+                    </h2>
+
+                    <div class="row g-3 align-items-stretch">
+                        <div class="col-12 col-md-6 d-flex flex-column">
+                            <label class="form-label fw-bold">
+                                Hình ảnh sản phẩm <span class="text-danger">*</span>
+                            </label>
+                            <p class="small text-secondary mb-2">Tối thiểu 1 ảnh, tối đa 5 ảnh. Ảnh đầu tiên làm ảnh đại diện.</p>
+                            <div class="upload-box flex-grow-1 d-flex flex-column justify-content-center align-items-center p-4">
+                                <i class="bi bi-camera upload-icon mb-2"></i>
+                                <p class="mb-1">Kéo thả hoặc <strong>Chọn ảnh</strong></p>
+                                <p class="small text-secondary mb-0">JPG, PNG · Tối đa 5MB</p>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 d-flex flex-column">
+                            <label class="form-label fw-bold">
+                                Video sản phẩm
+                                <span class="badge bg-light text-secondary border fw-normal ms-1" style="font-size:11px">Không bắt buộc</span>
+                            </label>
+                            <p class="small text-secondary mb-2">Tối đa 1 video · Dưới 30 giây · &lt; 20MB</p>
+                            <div class="upload-box video-box flex-grow-1 d-flex flex-column justify-content-center align-items-center p-4">
+                                <i class="bi bi-camera-video upload-icon mb-2"></i>
+                                <p class="mb-1">Kéo thả hoặc <strong>Chọn video</strong></p>
+                                <p class="small text-secondary mb-0">Định dạng MP4</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Thông tin chi tiết -->
+                <div class="card-white p-3 p-md-4 mb-4">
+                    <h2 class="post-section-title">
+                        <span class="post-section-num">2</span> Thông tin chi tiết
+                    </h2>
+
+                    <!-- Tên sản phẩm -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Tên sản phẩm <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" placeholder="VD: Áo khoác da bò Vintage size L">
+                        <p class="small text-secondary mt-1 mb-0">Nên chứa từ khóa, thương hiệu, màu sắc, tình trạng.</p>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label class="form-label">Danh mục <span style="color: red;">*</span></label>
-                            <select class="form-control">
+                    <!-- Danh mục + Tình trạng -->
+                    <div class="row g-3 mb-4 align-items-stretch">
+                        <div class="col-12 col-md-6 d-flex flex-column">
+                            <label class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
+                            <select class="form-select flex-grow-1">
                                 <option value="">-- Chọn danh mục --</option>
                                 <option value="fashion">Thời trang</option>
                                 <option value="electronics">Điện tử</option>
                                 <option value="furniture">Nội thất</option>
-                                <option value="books">Sách</option>
                             </select>
                         </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label class="form-label">Tình trạng <span style="color: red;">*</span></label>
-                            <select class="form-control">
+                        <div class="col-12 col-md-6 d-flex flex-column">
+                            <label class="form-label fw-bold">Tình trạng <span class="text-danger">*</span></label>
+                            <select class="form-select flex-grow-1">
                                 <option value="">-- Chọn tình trạng --</option>
                                 <option value="new">Mới 100% (Nguyên seal)</option>
                                 <option value="99">Như mới (99%)</option>
                                 <option value="90">Đã sử dụng (90%)</option>
-                                <option value="old">Cũ</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Giá bán (VNĐ) <span style="color: red;">*</span></label>
-                        <input type="number" class="form-control" placeholder="VD: 550000">
+                    <!-- Giá + Khu vực -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold">Giá bán (VNĐ) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" placeholder="VD: 550000">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold">Khu vực đăng bán <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-control" placeholder="VD: Quận 1, TP.HCM">
+                                <button type="button" class="btn-location text-nowrap fw-bold">
+                                    <i class="bi bi-geo-alt-fill me-1"></i>Lấy vị trí
+                                </button>
+                            </div>
+                            <p class="small text-secondary mt-1 mb-0">Định vị giúp người mua ở gần dễ tìm thấy.</p>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Mô tả chi tiết <span style="color: red;">*</span></label>
-                        <textarea class="form-control" rows="6" placeholder="Mô tả ưu điểm, khuyết điểm, lý do bán... càng chi tiết càng dễ chốt đơn."></textarea>
+                    <!-- Mô tả -->
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0">Mô tả chi tiết <span class="text-danger">*</span></label>
+                            <button type="button" class="btn-ai text-white fw-bold">
+                                <i class="bi bi-stars me-1"></i>Gợi ý AI
+                            </button>
+                        </div>
+                        <textarea class="form-control" rows="6" placeholder="Mô tả ưu điểm, khuyết điểm, thời gian đã sử dụng, lý do bán..."></textarea>
+                        <p class="small text-secondary mt-1 mb-0">Mô tả càng chi tiết, trung thực sẽ giúp bạn nhanh chóng chốt đơn.</p>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" style="padding: 15px 30px;">Hủy bỏ</button>
-                        <button type="submit" class="btn-primary" style="padding: 15px 40px; font-size: 16px;">🚀 Đăng tin ngay</button>
-                    </div>
-
                 </div>
+
+                <!-- ACTION BAR -->
+                <div class="card-white p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <button type="button" class="btn-cancel fw-bold">
+                        <i class="bi bi-arrow-left me-1"></i>Trở về
+                    </button>
+
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        <button type="button" class="btn-2life-outline">
+                            <i class="bi bi-eye me-1"></i>Xem trước
+                        </button>
+                        <button type="button" class="btn-draft">
+                            <i class="bi bi-floppy me-1"></i>Lưu nháp
+                        </button>
+                        <button type="submit" class="btn-2life-primary">
+                            <i class="bi bi-rocket-takeoff me-1"></i>Đăng bán ngay
+                        </button>
+                    </div>
+                </div>
+
             </form>
         </div>
-    </main>
 
+        <!-- ================================================
+             CỘT PHẢI — SIDEBAR
+             ================================================ -->
+        <div class="col-12 col-lg-4">
+            <div class="sidebar-sticky">
+
+                <!-- Mẹo đăng tin -->
+                <div class="card-white p-4 mb-3">
+                    <div class="section-label">💡 Mẹo đăng tin hiệu quả</div>
+                    <ul class="list-unstyled mb-0 guide-list">
+                        <li class="mb-3 pb-3 border-bottom border-dashed">
+                            <a href="#" class="text-decoration-none guide-link">
+                                <i class="bi bi-camera me-1"></i>Cách chụp ảnh sản phẩm thu hút hàng ngàn lượt xem
+                            </a>
+                        </li>
+                        <li class="mb-3 pb-3 border-bottom border-dashed">
+                            <a href="#" class="text-decoration-none guide-link">
+                                <i class="bi bi-journal-text me-1"></i>Hướng dẫn đăng tin bán hàng đơn giản cho người mới
+                            </a>
+                        </li>
+                        <li class="mb-3 pb-3 border-bottom border-dashed">
+                            <a href="#" class="text-decoration-none guide-link">
+                                <i class="bi bi-tags me-1"></i>Mẹo định giá đồ cũ hợp lý, dễ bán
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="text-decoration-none guide-link">
+                                <i class="bi bi-patch-question me-1"></i>Đăng bài bị lỗi hiển thị thì phải làm sao?
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Hỗ trợ -->
+                <div class="card-white p-4 text-center">
+                    <i class="bi bi-headset" style="font-size:2.5rem;color:var(--btn-secondary)"></i>
+                    <h3 class="h6 fw-bold mt-2 mb-2">Cần hỗ trợ?</h3>
+                    <p class="small text-secondary mb-3">Nếu bạn gặp khó khăn trong quá trình đăng tin, đội ngũ Admin luôn sẵn sàng giúp đỡ.</p>
+                    <button type="button" class="btn-2life-secondary w-100">
+                        <i class="bi bi-chat-dots me-1"></i>Liên hệ Admin ngay
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div><!-- /row -->
+</main>
+
+<!-- ============================================================
+     FOOTER — đồng nhất với product_detail.html
+     ============================================================ -->
+<footer class="pt-5 pb-3">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-3">
+                <div class="footer-logo mb-2">2Life</div>
+                <p style="font-size:13px;line-height:1.7">Nền tảng mua bán đồ cũ C2C — kết nối người mua và người bán toàn quốc. Tái sử dụng — Tiết kiệm — Bền vững.</p>
+            </div>
+            <div class="col-6 col-md-2">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Danh mục</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="#">Thời trang</a>
+                    <a href="#">Điện tử</a>
+                    <a href="#">Đồ gia dụng</a>
+                    <a href="#">Xe cộ</a>
+                    <a href="#">Sách vở</a>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Hỗ trợ</div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="#">Trung tâm trợ giúp</a>
+                    <a href="#">Mua bán an toàn</a>
+                    <a href="#">Chính sách</a>
+                    <a href="#">Liên hệ</a>
+                </div>
+            </div>
+            <div class="col-12 col-md-5">
+                <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px">Nhận thông báo hàng mới</div>
+                <div class="d-flex gap-2">
+                    <input type="email" placeholder="Email của bạn" style="flex:1;padding:9px 14px;border-radius:8px;border:1px solid #4A6785;background:rgba(255,255,255,.07);color:#fff;font-size:13px;outline:none">
+                    <button class="btn-2life-primary" style="border-radius:8px;white-space:nowrap;font-size:13px">Đăng ký</button>
+                </div>
+            </div>
+        </div>
+        <div style="border-top:1px solid #2e5278;padding-top:20px;font-size:12px;text-align:center">
+            © 2025 2Life Marketplace — Nhóm 3, Học phần Phát triển Ứng dụng Web
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
