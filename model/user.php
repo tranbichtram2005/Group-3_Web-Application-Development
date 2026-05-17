@@ -16,12 +16,12 @@ class User {
         return $stmt->rowCount() > 0;
     }
 
-    public function register($fullName, $username, $email, $phone, $passwordHash, $province_id, $district_id, $ward_id, $street) {
+   public function register($fullName, $username, $email, $phone, $passwordHash, $province_id, $district_id, $ward_id, $street) {
         try {
             // Bắt đầu giao dịch an toàn (Transaction)
             $this->conn->beginTransaction();
 
-            // 1. Thêm vào bảng users
+            // 1. Thêm thành viên vào bảng users
             $queryUser = "INSERT INTO " . $this->table_name . " 
                       (full_name, username, email, phone, password_hash, role_id, status_id) 
                       VALUES (:full_name, :username, :email, :phone, :password_hash, 1, 1)";
@@ -33,10 +33,10 @@ class User {
             $stmtUser->bindParam(':password_hash', $passwordHash);
             $stmtUser->execute();
 
-            // Lấy ID của user vừa được tạo
+            // Lấy ID của user vừa mới tạo thành công
             $user_id = $this->conn->lastInsertId();
 
-            // 2. Thêm vào bảng user_addresses (Đặt làm mặc định)
+            // 2. Thêm địa chỉ vào bảng user_addresses (Đặt làm mặc định)
             $queryAddr = "INSERT INTO user_addresses 
                       (user_id, province_id, district_id, ward_id, street, is_default) 
                       VALUES (:user_id, :province_id, :district_id, :ward_id, :street, 1)";
@@ -48,11 +48,17 @@ class User {
             $stmtAddr->bindParam(':street', $street);
             $stmtAddr->execute();
 
-            // Hoàn tất giao dịch
+            // 3. TỰ ĐỘNG KHỞI TẠO GIỎ HÀNG TRỐNG CHO THÀNH VIÊN MỚI
+            $queryCart = "INSERT INTO carts (user_id) VALUES (:user_id)";
+            $stmtCart = $this->conn->prepare($queryCart);
+            $stmtCart->bindParam(':user_id', $user_id);
+            $stmtCart->execute();
+
+            // Hoàn tất giao dịch khi cả 3 bước trên đều thành công tốt đẹp
             $this->conn->commit();
             return true;
         } catch (Exception $e) {
-            // Nếu có bất kỳ lỗi gì, quay xe (Rollback) không lưu gì cả
+            // Nếu có bất kỳ lỗi gì xảy ra ở 1 trong 3 bước, hủy bỏ toàn bộ thao tác để bảo vệ dữ liệu
             $this->conn->rollBack();
             return false;
         }

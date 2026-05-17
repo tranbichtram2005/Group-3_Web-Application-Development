@@ -1,59 +1,44 @@
-<?php
-require_once '../../control/AuthController.php';
-$auth = new AuthController();
-$error = $auth->handleLogin();
-?>
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <title>Đăng nhập - 2Life</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../layout/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="layout/style.css">
     <style>
         .split-bg {
             background: linear-gradient(rgba(31, 60, 90, 0.7), rgba(31, 60, 90, 0.7)), url('https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=1000') center/cover;
         }
-
-        .form-side {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-        }
+        .form-side { min-height: 100vh; display: flex; align-items: center; }
     </style>
 </head>
-
 <body>
     <div class="container-fluid p-0">
         <div class="row g-0">
             <div class="col-lg-6 d-none d-lg-flex split-bg text-white align-items-center justify-content-center flex-column p-5">
-                <h1 class="display-4 fw-bold mb-3">2Life Marketplace</h1>
-                <p class="fs-5 text-center">Nền tảng giao thương đồ cũ an toàn, tiện lợi nhất dành cho sinh viên UEH.</p>
+                <h1 class="display-4 fw-bold">2Life</h1>
+                <p class="fs-5 text-center mt-3">Chào mừng cậu trở lại! Tiếp tục hành trình trao đổi và tái sử dụng đồ dùng cũ tiện lợi cùng cộng đồng sinh viên.</p>
             </div>
+            <div class="col-lg-6 form-side bg-white px-4 px-md-5">
+                <div class="w-100" style="max-width: 450px; margin: 0 auto;">
+                    
+                    <div class="mb-4">
+                        <a href="index.php?controller=home" class="text-decoration-none text-secondary fw-medium" style="font-size: 14px;">
+                            <i class="bi bi-arrow-left"></i> Quay lại Trang chủ
+                        </a>
+                    </div>
 
-            <div class="col-lg-6 form-side bg-light">
-                <div class="w-100 p-4 p-md-5 mx-auto" style="max-width: 500px;">
-                    <a href="../../index.php" class="text-decoration-none mb-4 d-block" style="color: var(--nav-color); font-weight: bold; font-size: 1.5rem;">&larr; Về trang chủ</a>
+                    <div class="mb-5">
+                        <h2 class="fw-bold mb-2" style="color: var(--nav-color);">Đăng nhập</h2>
+                        <p class="text-secondary">Vui lòng điền thông tin tài khoản của cậu</p>
+                    </div>
 
-                    <h2 class="fw-bold mb-2" style="color: var(--nav-color);">Chào mừng trở lại! 👋</h2>
-                    <p class="text-secondary mb-4">Vui lòng đăng nhập để tiếp tục mua bán.</p>
-
-                    <?php if (isset($_GET['registered'])): ?>
-                        <div class="alert alert-success p-2 text-center" style="font-size: 14px;">
-                            🎉 Đăng ký thành công! Mời bạn đăng nhập vào hệ thống.
-                        </div>
+                    <?php if (isset($error) && $error): ?>
+                        <div class="alert alert-danger p-2" style="font-size: 14px; border-radius: 8px;"><?= $error ?></div>
                     <?php endif; ?>
 
-                    <?php if ($error): ?>
-                        <div class="alert alert-danger p-2 text-center" style="font-size: 14px;"><?= $error ?></div>
-                    <?php endif; ?>
-
-                    <?php if ($error): ?>
-                        <div class="alert alert-danger p-2 text-center" style="font-size: 14px;"><?= $error ?></div>
-                    <?php endif; ?>
-
-                    <form method="POST" action="" class="card-white p-4 shadow-sm rounded-4">
+                    <form method="POST" action="index.php?controller=auth&action=login">
                         <div class="mb-3">
                             <label class="form-label fw-bold text-secondary" style="font-size:13px;">Email hoặc Username</label>
                             <input type="text" name="identifier" class="form-control form-control-lg" placeholder="Nhập thông tin..." required style="border-radius:10px; font-size:15px;">
@@ -70,12 +55,11 @@ $error = $auth->handleLogin();
 
                     <div class="text-center mt-4" style="font-size: 14px;">
                         <span class="text-secondary">Bạn chưa có tài khoản?</span>
-                        <a href="register.php" style="color: var(--btn-primary); font-weight:600; text-decoration:none;">Đăng ký</a>
+                        <a href="index.php?controller=auth&action=register" style="color: var(--btn-primary); font-weight:600; text-decoration:none;">Đăng ký</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </body>
-
 </html>
