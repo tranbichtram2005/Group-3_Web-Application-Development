@@ -3,14 +3,16 @@ session_start();
 require_once __DIR__ . '/../model/Database.php';
 require_once __DIR__ . '/../model/OrderModel.php';
 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $db = (new Database())->getConnection();
     $orderModel = new OrderModel($db);
 
+
     // Giả sử dữ liệu giỏ hàng được lưu trong session hoặc gửi từ form
     // Trong thực tế, bạn nên lấy lại từ DB/Session để tránh người dùng sửa giá ở Frontend
-    $items = $_SESSION['cart_items']; 
-    
+    $items = $_SESSION['cart_items'];
+   
     $orderData = [
         'buyer_id'          => $_SESSION['user_id'],
         'seller_id'         => $items[0]['seller_id'], // Giả định 1 đơn hàng/1 shop
@@ -22,7 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         'items'             => $items
     ];
 
+
     $orderId = $orderModel->placeOrder($orderData);
+
 
     if ($orderId) {
         // Nếu chọn thanh toán online (VNPay/MoMo), chuyển hướng sang trang thanh toán

@@ -27,11 +27,11 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 </div>
                 <div class="col-5 d-flex justify-content-end align-items-center gap-3">
                     <?php if ($isLoggedIn): ?>
-                        <a href="view/public/cart.html" class="nav-link-text"><i class="bi bi-cart3"></i> Giỏ hàng</a>
-                        <a href="view/public/post-product.html" class="btn-2life-primary" style="padding: 8px 15px;"><i class="bi bi-plus-circle"></i> Đăng tin</a>
-                        <span class="text-white fw-bold ms-2"><i class="bi bi-person-circle"></i> Chào, <?= $_SESSION['full_name'] ?></span>
-                        <a href="view/Auth/logout.php" class="text-danger ms-2" style="font-size:13px; text-decoration:none;">(Đăng xuất)</a>
-                    <?php else: ?>
+    <a href="view/cart.php" class="nav-link-text"><i class="bi bi-cart3"></i> Giỏ hàng</a>
+    <a href="view/post-product.html" class="btn-2life-primary" style="padding: 8px 15px;"><i class="bi bi-plus-circle"></i> Đăng tin</a>
+    <span class="text-white fw-bold ms-2"><i class="bi bi-person-circle"></i> Chào, <?= $_SESSION['full_name'] ?></span>
+    <a href="view/Auth/logout.php" class="text-danger ms-2" style="font-size:13px; text-decoration:none;">(Đăng xuất)</a>
+<?php else: ?>
                         <!-- Nếu CHƯA đăng nhập thì hiện 2 nút này -->
                         <a href="view/Auth/login.php" class="btn-2life-outline" style="color: white; border-color: white;">Đăng nhập</a>
                         <a href="view/Auth/register.php" class="btn-2life-primary">Đăng ký</a>
