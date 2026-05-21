@@ -54,7 +54,20 @@ elseif ($controller == 'manage_listing') {
 // =========================================================
 elseif ($controller == 'home') {
     require_once __DIR__ . '/view/app/home.php';
-} else {
+}
+// =========================================================
+// PHÂN LUỒNG: ADMIN DUYỆT NGƯỜI BÁN (APPROVESELLER)
+// =========================================================
+elseif ($controller == 'approveseller') {
+    require_once __DIR__ . '/control/ApproveSellerController.php';
+    $approveSellerCtrl = new ApproveSellerController();
+    if (method_exists($approveSellerCtrl, $action)) {
+        $approveSellerCtrl->$action(); 
+    } else {
+        die("Lỗi: Không tìm thấy chức năng này trong hệ thống Admin!");
+    }
+} 
+else {
     echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
 }
 
