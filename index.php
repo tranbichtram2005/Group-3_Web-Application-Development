@@ -41,20 +41,21 @@ elseif ($controller == 'listing') {
 elseif ($controller == 'home') {
     require_once __DIR__ . '/view/app/home.php';
 }
-else {
-    echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
-}
-
-// ----------------------------------------------------
-// ĐOẠN ĐỊNH TUYẾN DÀNH CHO POST PRODUCT (LISTING)
-// ----------------------------------------------------
-if ($controller == 'listing') {
-    require_once 'control/ListingController.php';
-    $listingCtrl = new ListingController();
-
-    if ($action == 'create') {
-        $listingCtrl->create(); // Gọi hàm create trong Controller
+elseif ($controller == 'manage_listing') {
+    require_once __DIR__ . '/control/ManageListingController.php';
+    $manageController = new ManageListingController();
+    
+    if (method_exists($manageController, $action)) {
+        $manageController->$action(); // Gọi hàm index() hoặc changeStatus()
+    } else {
+        die("Lỗi: Không tìm thấy chức năng này trong trang quản lý!");
     }
+} 
+// =========================================================
+elseif ($controller == 'home') {
+    require_once __DIR__ . '/view/app/home.php';
+} else {
+    echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
 }
 
 ?>
