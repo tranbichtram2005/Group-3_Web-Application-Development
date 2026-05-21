@@ -24,7 +24,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 <div class="col-5 d-flex justify-content-end align-items-center gap-3">
                     <?php if ($isLoggedIn): ?>
                         <a href="index.php?controller=cart" class="nav-link-text"><i class="bi bi-cart3"></i> Giỏ hàng</a>
-                        <a href="view/post-product.html" class="btn-2life-primary" style="padding: 8px 15px;"><i class="bi bi-plus-circle"></i> Đăng tin</a>
+                        <a href="view/post-product.php" class="btn-2life-primary" style="padding: 8px 15px;"><i class="bi bi-plus-circle"></i> Đăng tin</a>
 <span class="text-white fw-bold ms-2">
     <i class="bi bi-person-circle"></i> Chào, <?= htmlspecialchars($_SESSION['username'] ?? 'Thành viên') ?>
 </span>                        
