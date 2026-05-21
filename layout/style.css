@@ -1,4 +1,6 @@
-/* --- CÀI ĐẶT BIẾN MÀU SẮC (Dễ dàng thay đổi sau này) --- */
+/* ========================================================
+   1. CÀI ĐẶT BIẾN MÀU SẮC & CƠ BẢN (Dùng chung)
+   ======================================================== */
 :root {
     --bg-main: #FAF7F2;
     --bg-section: #D6EEF8;
@@ -17,11 +19,10 @@
     --error-color: #FF5E5B;
 }
 
-/* --- CÀI ĐẶT CƠ BẢN CHO TOÀN BỘ TRANG --- */
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* Giúp tính toán kích thước viền chuẩn hơn */
+    box-sizing: border-box;
     font-family: 'Inter', sans-serif;
 }
 
@@ -30,383 +31,211 @@ body {
     color: var(--text-primary);
 }
 
-/* --- PHẦN 1: HEADER (THANH ĐIỀU HƯỚNG) --- */
-.navbar {
+/* ========================================================
+   2. NAVBAR & DROPDOWN (Giao diện Header siêu gọn)
+   ======================================================== */
+.navbar-2life {
     background-color: var(--nav-color);
-    padding: 15px 40px;
-    display: flex; /* Dàn hàng ngang */
-    justify-content: space-between; /* Đẩy các phần tử ra xa nhau */
-    align-items: center; /* Căn giữa theo chiều dọc */
-    color: white;
 }
 
 .logo {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--btn-primary); /* Điểm nhấn Logo */
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--btn-primary) !important;
 }
 
-.search-bar input {
-    padding: 10px 20px;
-    width: 400px;
-    border-radius: 20px; /* Bo tròn viền ô tìm kiếm */
+/* Tinh chỉnh Header & Hover Icon */
+.nav-icon-hover {
+    transition: color 0.2s;
+}
+.nav-icon-hover:hover {
+    color: var(--btn-hover) !important;
+}
+
+/* Tinh chỉnh Dropdown Menu siêu xịn */
+.nav-dropdown { position: relative; }
+.nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 15px);
+    right: 0;
+    background: #fff;
     border: 1px solid var(--border-color);
-    outline: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    min-width: 220px;
+    z-index: 1050;
+    padding: 8px 0;
 }
 
-.nav-actions {
+/* Tạo mũi tên nhọn chỉ lên trên cho Dropdown */
+.nav-dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 20px;
+    width: 12px; height: 12px;
+    background: #fff;
+    border-top: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    transform: rotate(45deg);
+}
+
+.nav-dropdown:hover > .nav-dropdown-menu { display: block; }
+
+.dropdown-group-title {
+    padding: 10px 20px 4px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+.nav-dropdown-item {
     display: flex;
-    gap: 20px; /* Khoảng cách giữa chữ Tài khoản và Nút */
     align-items: center;
-}
-
-/* Các Nút Bấm (Buttons) */
-button {
+    gap: 12px;
     padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary) !important;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.nav-dropdown-item:hover {
+    background-color: var(--bg-main);
+    color: var(--btn-primary) !important;
+}
+
+.nav-dropdown-item i {
+    font-size: 16px;
+    color: var(--btn-secondary);
+}
+
+/* ========================================================
+   3. CÁC NÚT BẤM (BUTTONS DÙNG CHUNG)
+   ======================================================== */
+.btn-2life-primary, .btn-primary {
+    background-color: var(--btn-primary) !important;
+    color: #fff !important;
     border: none;
-    border-radius: 25px; /* Bo tròn góc */
-    font-weight: 600;
+    transition: 0.25s;
     cursor: pointer;
-    transition: 0.3s; /* Hiệu ứng mượt mà khi di chuột */
+}
+.btn-2life-primary:hover, .btn-primary:hover { 
+    background-color: var(--error-color) !important; 
 }
 
-.btn-primary {
-    background-color: var(--btn-primary);
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: var(--error-color); /* Dùng màu hover/error cho nổi */
-}
-
-.btn-secondary {
+.btn-2life-secondary, .btn-secondary {
     background-color: var(--btn-secondary);
-    color: white;
+    color: #fff;
+    border: none;
+    transition: 0.25s;
+    cursor: pointer;
+}
+.btn-2life-secondary:hover, .btn-secondary:hover { 
+    background-color: var(--btn-hover); 
+    color: var(--text-primary); 
 }
 
-.btn-secondary:hover {
-    background-color: var(--btn-hover);
+.btn-2life-outline {
+    background-color: transparent;
+    color: var(--btn-secondary);
+    border: 1.5px solid var(--btn-secondary);
+    transition: 0.25s;
+    cursor: pointer;
+}
+.btn-2life-outline:hover { 
+    background-color: var(--btn-secondary); 
+    color: #fff !important; 
 }
 
-/* --- PHẦN 2: HERO BANNER --- */
+/* ========================================================
+   4. GIAO DIỆN TRANG CHỦ (HERO & SẢN PHẨM)
+   ======================================================== */
 .hero-section {
     background-color: var(--bg-section);
-    /* Lấy ảnh nền mờ mờ từ Unsplash làm background */
     background-image: linear-gradient(rgba(214, 238, 248, 0.8), rgba(214, 238, 248, 0.9)), url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1000&q=80');
     background-size: cover;
     background-position: center;
     padding: 80px 40px;
-    text-align: center; /* Căn giữa chữ */
+    text-align: center;
     border-bottom: 1px solid var(--border-color);
 }
 
-.hero-section h1 {
-    font-size: 36px;
-    margin-bottom: 15px;
-}
-
-.hero-section p {
-    font-size: 18px;
-    color: var(--text-secondary);
-    margin-bottom: 25px;
-}
-
-/* --- PHẦN 3: DANH SÁCH SẢN PHẨM --- */
-.product-section {
-    padding: 40px;
-}
-
-.product-section h2 {
-    margin-bottom: 20px;
-}
-
-/* Dùng CSS Grid - Kỹ thuật tự động chia cột cực hay cho người mới */
-.product-grid {
-    display: grid;
-    /* Tự động chia cột, mỗi cột nhỏ nhất 250px, nếu màn hình rộng thì tự động chia đều */
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px; /* Khoảng cách giữa các thẻ (card) */
-}
-
-/* Thẻ Sản Phẩm (Card) */
-.product-card {
-    background-color: var(--bg-card);
+.card-white {
+    background-color: #fff;
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    overflow: hidden; /* Cắt phần ảnh bị thừa ra ngoài viền bo góc */
-    transition: transform 0.3s;
 }
 
-.product-card:hover {
-    transform: translateY(-5px); /* Khi di chuột vào thẻ sẽ nảy nhẹ lên */
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Thêm bóng đổ nhẹ */
-}
-
-/* Ảnh trong thẻ sản phẩm */
-.product-card img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover; /* Đảm bảo ảnh không bị méo */
-}
-
-/* Khu vực chứa thông tin (chữ) của sản phẩm */
-.card-info {
-    padding: 15px;
-}
-
-/* Nhãn (Tag) */
-.tag {
+.tag-2life {
     display: inline-block;
     background-color: var(--tag-color);
     color: white;
     font-size: 12px;
     padding: 3px 8px;
     border-radius: 4px;
-    margin-bottom: 10px;
 }
 
-.product-title {
-    font-size: 18px;
-    margin-bottom: 8px;
-}
-
-.product-price {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--btn-primary);
-    margin-bottom: 8px;
-}
-
-.product-seller {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
+.tag-blue { background-color: var(--btn-secondary); }
 
 /* ========================================================
-   CSS MỚI THÊM CHO TRANG CHI TIẾT SẢN PHẨM (product-detail.html)
+   5. TRANG CHI TIẾT SẢN PHẨM & GIỎ HÀNG
    ======================================================== */
-
-/* Container bọc nội dung, giới hạn chiều rộng và căn giữa màn hình */
-.container {
-    max-width: 1100px;
-    margin: 0 auto; /* Tự động căn giữa */
-    padding: 40px 20px;
-}
-
-/* Đường dẫn Breadcrumb */
-.breadcrumb {
-    color: var(--text-secondary);
-    margin-bottom: 25px;
-    font-size: 14px;
-}
-
-/* Chia đôi màn hình: Trái (Ảnh) - Phải (Thông tin) */
-.product-detail-wrapper {
-    display: flex;
-    gap: 50px; /* Khoảng cách giữa 2 cột */
-}
-
-/* --- CỘT TRÁI: HÌNH ẢNH --- */
-.product-images {
-    flex: 1; /* Chiếm 1 phần không gian */
-}
-
-.main-img {
-    width: 100%;
-    height: 500px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-}
-
-.thumb-gallery {
-    display: flex;
-    gap: 15px;
-    margin-top: 15px;
-}
-
-.thumb-gallery img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 2px solid transparent; /* Viền trong suốt để chống giật khi hover */
-    opacity: 0.6; /* Hơi mờ đi */
-    transition: 0.2s;
-}
-
-.thumb-gallery img:hover, .thumb-gallery img.active-thumb {
-    opacity: 1;
-    border-color: var(--btn-primary); /* Đổi màu viền khi hover hoặc đang xem */
-}
-
-/* --- CỘT PHẢI: THÔNG TIN --- */
-.product-info {
-    flex: 1; /* Chiếm 1 phần không gian bằng bên trái */
-    display: flex;
-    flex-direction: column; /* Xếp thông tin dọc từ trên xuống */
-    gap: 20px;
-}
-
-.detail-title {
-    font-size: 28px;
-    color: var(--text-primary);
-    line-height: 1.3;
-}
-
-.price-large {
-    font-size: 36px;
-    font-weight: 700;
-    color: var(--btn-primary);
-}
-
-.tags-group {
-    display: flex;
-    gap: 10px;
-}
-
-/* Khối thông tin người bán (Card) */
-.seller-card {
-    background-color: var(--bg-card);
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.seller-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.seller-details h4 {
-    margin-bottom: 5px;
-    font-size: 16px;
-}
-
-.seller-details p {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-/* Phần mô tả */
-.description-box {
-    border-top: 1px solid var(--border-color);
-    padding-top: 20px;
-}
-
-.description-box h3 {
-    font-size: 18px;
-    margin-bottom: 10px;
-}
-
-.description-box p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-}
-
-/* Nhóm 2 nút Chat và Mua */
-.action-group {
-    display: flex;
-    gap: 15px;
-    margin-top: 10px;
-}
-
-.btn-large {
-    flex: 1; /* 2 nút chia đều chiều rộng */
-    padding: 15px;
-    font-size: 16px;
-}
-
-/* ========================================================
-   CSS MỚI THÊM CHO TRANG GIỎ HÀNG (cart.html)
-   ======================================================== */
-
+/* --- Giỏ hàng --- */
 .page-title {
-    margin-bottom: 30px;
-    font-size: 28px;
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 10px;
-}
-
-/* Chia đôi màn hình: Trái (Sản phẩm) - Phải (Tính tiền) */
-.cart-layout {
-    display: flex;
-    gap: 40px;
-    align-items: flex-start; /* Giúp cột bên phải không bị kéo dài bằng cột trái */
-}
-
-/* --- CỘT TRÁI: DANH SÁCH SẢN PHẨM --- */
-.cart-items-container {
-    flex: 2; /* Chiếm 2 phần diện tích (to hơn) */
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    color: var(--text-primary);
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
 }
 
 .cart-item {
-    background-color: var(--bg-card);
+    background-color: #fff;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 20px;
-    display: flex; /* Dàn hàng ngang các thành phần trong 1 sản phẩm */
+    display: flex;
     align-items: center;
     gap: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
 
 .cart-item img {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 12px;
+    background-color: var(--bg-card);
 }
 
-.item-info {
-    flex: 1; /* Chiếm hết phần không gian trống ở giữa */
-}
-
-.item-info h3 {
-    font-size: 18px;
-    margin-bottom: 8px;
-}
-
-.seller-name {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-/* Khu vực tăng giảm số lượng */
 .item-quantity {
     display: flex;
     align-items: center;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 10px;
     overflow: hidden;
-    background-color: white;
+    background: #fff;
 }
 
 .qty-btn {
-    width: 35px;
-    height: 35px;
+    width: 36px;
+    height: 36px;
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 16px;
+    color: var(--text-primary);
     cursor: pointer;
-    border-radius: 0; /* Bỏ bo tròn mặc định của button */
-}
-
-.qty-btn:hover {
-    background-color: var(--bg-section);
+    font-weight: 600;
 }
 
 .qty-input {
     width: 40px;
-    height: 35px;
+    height: 36px;
     text-align: center;
     border: none;
     border-left: 1px solid var(--border-color);
@@ -415,311 +244,31 @@ button {
 }
 
 .item-price {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--btn-primary);
-    width: 120px; /* Cố định độ rộng để giá tiền các dòng thẳng hàng nhau */
+    min-width: 120px;
     text-align: right;
 }
 
-/* Nút xóa màu đỏ */
-.btn-remove {
-    background: none;
-    border: none;
-    color: var(--error-color);
-    font-weight: 600;
-    cursor: pointer;
-    padding: 10px;
-}
-
-.btn-remove:hover {
-    text-decoration: underline;
-}
-
-/* --- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG --- */
 .cart-summary {
-    flex: 1; /* Chiếm 1 phần diện tích (nhỏ hơn) */
-    background-color: white;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 30px;
-    /* Hiệu ứng Sticky: Khi cuộn trang xuống, khối này sẽ trượt theo và dính ở góc trên */
-    position: sticky;
-    top: 20px; 
-}
-
-.cart-summary h3 {
-    margin-bottom: 25px;
-    font-size: 20px;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    color: var(--text-secondary);
-}
-
-.summary-total {
-    border-top: 1px solid var(--border-color);
-    padding-top: 20px;
-    margin-top: 20px;
-    color: var(--text-primary);
-    font-weight: 700;
-    font-size: 18px;
-}
-
-.total-price {
-    color: var(--btn-primary);
-    font-size: 22px;
-}
-
-.security-note {
-    font-size: 12px;
-    color: var(--text-secondary);
-    text-align: center;
-    margin-top: 15px;
-}
-
-/* ========================================================
-   CSS MỚI DÀNH RIÊNG CHO TRANG ĐĂNG TIN (BOOTSTRAP VER)
-   ======================================================== */
-
-/* Khung Upload Ảnh/Video */
-.upload-box {
-    border: 2px dashed var(--border-color);
-    background-color: var(--bg-main);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.3s;
-    min-height: 180px; /* Chiều cao tối thiểu để 2 ô cân đối */
-}
-.upload-box:hover {
-    border-color: var(--btn-primary);
-    background-color: var(--bg-card);
-}
-.video-box { border-style: dotted; }
-.upload-icon { font-size: 40px; }
-
-/* Định dạng lại Input/Select Form cho tệp thiết kế cũ */
-.form-control, .form-select {
-    padding: 12px 15px;
-    border-color: var(--border-color);
-    border-radius: 8px;
-    font-size: 15px;
-}
-.form-control:focus, .form-select:focus {
-    border-color: var(--btn-primary);
-    box-shadow: 0 0 0 3px rgba(255, 122, 61, 0.1);
-}
-
-/* Các Nút đặc biệt trong Form */
-.btn-ai {
-    background: linear-gradient(45deg, #a855f7, #ec4899);
-    border: none;
-    transition: 0.3s;
-}
-.btn-ai:hover { opacity: 0.8; }
-
-.btn-location {
-    background-color: #e2e8f0;
-    transition: 0.3s;
-}
-.btn-location:hover { background-color: #cbd5e1; }
-
-.btn-cancel:hover { color: var(--error-color) !important; text-decoration: underline; }
-.btn-preview:hover { background-color: var(--bg-section); }
-.btn-support:hover { opacity: 0.8; }
-
-/* Kẻ viền nét đứt cho danh sách hướng dẫn ở Sidebar */
-.border-dashed { border-bottom-style: dashed !important; }
-.guide-list a { color: var(--btn-secondary) !important; }
-.guide-list a:hover { color: var(--btn-hover) !important; text-decoration: underline !important; }
-
-/* ========================================================
-   SHARED LAYOUT — NAVBAR & FOOTER (dùng chung mọi trang)
-   ======================================================== */
-
-/* --- Navbar 2Life (Bootstrap wrapper) --- */
-.navbar-2life {
-    background-color: var(--nav-color);
-    padding: 12px 0;
-}
-.navbar-2life .logo {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--btn-primary);
-    text-decoration: none;
-}
-.navbar-2life .search-input {
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    padding: 8px 18px;
-    width: 100%;
-    outline: none;
-    font-size: 14px;
-}
-.navbar-2life .search-input:focus {
-    border-color: var(--btn-primary);
-    box-shadow: 0 0 0 3px rgba(255,122,61,.15);
-}
-.nav-link-text {
-    color: #fff;
-    text-decoration: none;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    white-space: nowrap;
-}
-.nav-link-text:hover { color: var(--btn-hover); }
-
-/* Badge thông báo nhỏ trên icon */
-.nav-badge {
-    position: absolute;
-    top: -6px; right: -8px;
-    background: var(--btn-primary);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    min-width: 16px;
-    height: 16px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 3px;
-    line-height: 1;
-}
-
-/* --- Dropdown navbar --- */
-.nav-dropdown { position: relative; }
-.nav-dropdown-menu {
-    display: none;
-    position: absolute !important;
-    top: calc(100% + 10px);
-    right: 0; left: auto;
-    background: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.14);
-    min-width: 240px;
-    width: 240px;
-    z-index: 9999;
-    overflow: hidden;
-}
-.nav-dropdown:hover > .nav-dropdown-menu { display: block; }
-.nav-dropdown-item {
-    display: flex !important;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 16px;
-    font-size: 13px;
-    color: var(--text-primary) !important;
-    text-decoration: none;
-    border-bottom: 1px solid var(--border-color);
-    transition: background .15s;
-    width: 100%;
-}
-.nav-dropdown-item:last-child { border-bottom: none; }
-.nav-dropdown-item:hover { background: var(--bg-main) !important; color: var(--btn-primary) !important; }
-.nav-dropdown-item i { font-size: 15px; color: var(--btn-secondary); flex-shrink: 0; }
-.nav-dropdown-item .item-sub { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 1px; }
-
-/* --- Shared Buttons (đồng nhất với product_detail) --- */
-.btn-2life-primary {
-    background-color: var(--btn-primary);
-    color: #fff;
-    border: none;
-    border-radius: 25px;
-    padding: 10px 22px;
-    font-weight: 600;
-    font-size: 14px;
-    transition: .25s;
-    cursor: pointer;
-}
-.btn-2life-primary:hover { background-color: var(--error-color); color: #fff; }
-
-.btn-2life-secondary {
-    background-color: var(--btn-secondary);
-    color: #fff;
-    border: none;
-    border-radius: 25px;
-    padding: 10px 22px;
-    font-weight: 600;
-    font-size: 14px;
-    transition: .25s;
-    cursor: pointer;
-}
-.btn-2life-secondary:hover { background-color: var(--btn-hover); color: var(--text-primary); }
-
-.btn-2life-outline {
-    background-color: transparent;
-    color: var(--btn-secondary);
-    border: 1.5px solid var(--btn-secondary);
-    border-radius: 25px;
-    padding: 9px 22px;
-    font-weight: 600;
-    font-size: 14px;
-    transition: .25s;
-    cursor: pointer;
-}
-.btn-2life-outline:hover { background-color: var(--btn-secondary); color: #fff; }
-
-/* --- Shared Cards --- */
-.card-white {
     background-color: #fff;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 16px;
+    padding: 24px;
+    position: sticky;
+    top: 20px;
 }
-
-/* --- Shared Utilities --- */
-.section-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 12px;
-}
-.breadcrumb-2life {
-    font-size: 13px;
-    color: var(--text-secondary);
-    padding: 16px 0 8px;
-}
-.breadcrumb-2life a { color: var(--text-secondary); text-decoration: none; }
-.breadcrumb-2life a:hover { color: var(--btn-primary); text-decoration: underline; }
-.breadcrumb-2life .sep { margin: 0 6px; }
-
-/* --- Sidebar sticky (dùng chung) --- */
-@media (min-width: 992px) {
-    .sidebar-sticky { position: sticky; top: 20px; }
-}
-
-/* --- Footer (dùng chung) --- */
-footer {
-    background-color: var(--nav-color);
-    color: #ccc;
-    font-size: 13px;
-    margin-top: 60px;
-}
-footer a { color: #A7D0E8; text-decoration: none; }
-footer a:hover { color: var(--btn-primary); }
-footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primary); }
-
 
 /* ========================================================
-   POST-PRODUCT PAGE — Chỉ dùng cho trang đăng tin
+   6. TRANG ĐĂNG TIN (POST PRODUCT)
    ======================================================== */
-
-/* Container chính */
 .post-main {
     max-width: 1100px;
     padding-top: 8px;
     padding-bottom: 60px;
 }
 
-/* Tiêu đề section trong form */
 .post-section-title {
     font-size: 1rem;
     font-weight: 700;
@@ -730,6 +279,7 @@ footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primar
     align-items: center;
     gap: 10px;
 }
+
 .post-section-num {
     display: inline-flex;
     align-items: center;
@@ -741,10 +291,8 @@ footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primar
     font-size: 13px;
     font-weight: 700;
     border-radius: 50%;
-    flex-shrink: 0;
 }
 
-/* Upload boxes */
 .upload-box {
     border: 2px dashed var(--border-color);
     background-color: var(--bg-main);
@@ -758,38 +306,7 @@ footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primar
     background-color: var(--bg-card);
 }
 .video-box { border-style: dotted; }
-.upload-icon { font-size: 2.2rem; color: var(--text-secondary); }
 
-/* Form controls — override Bootstrap để match màu thương hiệu */
-.post-main .form-control,
-.post-main .form-select {
-    padding: 10px 14px;
-    border-color: var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-}
-.post-main .form-control:focus,
-.post-main .form-select:focus {
-    border-color: var(--btn-primary);
-    box-shadow: 0 0 0 3px rgba(255,122,61,.1);
-}
-
-/* Nút lấy vị trí */
-.btn-location {
-    background-color: #e2e8f0;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: .25s;
-    white-space: nowrap;
-    color: var(--text-primary);
-}
-.btn-location:hover { background-color: #cbd5e1; }
-
-/* Nút AI */
 .btn-ai {
     background: linear-gradient(45deg, #a855f7, #ec4899);
     border: none;
@@ -803,34 +320,7 @@ footer .footer-logo { font-size: 22px; font-weight: 700; color: var(--btn-primar
 }
 .btn-ai:hover { opacity: .85; }
 
-/* Nút Lưu nháp */
-.btn-draft {
-    background-color: #fff;
-    border: 1.5px solid var(--border-color);
-    border-radius: 25px;
-    padding: 9px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: .25s;
-    color: var(--text-primary);
-}
-.btn-draft:hover { border-color: var(--text-secondary); background-color: var(--bg-main); }
-
-/* Nút Trở về */
-.btn-cancel {
-    background: none;
-    border: none;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    color: var(--text-secondary);
-    padding: 9px 4px;
-    transition: .2s;
-}
-.btn-cancel:hover { color: var(--error-color); text-decoration: underline; }
-
-/* Guide list sidebar */
+/* Kẻ viền nét đứt cho danh sách hướng dẫn ở Sidebar */
 .guide-list .border-dashed { border-bottom-style: dashed !important; }
 .guide-link { font-size: 13px; color: var(--btn-secondary); }
 .guide-link:hover { color: var(--btn-hover); text-decoration: underline !important; }
