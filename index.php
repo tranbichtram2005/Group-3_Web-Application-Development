@@ -1,6 +1,40 @@
 <?php
 session_start();
 
+// 1. TỰ ĐỘNG LẤY SỐ LƯỢNG CHO HEADER 
+$GLOBALS['cartCount'] = 0; 
+$GLOBALS['notiCount'] = 0; 
+$GLOBALS['msgCount']  = 0;
+
+if (isset($_SESSION['user_id'])) {
+    
+    // Nạp file kết nối Database và file Model User của nhóm cậu
+    // (Cậu nhớ chỉnh lại đường dẫn cho đúng vị trí thực tế nhé, ví dụ: 'config/Database.php')
+    require_once __DIR__ . '/model/Database.php'; 
+    require_once __DIR__ . '/model/User.php';     
+
+    try {
+        // 1. Khởi tạo đối tượng Database và lấy kết nối PDO
+        $database = new Database();
+        $pdo = $database->getConnection();
+        
+        // 2. Chỉ tiếp tục nếu kết nối DB thành công (không bị null)
+        if ($pdo != null) {
+            // Truyền kết nối PDO vào Model User
+            $userModel = new User($pdo);
+            $stats = $userModel->getHeaderStats($_SESSION['user_id']);
+            
+            // Lưu vào biến toàn cục để file user-header.php lấy được
+            $GLOBALS['cartCount'] = $stats['cartCount'];
+            $GLOBALS['notiCount'] = $stats['notiCount'];
+            $GLOBALS['msgCount']  = $stats['msgCount'];
+        }
+    } catch (Exception $e) {
+        // Bỏ qua lỗi kết nối (nếu có) để không làm sập trang web
+    }
+}
+
+// 2. PHÂN LUỒNG ROUTER
 $controller = isset($_GET['controller']) ? $_GET['controller'] : 'home';
 $action = isset($_GET['action']) ? $_GET['action'] : 'index';
 

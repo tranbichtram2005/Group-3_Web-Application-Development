@@ -78,5 +78,29 @@ class User {
         }
         return false;
     }
+    // --- GIỮ NGUYÊN CODE CŨ CỦA FILE USER.PHP Ở TRÊN, CHỈ DÁN THÊM HÀM NÀY VÀO TRƯỚC DẤU } CUỐI CÙNG ---
+
+    public function getHeaderStats($user_id) {
+        $stats = ['cartCount' => 0, 'notiCount' => 0, 'msgCount' => 0];
+        try {
+            // 1. Đếm số món trong giỏ hàng
+            $stmtCart = $this->conn->prepare("SELECT COUNT(*) as count FROM cart_items ci JOIN carts c ON ci.cart_id = c.id WHERE c.user_id = :user_id");
+            $stmtCart->execute([':user_id' => $user_id]);
+            $stats['cartCount'] = $stmtCart->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+
+            // 2. Đếm thông báo chưa đọc
+            $stmtNoti = $this->conn->prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = :user_id AND is_read = 0");
+            $stmtNoti->execute([':user_id' => $user_id]);
+            $stats['notiCount'] = $stmtNoti->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+
+            // 3. Đếm tin nhắn chưa đọc
+            $stmtMsg = $this->conn->prepare("SELECT COUNT(tm.id) as count FROM trade_messages tm JOIN trade_conversations tc ON tm.trade_conversation_id = tc.id WHERE tm.is_read = 0 AND tm.sender_id != :user_id AND (tc.buyer_id = :user_id OR tc.seller_id = :user_id)");
+            $stmtMsg->execute([':user_id' => $user_id]);
+            $stats['msgCount'] = $stmtMsg->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+        } catch (Exception $e) {
+            // Lỗi thì giữ nguyên bằng 0
+        }
+        return $stats;
+    }
 }
 ?>
