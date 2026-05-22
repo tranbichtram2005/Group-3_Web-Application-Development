@@ -24,7 +24,6 @@ class CartController {
         // Lấy danh sách sản phẩm từ DB
         $cartItems = $this->cartModel->getCartItems($cartId);
         
-        // ĐÃ SỬA: Gọi đúng file giao diện nằm trong thư mục view/app/
         require_once __DIR__ . '/../view/app/cart.php';
     }
 
@@ -39,12 +38,12 @@ class CartController {
 
         $input = json_decode(file_get_contents("php://input"), true);
         if (!$input) {
-            echo json_encode(['status' => 'error', 'msg' => 'Dữ liệu Webservice không hợp lệ']);
+            echo json_encode(['status' => 'error', 'msg' => 'Dữ liệu không hợp lệ']);
             return;
         }
 
         $listingId = $input['listingId'];
-        $action = $input['action']; 
+        $action = $input['action'];
         
         $userId = $_SESSION['user_id'];
         $cartId = $this->cartModel->getCartId($userId);
@@ -53,18 +52,29 @@ class CartController {
             if ($action === 'remove') {
                 $this->cartModel->removeItem($cartId, $listingId);
             } elseif ($action === 'update') {
-                $newQty = $input['quantity'];
+                $newQty = intval($input['quantity']);
+                
+                // ✅ Kiểm tra tồn kho trước khi cập nhật
+                $stock = $this->cartModel->getStock($listingId);
+                if ($newQty > $stock) {
+                    echo json_encode([
+                        'status' => 'error', 
+                        'msg' => "Chỉ còn $stock sản phẩm trong kho!",
+                        'maxQty' => $stock
+                    ]);
+                    return;
+                }
+                
                 $this->cartModel->updateQuantity($cartId, $listingId, $newQty);
             }
 
-            // Tính toán lại tổng tiền để trả về cho Client
             $updatedItems = $this->cartModel->getCartItems($cartId);
             $totalAmount = 0;
             $totalItems = 0;
             
             foreach ($updatedItems as $item) {
                 $totalAmount += ($item['price_snapshot'] * $item['quantity']);
-                $totalItems++; 
+                $totalItems++;
             }
 
             echo json_encode([
@@ -77,7 +87,8 @@ class CartController {
             echo json_encode(['status' => 'error', 'msg' => $e->getMessage()]);
         }
     }
-    // Xử lý AJAX áp dụng voucher - Trả về JSON
+
+    // Áp dụng voucher - Trả về JSON
     public function applyVoucher() {
         header('Content-Type: application/json; charset=utf-8');
 
@@ -95,6 +106,15 @@ class CartController {
             return;
         }
 
+        $userId = $_SESSION['user_id'];
+
+        // ✅ Kiểm tra voucher đã dùng chưa
+        $alreadyUsed = $this->voucherModel->isVoucherUsedByUser($code, $userId);
+        if ($alreadyUsed) {
+            echo json_encode(['status' => 'error', 'msg' => 'Bạn đã dùng voucher này rồi!']);
+            return;
+        }
+
         $voucher = $this->voucherModel->getVoucherByCode($code, $orderTotal);
 
         if (isset($voucher['error'])) {
@@ -103,7 +123,6 @@ class CartController {
         }
 
         $discount = intval($voucher['discount_value']);
-        // Không cho giảm quá tổng đơn hàng
         if ($discount > $orderTotal) $discount = $orderTotal;
         $finalTotal = $orderTotal - $discount;
 
@@ -116,6 +135,48 @@ class CartController {
             'finalTotalFormat' => number_format($finalTotal, 0, ',', '.') . 'đ',
             'msg'              => 'Áp dụng voucher thành công!'
         ]);
+    }
+
+    // ✅ AJAX lấy địa chỉ của user
+    public function getAddresses() {
+        header('Content-Type: application/json; charset=utf-8');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['status' => 'error', 'msg' => 'Chưa đăng nhập']);
+            return;
+        }
+        $addresses = $this->cartModel->getUserAddresses($_SESSION['user_id']);
+        echo json_encode(['status' => 'success', 'addresses' => $addresses]);
+    }
+
+    // ✅ AJAX thêm địa chỉ mới
+    public function addAddress() {
+        header('Content-Type: application/json; charset=utf-8');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['status' => 'error', 'msg' => 'Chưa đăng nhập']);
+            return;
+        }
+        $input = json_decode(file_get_contents("php://input"), true);
+        $fullName  = trim($input['full_name'] ?? '');
+        $phone     = trim($input['phone'] ?? '');
+        $province  = trim($input['province'] ?? '');
+        $district  = trim($input['district'] ?? '');
+        $ward      = trim($input['ward'] ?? '');
+        $street    = trim($input['street'] ?? '');
+
+        if (!$fullName || !$phone || !$province || !$district || !$ward || !$street) {
+            echo json_encode(['status' => 'error', 'msg' => 'Vui lòng điền đầy đủ thông tin địa chỉ.']);
+            return;
+        }
+
+        $result = $this->cartModel->addUserAddress(
+            $_SESSION['user_id'], $fullName, $phone, $province, $district, $ward, $street
+        );
+
+        if ($result) {
+            echo json_encode(['status' => 'success', 'msg' => 'Thêm địa chỉ thành công!', 'id' => $result]);
+        } else {
+            echo json_encode(['status' => 'error', 'msg' => 'Không thể thêm địa chỉ.']);
+        }
     }
 }
 ?>

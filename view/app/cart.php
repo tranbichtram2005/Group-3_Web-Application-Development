@@ -36,7 +36,10 @@ require_once __DIR__ . '/../partials/user-header.php';
                 <div id="cart-items-list">
                     <?php foreach($cartItems as $sp): ?>
                     <div class="cart-item" id="item-<?= $sp['listing_id'] ?>" style="transition: all 0.3s ease;">
-                        <input type="checkbox" class="item-check" value="<?= $sp['listing_id'] ?>" style="width:15px;height:15px;accent-color:var(--btn-primary);flex-shrink:0" onchange="updateSummary()">
+                        <input type="checkbox" class="item-check" value="<?= $sp['listing_id'] ?>" 
+                               data-stock="<?= (int)$sp['stock_quantity'] ?>"
+                               style="width:15px;height:15px;accent-color:var(--btn-primary);flex-shrink:0" 
+                               onchange="updateSummary(); updateOrderBtn()">
                         
                         <img src="<?= htmlspecialchars($sp['image_url'] ?? 'https://via.placeholder.com/200') ?>" alt="Product Image">
                         
@@ -48,7 +51,11 @@ require_once __DIR__ . '/../partials/user-header.php';
                         
                         <div class="item-quantity">
                             <button class="qty-btn" onclick="changeQty(this, <?= $sp['listing_id'] ?>, -1)">−</button>
-                            <input type="text" value="<?= $sp['quantity'] ?>" class="qty-input" id="qty-<?= $sp['listing_id'] ?>" data-dongia="<?= $sp['price_snapshot'] ?>" readonly>
+                            <input type="text" value="<?= $sp['quantity'] ?>" class="qty-input" 
+                                   id="qty-<?= $sp['listing_id'] ?>" 
+                                   data-dongia="<?= $sp['price_snapshot'] ?>"
+                                   data-stock="<?= (int)$sp['stock_quantity'] ?>"
+                                   readonly>
                             <button class="qty-btn" onclick="changeQty(this, <?= $sp['listing_id'] ?>, 1)">+</button>
                         </div>
                         
@@ -66,19 +73,16 @@ require_once __DIR__ . '/../partials/user-header.php';
                 <div class="cart-summary">
                     <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text-primary);"><i class="bi bi-receipt me-2" style="color:var(--btn-secondary)"></i>Tóm tắt đơn hàng</h3>
 
-                    <!-- Tạm tính -->
                     <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 14px; color: var(--text-secondary);">
                         <span>Tạm tính (<span id="itemCount">0</span> sản phẩm):</span>
                         <span id="subtotal">0đ</span>
                     </div>
 
-                    <!-- Giảm giá voucher (ẩn khi chưa áp dụng) -->
                     <div class="summary-row" id="voucher-discount-row" style="display: none; justify-content: space-between; margin-bottom: 14px; font-size: 14px; color: var(--text-secondary);">
                         <span>Giảm giá (<span id="voucher-code-label" style="color:var(--btn-primary);font-weight:600"></span>):</span>
                         <span id="voucher-discount-amount" style="color:#388E3C;font-weight:600">—</span>
                     </div>
 
-                    <!-- Tổng cộng -->
                     <div class="summary-row summary-total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 18px; margin-top: 18px; font-weight: 700; font-size: 16px; color: var(--text-primary);">
                         <span>Tổng cộng:</span>
                         <span class="total-price" id="totalPrice" style="font-size: 24px; color: var(--btn-primary); font-weight: 700;">0đ</span>
@@ -96,9 +100,21 @@ require_once __DIR__ . '/../partials/user-header.php';
                         <div id="voucher-msg" style="font-size:12px;margin-top:6px;min-height:18px;"></div>
                     </div>
 
-                    <a href="index.php?controller=checkout" class="btn-2life-primary" style="display: block; background-color: var(--btn-primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-weight: 700; width: 100%; text-align: center; text-decoration: none; cursor: pointer;">
-                        <i class="bi bi-bag-check-fill me-2"></i>Đặt hàng
-                    </a>
+                    <!-- ✅ Form đặt hàng - chỉ gửi các item đã chọn -->
+                    <form id="checkoutForm" action="index.php?controller=checkout" method="POST">
+                        <input type="hidden" name="selected_ids" id="selectedIdsInput" value="">
+                        <button type="button" id="orderBtn" onclick="goToCheckout()" 
+                                class="btn-2life-primary" 
+                                disabled
+                                style="display: block; background-color: #ccc; color: #fff; border: none; border-radius: 12px; padding: 14px; font-weight: 700; width: 100%; text-align: center; cursor: not-allowed; transition: 0.2s;">
+                            <i class="bi bi-bag-check-fill me-2"></i>Đặt hàng
+                        </button>
+                    </form>
+                    
+                    <!-- Thông báo khi chưa chọn -->
+                    <div id="noSelectMsg" style="font-size:12px;color:var(--error-color);text-align:center;margin-top:6px;min-height:16px;">
+                        Vui lòng chọn ít nhất 1 sản phẩm để đặt hàng
+                    </div>
                     
                     <a href="index.php?controller=home" style="display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--btn-secondary);text-decoration:none">
                         <i class="bi bi-arrow-left me-1"></i>Tiếp tục mua sắm
@@ -116,7 +132,8 @@ require_once __DIR__ . '/../partials/user-header.php';
 
 <script>
 // ── State voucher ──────────────────────────────────────────
-let appliedDiscount = 0; // số tiền đã giảm (sau khi áp voucher)
+let appliedDiscount  = 0;
+let appliedVoucherId = null;
 
 // ── Helper gọi API giỏ hàng ───────────────────────────────
 async function sendCartActionToDB(payload) {
@@ -128,7 +145,7 @@ async function sendCartActionToDB(payload) {
         });
         const result = await response.json();
         if (result.status !== 'success') {
-            alert('Lỗi từ hệ thống: ' + result.msg);
+            alert('Lỗi: ' + result.msg);
             return false;
         }
         return result;
@@ -140,22 +157,31 @@ async function sendCartActionToDB(payload) {
 
 // ── Tăng / Giảm số lượng ──────────────────────────────────
 async function changeQty(btn, listingId, delta) {
-    const input = document.getElementById('qty-' + listingId);
+    const input  = document.getElementById('qty-' + listingId);
     let currentQty = parseInt(input.value);
-    let newQty = currentQty + delta;
+    let newQty     = currentQty + delta;
+    const stock    = parseInt(input.dataset.stock);
+
     if (newQty <= 0) {
         removeItem(listingId);
         return;
     }
+
+    // ✅ Check tồn kho ngay trên client trước
+    if (newQty > stock) {
+        showToast(`Chỉ còn ${stock} sản phẩm trong kho!`, 'error');
+        return;
+    }
+
     let success = await sendCartActionToDB({ action: 'update', listingId: listingId, quantity: newQty });
     if (success) {
         input.value = newQty;
-        const priceEl = document.getElementById('price-' + listingId);
+        const priceEl  = document.getElementById('price-' + listingId);
         const unitPrice = parseInt(input.dataset.dongia);
         priceEl.textContent = (unitPrice * newQty).toLocaleString('vi-VN') + 'đ';
-        // Reset voucher khi đổi số lượng (tổng thay đổi)
         resetVoucher();
         updateSummary();
+        updateOrderBtn();
     }
 }
 
@@ -170,7 +196,8 @@ async function removeItem(listingId) {
             setTimeout(() => { 
                 item.remove();
                 resetVoucher();
-                updateSummary(); 
+                updateSummary();
+                updateOrderBtn();
                 if (document.querySelectorAll('.cart-item').length === 0) { window.location.reload(); }
             }, 300);
         }
@@ -181,12 +208,13 @@ async function removeItem(listingId) {
 function toggleAll(master) {
     document.querySelectorAll('.item-check').forEach(c => c.checked = master.checked);
     updateSummary();
+    updateOrderBtn();
 }
 
 // ── Xóa đã chọn ──────────────────────────────────────────
 async function removeSelected() {
     const selectedChecks = document.querySelectorAll('.item-check:checked');
-    if (selectedChecks.length === 0) { alert("Cậu chưa chọn sản phẩm nào để xóa!"); return; }
+    if (selectedChecks.length === 0) { alert("Cậu chưa chọn sản phẩm nào!"); return; }
     if (confirm("Xóa toàn bộ các sản phẩm đã chọn?")) {
         for (let check of selectedChecks) {
             let listingId = check.value;
@@ -195,6 +223,7 @@ async function removeSelected() {
         }
         resetVoucher();
         updateSummary();
+        updateOrderBtn();
         if (document.querySelectorAll('.cart-item').length === 0) { window.location.reload(); }
     }
 }
@@ -207,7 +236,7 @@ function updateSummary() {
         const check = item.querySelector('.item-check');
         if (check && check.checked) {
             const input = item.querySelector('.qty-input');
-            const qty = parseInt(input.value);
+            const qty   = parseInt(input.value);
             const price = parseInt(input.dataset.dongia);
             subtotal += qty * price;
             count++;
@@ -215,28 +244,66 @@ function updateSummary() {
     });
 
     document.getElementById('itemCount').textContent = count;
-    document.getElementById('subtotal').textContent = subtotal.toLocaleString('vi-VN') + 'đ';
+    document.getElementById('subtotal').textContent   = subtotal.toLocaleString('vi-VN') + 'đ';
 
-    // Tổng = tạm tính - giảm giá voucher
     const finalTotal = Math.max(0, subtotal - appliedDiscount);
-    document.getElementById('totalPrice').textContent = finalTotal.toLocaleString('vi-VN') + 'đ';
+    document.getElementById('totalPrice').textContent  = finalTotal.toLocaleString('vi-VN') + 'đ';
 
     const tongSoItemEl = document.getElementById('tongSoItem');
     if (tongSoItemEl) tongSoItemEl.textContent = items.length;
 }
 
+// ✅ Cập nhật trạng thái nút Đặt hàng
+function updateOrderBtn() {
+    const btn     = document.getElementById('orderBtn');
+    const msgEl   = document.getElementById('noSelectMsg');
+    const checked = document.querySelectorAll('.item-check:checked');
+    
+    let subtotal = 0;
+    checked.forEach(check => {
+        const item  = check.closest('.cart-item');
+        const input = item.querySelector('.qty-input');
+        subtotal += parseInt(input.value) * parseInt(input.dataset.dongia);
+    });
+
+    if (checked.length > 0 && subtotal > 0) {
+        btn.disabled = false;
+        btn.style.backgroundColor  = 'var(--btn-primary)';
+        btn.style.cursor           = 'pointer';
+        msgEl.style.display        = 'none';
+    } else {
+        btn.disabled = true;
+        btn.style.backgroundColor  = '#ccc';
+        btn.style.cursor           = 'not-allowed';
+        msgEl.style.display        = 'block';
+        msgEl.textContent          = checked.length === 0
+            ? 'Vui lòng chọn ít nhất 1 sản phẩm để đặt hàng'
+            : 'Tổng đơn hàng không hợp lệ';
+    }
+}
+
+// ✅ Submit form checkout với các IDs đã chọn
+function goToCheckout() {
+    const checked = document.querySelectorAll('.item-check:checked');
+    if (checked.length === 0) {
+        alert('Vui lòng chọn ít nhất 1 sản phẩm!');
+        return;
+    }
+    const ids = Array.from(checked).map(c => c.value).join(',');
+    document.getElementById('selectedIdsInput').value = ids;
+    document.getElementById('checkoutForm').submit();
+}
+
 // ── Áp dụng voucher ──────────────────────────────────────
 async function applyVoucher() {
-    const code = document.getElementById('voucher-input').value.trim();
-    const msgEl = document.getElementById('voucher-msg');
-    const btn = document.getElementById('voucher-btn');
+    const code  = document.getElementById('voucher-input').value.trim();
+    const btn   = document.getElementById('voucher-btn');
 
     if (!code) {
         showVoucherMsg('Vui lòng nhập mã voucher.', 'error');
         return;
     }
 
-    // Tính tạm tính hiện tại từ các item đang chọn
     let subtotal = 0;
     document.querySelectorAll('.cart-item').forEach(item => {
         const check = item.querySelector('.item-check');
@@ -251,11 +318,10 @@ async function applyVoucher() {
         return;
     }
 
-    btn.disabled = true;
-    btn.textContent = '...';
+    btn.disabled = true; btn.textContent = '...';
 
     try {
-        const res = await fetch('index.php?controller=cart&action=applyVoucher', {
+        const res  = await fetch('index.php?controller=cart&action=applyVoucher', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code: code, orderTotal: subtotal })
@@ -263,15 +329,14 @@ async function applyVoucher() {
         const data = await res.json();
 
         if (data.status === 'success') {
-            appliedDiscount = data.discount;
-            // Hiển thị dòng giảm giá
+            appliedDiscount  = data.discount;
+            appliedVoucherId = data.voucherId;
             document.getElementById('voucher-discount-row').style.display = 'flex';
-            document.getElementById('voucher-code-label').textContent = code.toUpperCase();
+            document.getElementById('voucher-code-label').textContent     = code.toUpperCase();
             document.getElementById('voucher-discount-amount').textContent = data.discountFormat;
-            // Đổi nút thành "Bỏ áp dụng"
-            btn.textContent = 'Bỏ';
-            btn.onclick = resetVoucher;
-            btn.style.color = 'var(--error-color)';
+            btn.textContent   = 'Bỏ';
+            btn.onclick       = resetVoucher;
+            btn.style.color   = 'var(--error-color)';
             document.getElementById('voucher-input').disabled = true;
             showVoucherMsg(data.msg, 'success');
             updateSummary();
@@ -293,19 +358,29 @@ function showVoucherMsg(msg, type) {
 }
 
 function resetVoucher() {
-    appliedDiscount = 0;
-    document.getElementById('voucher-discount-row').style.display = 'none';
-    document.getElementById('voucher-discount-amount').textContent = '—';
-    document.getElementById('voucher-code-label').textContent = '';
-    document.getElementById('voucher-input').disabled = false;
-    document.getElementById('voucher-input').value = '';
-    document.getElementById('voucher-msg').textContent = '';
+    appliedDiscount = 0; appliedVoucherId = null;
+    document.getElementById('voucher-discount-row').style.display  = 'none';
+    document.getElementById('voucher-discount-amount').textContent  = '—';
+    document.getElementById('voucher-code-label').textContent       = '';
+    document.getElementById('voucher-input').disabled               = false;
+    document.getElementById('voucher-input').value                  = '';
+    document.getElementById('voucher-msg').textContent              = '';
     const btn = document.getElementById('voucher-btn');
-    btn.textContent = 'Áp dụng';
-    btn.onclick = applyVoucher;
-    btn.style.color = 'var(--text-primary)';
+    btn.textContent = 'Áp dụng'; btn.onclick = applyVoucher; btn.style.color = 'var(--text-primary)';
     updateSummary();
 }
+
+function showToast(msg, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;color:#fff;background:${type==='error'?'#e53935':'#43a047'};box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:opacity 0.3s`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// Khởi tạo
+updateSummary();
+updateOrderBtn();
 </script>
 
 <?php
