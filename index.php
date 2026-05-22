@@ -80,6 +80,12 @@ switch ($controller) {
         method_exists($profileCtrl, $action) ? $profileCtrl->$action() : die("Lỗi: Không tìm thấy action!");
         break;
 
+        case 'admin-home':
+    require_once __DIR__ . '/control/AdminController.php'; // Đường dẫn tới file Controller Admin
+    $adminCtrl = new AdminController();
+    $adminCtrl->index();
+    break;
+
     default:
         echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
         break;
