@@ -84,6 +84,13 @@ switch ($controller) {
         $voucherCtrl = new VoucherController();
         method_exists($voucherCtrl, $action) ? $voucherCtrl->$action() : die("Lỗi: Không tìm thấy action!");
         break;
+    case 'checkout':
+        require_once __DIR__ . '/control/CheckoutController.php';
+        $checkoutCtrl = new CheckoutController();
+        // Kiểm tra xem action có tồn tại không, nếu không thì mặc định chạy hàm index()
+        $action = isset($_GET['action']) ? $_GET['action'] : 'index';
+        method_exists($checkoutCtrl, $action) ? $checkoutCtrl->$action() : die("Lỗi: Không tìm thấy action $action trong CheckoutController!");
+        break;
     default:
         echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
         break;
