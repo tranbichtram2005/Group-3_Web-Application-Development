@@ -102,5 +102,59 @@ class User {
         }
         return $stats;
     }
+    // ==========================================
+    // CÁC HÀM QUẢN LÝ TÀI KHOẢN (PROFILE)
+    // ==========================================
+    
+    // 1. Lấy thông tin user hiện tại
+    public function getUserById($id) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // 2. Cập nhật thông tin cá nhân
+    public function updateProfile($id, $fullName, $phone, $bio, $avatarUrl = null) {
+        $query = "UPDATE " . $this->table_name . " SET full_name = :full_name, phone = :phone, bio = :bio";
+        
+        // Nếu có ảnh mới thì thêm vào câu lệnh SQL
+        if ($avatarUrl != null) {
+            $query .= ", avatar_url = :avatar_url";
+        }
+        $query .= " WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        $params = [
+            ':full_name' => $fullName,
+            ':phone' => $phone,
+            ':bio' => $bio,
+            ':id' => $id
+        ];
+        if ($avatarUrl != null) {
+            $params[':avatar_url'] = $avatarUrl;
+        }
+        
+        return $stmt->execute($params);
+    }
+
+    // 3. Cập nhật mật khẩu
+    public function updatePassword($id, $newPasswordHash) {
+        $query = "UPDATE " . $this->table_name . " SET password_hash = :password WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([':password' => $newPasswordHash, ':id' => $id]);
+    }
+
+    // 4. Gửi yêu cầu đăng ký bán hàng
+    public function registerSeller($userId, $shopName, $description) {
+        // Kiểm tra xem đã gửi yêu cầu chưa
+        $check = $this->conn->prepare("SELECT id FROM seller_profiles WHERE user_id = :user_id");
+        $check->execute([':user_id' => $userId]);
+        if ($check->rowCount() > 0) return false;
+
+        $query = "INSERT INTO seller_profiles (user_id, shop_name, description, is_verified) VALUES (:user_id, :shop_name, :description, 0)";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([':user_id' => $userId, ':shop_name' => $shopName, ':description' => $description]);
+    }
 }
 ?>

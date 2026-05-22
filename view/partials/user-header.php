@@ -81,13 +81,13 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
                                 <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-receipt"></i> Đơn bán của tôi</a>
                             </li>
                             <li>
-                                <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-bar-chart"></i> Dashboard á</a>
+                                <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-bar-chart"></i> Dashboard</a>
                             </li>
                             <li>
                                 <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-card-list"></i> Quản lý tin đăng</a>
                             </li>
                             <li>
-                                <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-person-gear"></i> Tài khoản của tôi</a>
+                                <a href="index.php?controller=profile" class="nav-dropdown-item dropdown-item"><i class="bi bi-person-gear"></i> Tài khoản của tôi</a>
                             </li>
                             
                             <li><hr class="dropdown-divider my-1 mx-2 text-secondary opacity-25"></li>

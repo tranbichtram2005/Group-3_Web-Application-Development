@@ -9,7 +9,6 @@ $GLOBALS['msgCount']  = 0;
 if (isset($_SESSION['user_id'])) {
     
     // Nạp file kết nối Database và file Model User của nhóm cậu
-    // (Cậu nhớ chỉnh lại đường dẫn cho đúng vị trí thực tế nhé, ví dụ: 'config/Database.php')
     require_once __DIR__ . '/model/Database.php'; 
     require_once __DIR__ . '/model/User.php';     
 
@@ -34,75 +33,55 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
-// 2. PHÂN LUỒNG ROUTER
+// =========================================================
+// 2. FRONT CONTROLLER (ROUTER) BẰNG SWITCH-CASE
+// =========================================================
 $controller = isset($_GET['controller']) ? $_GET['controller'] : 'home';
 $action = isset($_GET['action']) ? $_GET['action'] : 'index';
 
-if ($controller == 'cart') {
-    require_once __DIR__ . '/control/CartController.php';
-    $cartController = new CartController();
-    if (method_exists($cartController, $action)) {
-        $cartController->$action();
-    } else {
-        die("Lỗi: Không tìm thấy chức năng này!");
-    }
-} elseif ($controller == 'auth') {
-    require_once __DIR__ . '/control/AuthController.php';
-    $authController = new AuthController();
-    // Tự động gọi hàm trùng tên với biến $action trên URL
-    if (method_exists($authController, $action)) {
-        $authController->$action();
-    } else {
-        die("Lỗi: Không tìm thấy hành động xác thực này!");
-    }
-} elseif ($controller == 'home') {
-    require_once __DIR__ . '/view/app/home.php';
-} 
-// =========================================================
-// NHÁNH XỬ LÝ CHO TIN ĐĂNG (LISTING) 
-// =========================================================
-elseif ($controller == 'listing') {
-    require_once __DIR__ . '/control/ListingController.php';
-    $listingController = new ListingController();
-    
-    if (method_exists($listingController, $action)) {
-        $listingController->$action(); // Gọi hàm create()
-    } else {
-        die("Lỗi: Không tìm thấy chức năng này trong Listing!");
-    }
-} 
-// =========================================================
-elseif ($controller == 'home') {
-    require_once __DIR__ . '/view/app/home.php';
-}
-elseif ($controller == 'manage_listing') {
-    require_once __DIR__ . '/control/ManageListingController.php';
-    $manageController = new ManageListingController();
-    
-    if (method_exists($manageController, $action)) {
-        $manageController->$action(); // Gọi hàm index() hoặc changeStatus()
-    } else {
-        die("Lỗi: Không tìm thấy chức năng này trong trang quản lý!");
-    }
-} 
-// =========================================================
-elseif ($controller == 'home') {
-    require_once __DIR__ . '/view/app/home.php';
-}
-// =========================================================
-// PHÂN LUỒNG: ADMIN DUYỆT NGƯỜI BÁN (APPROVESELLER)
-// =========================================================
-elseif ($controller == 'approveseller') {
-    require_once __DIR__ . '/control/ApproveSellerController.php';
-    $approveSellerCtrl = new ApproveSellerController();
-    if (method_exists($approveSellerCtrl, $action)) {
-        $approveSellerCtrl->$action(); 
-    } else {
-        die("Lỗi: Không tìm thấy chức năng này trong hệ thống Admin!");
-    }
-} 
-else {
-    echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
-}
+switch ($controller) {
+    case 'home':
+        require_once __DIR__ . '/view/app/home.php';
+        break;
 
+    case 'cart':
+        require_once __DIR__ . '/control/CartController.php';
+        $cartCtrl = new CartController();
+        method_exists($cartCtrl, $action) ? $cartCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
+
+    case 'auth':
+        require_once __DIR__ . '/control/AuthController.php';
+        $authCtrl = new AuthController();
+        method_exists($authCtrl, $action) ? $authCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
+
+    case 'listing':
+        require_once __DIR__ . '/control/ListingController.php';
+        $listingCtrl = new ListingController();
+        method_exists($listingCtrl, $action) ? $listingCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
+
+    case 'manage_listing':
+        require_once __DIR__ . '/control/ManageListingController.php';
+        $manageCtrl = new ManageListingController();
+        method_exists($manageCtrl, $action) ? $manageCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
+
+    case 'approveseller':
+        require_once __DIR__ . '/control/ApproveSellerController.php';
+        $approveSellerCtrl = new ApproveSellerController();
+        method_exists($approveSellerCtrl, $action) ? $approveSellerCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
+
+    case 'profile':
+        require_once __DIR__ . '/control/ProfileController.php';
+        $profileCtrl = new ProfileController();
+        method_exists($profileCtrl, $action) ? $profileCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
+
+    default:
+        echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
+        break;
+}
 ?>
