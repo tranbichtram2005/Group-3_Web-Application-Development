@@ -79,7 +79,11 @@ switch ($controller) {
         $profileCtrl = new ProfileController();
         method_exists($profileCtrl, $action) ? $profileCtrl->$action() : die("Lỗi: Không tìm thấy action!");
         break;
-
+    case 'voucher':
+        require_once __DIR__ . '/control/VoucherController.php';
+        $voucherCtrl = new VoucherController();
+        method_exists($voucherCtrl, $action) ? $voucherCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
     default:
         echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
         break;
