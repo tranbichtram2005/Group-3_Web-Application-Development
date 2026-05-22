@@ -84,15 +84,20 @@ require_once __DIR__ . '/../view/partials/profile.php';    }
         }
     }
 
-    public function registerSellerAjax() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        $userId = $_SESSION['user_id'];
-        
-        if ($this->userModel->registerSeller($userId, $data['shop_name'], $data['description'])) {
-            echo json_encode(['status' => 'success', 'msg' => 'Đăng ký thành công! Đang chờ Admin duyệt.']);
-        } else {
-            echo json_encode(['status' => 'error', 'msg' => 'Bạn đã gửi yêu cầu trước đó rồi!']);
-        }
+public function registerSellerAjax() {
+    $userId = $_SESSION['user_id'];
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    $shopName = $data['shop_name'];
+    $taxCode = $data['tax_code']; // Đón dữ liệu mới
+    $description = $data['description'];
+
+    // Gọi Model để lưu (Cậu nhớ cập nhật hàm trong Model User/SellerProfile để nhận thêm biến $taxCode)
+    if ($this->userModel->registerSeller($userId, $shopName, $taxCode, $description)) {
+        echo json_encode(['status' => 'success', 'msg' => 'Gửi yêu cầu đăng ký thành công!']);
+    } else {
+        echo json_encode(['status' => 'error', 'msg' => 'Bạn đã gửi yêu cầu trước đó hoặc có lỗi xảy ra.']);
     }
+}
 }
 ?>

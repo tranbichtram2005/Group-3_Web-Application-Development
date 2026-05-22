@@ -91,6 +91,10 @@ $avatarDisplay = !empty($user['avatar_url']) ? $user['avatar_url'] : "https://ui
                     <div class="alert alert-warning border-0 rounded-3 small d-flex align-items-center gap-2 mb-4"><i class="bi bi-info-circle-fill fs-5"></i><span>Sau khi gửi yêu cầu, Ban quản trị sẽ duyệt trong 24h.</span></div>
                     <form id="form-seller">
                         <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Tên Shop của bạn <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="shopName" required style="font-size: 15px;"></div>
+                        <div class="mb-3">
+    <label class="form-label fw-bold text-secondary small text-uppercase">Mã số thuế <span class="text-danger">*</span></label>
+    <input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="taxCode" required placeholder="Nhập mã số thuế cá nhân hoặc doanh nghiệp">
+</div>
                         <div class="mb-4"><label class="form-label fw-bold text-secondary small text-uppercase">Mô tả định hướng kinh doanh</label><textarea class="form-control border-2 shadow-none rounded-3 py-2" id="shopDesc" rows="4" style="font-size: 15px; resize: none;"></textarea></div>
                         <button type="button" class="btn btn-2life-primary px-4 py-2.5 rounded-3 fw-bold shadow-sm" onclick="registerSeller()"><i class="bi bi-send me-1"></i> Gửi yêu cầu duyệt</button>
                     </form>
@@ -161,20 +165,21 @@ async function changePassword() {
 // 3. Gửi Form Đăng ký Shop
 async function registerSeller() {
     const shopName = document.getElementById('shopName').value;
-    if(shopName.trim() === '') return showError("Vui lòng nhập tên Shop!");
+    const taxCode = document.getElementById('taxCode').value; // Lấy giá trị mới
+    const shopDesc = document.getElementById('shopDesc').value;
 
-    const data = { shop_name: shopName, description: document.getElementById('shopDesc').value };
-    try {
-        const res = await fetch('index.php?controller=profile&action=registerSellerAjax', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        
-        Swal.fire({ icon: result.status, title: 'Đăng ký bán hàng', text: result.msg, confirmButtonColor: '#FF7A3D' });
-        if(result.status === 'success') document.getElementById('form-seller').reset();
-    } catch (error) {
-        showError("Có lỗi kết nối hệ thống!");
-    }
+    // Validate bắt buộc
+    if(shopName.trim() === '') return showError("Vui lòng nhập tên Shop!");
+    if(taxCode.trim() === '') return showError("Vui lòng nhập Mã số thuế!");
+
+    const data = { shop_name: shopName, tax_code: taxCode, description: shopDesc };
+    
+    const res = await fetch('index.php?controller=profile&action=registerSellerAjax', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    Swal.fire({ icon: result.status, title: 'Thông báo', text: result.msg, confirmButtonColor: '#FF7A3D' });
+    if(result.status === 'success') document.getElementById('form-seller').reset();
 }
 
 // Preview ảnh
