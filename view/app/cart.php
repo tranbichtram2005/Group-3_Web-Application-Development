@@ -90,10 +90,6 @@ require_once __DIR__ . '/../partials/user-header.php';
                         <button class="btn-2life-secondary" style="border-radius:8px;padding:9px 14px;font-size:13px;white-space:nowrap; background-color: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); font-weight: 600;">Áp dụng</button>
                     </div>
 
-                    <button class="btn-2life-primary" style="background-color: var(--btn-primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-weight: 700; width: 100%; text-align: center;">
-                        <i class="bi bi-lock-fill me-2"></i>Đặt hàng
-                    </button>
-
                     <a href="index.php?controller=checkout" class="btn-2life-primary" style="display: block; background-color: var(--btn-primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-weight: 700; width: 100%; text-align: center; text-decoration: none; cursor: pointer;">
                         <i class="bi bi-bag-check-fill me-2"></i>Đặt hàng
                     </a>
