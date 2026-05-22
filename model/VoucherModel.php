@@ -5,7 +5,6 @@ class VoucherModel {
     private $db;
 
     public function __construct() {
-        // Khởi tạo đối tượng Database theo đúng file của bạn
         $database = new Database();
         $this->db = $database->getConnection();
     }
@@ -36,7 +35,6 @@ class VoucherModel {
 
     /**
      * Tìm voucher theo code, kiểm tra còn hạn và đủ điều kiện đơn hàng
-     * Trả về voucher data hoặc ['error' => 'message']
      */
     public function getVoucherByCode($code, $orderTotal) {
         $code = strtoupper(trim($code));
@@ -55,6 +53,34 @@ class VoucherModel {
             return ['error' => 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($voucher['min_order_value'], 0, ',', '.') . 'đ để dùng voucher này.'];
         }
         return $voucher;
+    }
+
+    // ✅ Kiểm tra user đã dùng voucher này chưa
+    public function isVoucherUsedByUser($code, $userId) {
+        $code = strtoupper(trim($code));
+        try {
+            // Kiểm tra trong bảng orders xem user đã dùng voucher với code này chưa
+            $stmt = $this->db->prepare(
+                "SELECT COUNT(*) FROM orders o
+                 JOIN vouchers v ON o.voucher_id = v.id
+                 WHERE v.code = :code AND o.buyer_id = :uid LIMIT 1"
+            );
+            $stmt->execute([':code' => $code, ':uid' => $userId]);
+            return $stmt->fetchColumn() > 0;
+        } catch (Exception $e) {
+            return false; // Nếu bảng chưa có, cho phép dùng
+        }
+    }
+
+    // ✅ Đánh dấu voucher đã được dùng (gọi sau khi tạo đơn thành công)
+    public function markVoucherUsed($voucherId, $userId, $orderId) {
+        try {
+            // Có thể tạo bảng voucher_usage nếu muốn chi tiết hơn
+            // Ở đây chúng ta dựa vào quan hệ orders.voucher_id để track
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 }
 ?>
