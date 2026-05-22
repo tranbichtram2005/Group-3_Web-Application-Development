@@ -1,12 +1,14 @@
 <?php
-// Bắt buộc phải có __DIR__ kèm dấu nháy đơn để PHP không bị lạc đường
 require_once __DIR__ . '/../model/CartModel.php';
+require_once __DIR__ . '/../model/VoucherModel.php';
 
 class CartController {
     private $cartModel;
+    private $voucherModel;
 
     public function __construct() {
         $this->cartModel = new CartModel();
+        $this->voucherModel = new VoucherModel();
     }
 
     // Giao diện hiển thị giỏ hàng
@@ -74,6 +76,46 @@ class CartController {
         } catch (Exception $e) {
             echo json_encode(['status' => 'error', 'msg' => $e->getMessage()]);
         }
+    }
+    // Xử lý AJAX áp dụng voucher - Trả về JSON
+    public function applyVoucher() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['status' => 'error', 'msg' => 'Vui lòng đăng nhập!']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents("php://input"), true);
+        $code = trim($input['code'] ?? '');
+        $orderTotal = intval($input['orderTotal'] ?? 0);
+
+        if (empty($code)) {
+            echo json_encode(['status' => 'error', 'msg' => 'Vui lòng nhập mã voucher.']);
+            return;
+        }
+
+        $voucher = $this->voucherModel->getVoucherByCode($code, $orderTotal);
+
+        if (isset($voucher['error'])) {
+            echo json_encode(['status' => 'error', 'msg' => $voucher['error']]);
+            return;
+        }
+
+        $discount = intval($voucher['discount_value']);
+        // Không cho giảm quá tổng đơn hàng
+        if ($discount > $orderTotal) $discount = $orderTotal;
+        $finalTotal = $orderTotal - $discount;
+
+        echo json_encode([
+            'status'           => 'success',
+            'voucherId'        => $voucher['id'],
+            'discount'         => $discount,
+            'discountFormat'   => '-' . number_format($discount, 0, ',', '.') . 'đ',
+            'finalTotal'       => $finalTotal,
+            'finalTotalFormat' => number_format($finalTotal, 0, ',', '.') . 'đ',
+            'msg'              => 'Áp dụng voucher thành công!'
+        ]);
     }
 }
 ?>
