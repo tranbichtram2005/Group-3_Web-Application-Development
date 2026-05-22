@@ -91,8 +91,12 @@ require_once __DIR__ . '/../partials/user-header.php';
                     </div>
 
                     <button class="btn-2life-primary" style="background-color: var(--btn-primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-weight: 700; width: 100%; text-align: center;">
-                        <i class="bi bi-lock-fill me-2"></i>Thanh toán ngay
+                        <i class="bi bi-lock-fill me-2"></i>Đặt hàng
                     </button>
+
+                    <a href="index.php?controller=checkout" class="btn-2life-primary" style="display: block; background-color: var(--btn-primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-weight: 700; width: 100%; text-align: center; text-decoration: none; cursor: pointer;">
+                        <i class="bi bi-bag-check-fill me-2"></i>Đặt hàng
+                    </a>
                     
                     <a href="index.php?controller=home" style="display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--btn-secondary);text-decoration:none">
                         <i class="bi bi-arrow-left me-1"></i>Tiếp tục mua sắm
@@ -100,7 +104,7 @@ require_once __DIR__ . '/../partials/user-header.php';
                     
                     <p class="security-note" style="font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 14px;">
                         <i class="bi bi-shield-check me-1" style="color:var(--btn-primary)"></i>
-                        Kiểm tra hàng trước khi thanh toán
+                        Vui lòng kiểm tra kỹ trước khi nhấn Đặt hàng nhé!
                     </p>
                 </div>
             </div>
