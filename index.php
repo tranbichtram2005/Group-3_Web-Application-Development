@@ -98,6 +98,12 @@ switch ($controller) {
         $action = isset($_GET['action']) ? $_GET['action'] : 'index';
         method_exists($checkoutCtrl, $action) ? $checkoutCtrl->$action() : die("Lỗi: Không tìm thấy action $action trong CheckoutController!");
         break;
+    
+    case 'approvelisting': // <-- TÍNH NĂNG DUYỆT TIN ĐĂNG MỚI ĐƯỢC BỔ SUNG
+        require_once __DIR__ . '/control/ApproveListingController.php';
+        $approveListingCtrl = new ApproveListingController();
+        method_exists($approveListingCtrl, $action) ? $approveListingCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
     default:
         echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
         break;
