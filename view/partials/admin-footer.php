@@ -1,7 +1,7 @@
 </main>
     <footer class="admin-footer">
         <div class="container-fluid">
-            © 2026 2Life Admin Panel - Hệ thống quản trị nội bộ. 
+            © 2026 2Life Admin Panel - Hệ thống quản trị nội bộ.
         </div>
     </footer>
 

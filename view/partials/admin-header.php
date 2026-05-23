@@ -1,3 +1,15 @@
+<?php
+// Đảm bảo session luôn hoạt động để đọc thông tin tài khoản đăng nhập
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Đọc chính xác Họ và tên Admin từ mảng Session user khi đăng nhập thành công
+$adminName = isset($_SESSION['user']['full_name']) ? $_SESSION['user']['full_name'] : 'Admin Account';
+
+// Vì Database chỉ quy định rõ 2 vai trò (1 là Admin, 2 là Member), nên hiển thị nhãn vai trò là Admin
+$adminRole = 'Admin';
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -48,7 +60,6 @@
                             <li><a class="dropdown-item py-2" href="index.php?controller=report&action=index"><i class="bi bi-bar-chart-line me-2 text-secondary"></i>Báo cáo thống kê</a></li>
                         </ul>
                     </li>
-                    
                     <li class="nav-item">
                         <a class="nav-link" href="index.php?controller=support&action=index"><i class="bi bi-headset me-1"></i> Hỗ trợ</a>
                     </li>
@@ -59,9 +70,7 @@
                     <div class="dropdown">
                         <a href="#" class="nav-link position-relative text-white" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-bell fs-5"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">
-                                1
-                            </span>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">1</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationDropdown" style="width: 320px;">
                             <li><h6 class="dropdown-header text-dark fw-bold py-2">Thông báo hệ thống</h6></li>
@@ -82,10 +91,10 @@
 
                     <div class="dropdown">
                         <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://ui-avatars.com/api/?name=Huynh+Nam&background=38bdf8&color=fff" alt="Avatar" width="35" height="35" class="rounded-circle me-2">
+                            <img src="https://ui-avatars.com/api/?name=<?= urlencode($adminName) ?>&background=38bdf8&color=fff" alt="Avatar" width="35" height="35" class="rounded-circle me-2">
                             <div class="d-flex flex-column text-start me-1">
-                                <strong style="font-size: 14px; line-height: 1.2;">Huỳnh N. Nhật Nam</strong>
-                                <small style="font-size: 11px; color: #94a3b8;">Super Admin</small>
+                                <strong style="font-size: 14px; line-height: 1.2; color: #ffffff;"><?= htmlspecialchars($adminName) ?></strong>
+                                <small style="font-size: 11px; color: #94a3b8;"><?= htmlspecialchars($adminRole) ?></small>
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow mt-2" aria-labelledby="accountDropdown">
@@ -101,5 +110,5 @@
             </div>
         </div>
     </header>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <main>
