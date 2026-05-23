@@ -1,77 +1,80 @@
 <?php
 require_once 'model/ListingModel.php';
 
-class ListingController {
+class ListingController
+{
     private $listingModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->listingModel = new ListingModel();
     }
-    
-    public function create() {
-        // ------------------------------------------------------------------
-        // NHÁNH 1: XỬ LÝ KHI NGƯỜI DÙNG BẤM NÚT "ĐĂNG BÁN NGAY" (SUBMIT FORM)
-        // ------------------------------------------------------------------
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if (session_status() == PHP_SESSION_NONE) {
-                session_start();
-            }
-            
-            // 1. Lấy thông tin người đăng (Giả lập user ID = 2 nếu chưa có chức năng login)
-            $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 2; 
-            
-            // 2. Nhận và dọn dẹp dữ liệu từ form
-            $title = trim($_POST['title'] ?? '');
-            $categoryId = $_POST['category_id'] ?? null;
-            $conditionId = $_POST['condition_id'] ?? null;
-            $price = $_POST['price'] ?? 0;
-            $wardId = $_POST['ward_id'] ?? null; 
-            $description = trim($_POST['description'] ?? '');
-            $isNegotiable = isset($_POST['is_negotiable']) ? 1 : 0; // Xử lý checkbox
-            
-            // Dữ liệu mặc định cho tin mới
-            $stockQuantity = 1; 
-            $statusId = 1; // 1 = 'pending' (chờ admin duyệt)
 
-            // Validate dữ liệu trống
-            if(empty($title) || empty($categoryId) || empty($conditionId) || empty($price) || empty($wardId) || empty($description)) {
-                echo "<script>alert('Vui lòng điền đầy đủ thông tin bắt buộc!'); history.back();</script>";
-                return;
-            }
+    public function create()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
 
-            // 3. Lưu thông tin tin đăng vào bảng product_listings
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Bóc tách dữ liệu từ Form
+            $userId        = $_SESSION['user']['id'] ?? 2; // Giả lập user 2 nếu chưa đăng nhập
+            $categoryId    = $_POST['category_id'] ?? null;
+            $conditionId   = $_POST['condition_id'] ?? null;
+            $statusId      = 1; // 1 = Chờ duyệt (Pending)
+            $wardId        = $_POST['ward_id'] ?? null;
+            $title         = isset($_POST['title']) ? trim($_POST['title']) : '';
+            $description   = isset($_POST['description']) ? trim($_POST['description']) : '';
+            $price         = $_POST['price'] ?? 0;
+            $isNegotiable  = isset($_POST['is_negotiable']) ? 1 : 0;
+            $stockQuantity = $_POST['stock_quantity'] ?? 1;
+
+            // Truyền chính xác 10 biến theo đúng thứ tự khai báo trong ListingModel
             $listingId = $this->listingModel->createListing(
-                $userId, $categoryId, $conditionId, $statusId, $wardId, 
-                $title, $description, $price, $isNegotiable, $stockQuantity
+                $userId,
+                $categoryId,
+                $conditionId,
+                $statusId,
+                $wardId,
+                $title,
+                $description,
+                $price,
+                $isNegotiable,
+                $stockQuantity
             );
 
-            // 4. Upload ảnh nếu Insert DB thành công
             if ($listingId) {
                 if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
                     $this->handleImageUploads($listingId, $_FILES['images']);
                 }
-                echo "<script>alert('Đăng tin thành công! Tin của bạn đang chờ duyệt.'); window.location.href='index.php';</script>";
+                
+                // Trả về JSON thông báo Thành công thay vì xuất thẻ <script>
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'success', 'message' => 'Đăng tin thành công! Tin của bạn đang chờ duyệt.']);
+                exit();
             } else {
-                echo "<script>alert('Có lỗi xảy ra khi lưu tin đăng vào hệ thống.'); history.back();</script>";
+                
+                // Trả về JSON thông báo Lỗi
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'error', 'message' => 'Có lỗi xảy ra khi lưu tin đăng vào hệ thống.']);
+                exit();
             }
-        
-        // ------------------------------------------------------------------
-        // NHÁNH 2: XỬ LÝ KHI NGƯỜI DÙNG VỪA VÀO TRANG ĐĂNG TIN (GET)
-        // ------------------------------------------------------------------
         } else {
-            // Lấy dữ liệu Category và Condition từ DB để truyền ra View
+            // ĐÃ SỬA LỖI: Gọi đúng tên hàm get data từ Model để hiển thị giao diện
             $categories = $this->listingModel->getAllCategories();
             $conditions = $this->listingModel->getAllConditions();
+            $wards      = $this->listingModel->getWards();
+
             include 'view/post-product.php';
         }
     }
-
     // =======================================================
     // HÀM PHỤ TRỢ: XỬ LÝ UPLOAD HÌNH ẢNH
     // =======================================================
-    private function handleImageUploads($listingId, $files) {
-        $uploadDir = 'uploads/listings/'; 
-        
+    private function handleImageUploads($listingId, $files)
+    {
+        $uploadDir = 'uploads/listings/';
+
         // Tạo thư mục nếu chưa tồn tại
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
@@ -83,7 +86,7 @@ class ListingController {
         for ($i = 0; $i < $totalImages; $i++) {
             if ($files['error'][$i] === UPLOAD_ERR_OK) {
                 $fileExtension = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
-                
+
                 // Validate định dạng ảnh
                 $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
                 if (!in_array($fileExtension, $allowedExtensions)) continue;
@@ -96,7 +99,7 @@ class ListingController {
                 if (move_uploaded_file($files['tmp_name'][$i], $targetFilePath)) {
                     $imageUrl = '/' . $targetFilePath;
                     $isPrimary = ($i === 0) ? 1 : 0; // Ảnh đầu tiên là ảnh đại diện
-                    
+
                     $this->listingModel->addListingImage($listingId, $imageUrl, $sortOrder, $isPrimary);
                     $sortOrder++;
                 }
@@ -104,4 +107,3 @@ class ListingController {
         }
     }
 }
-?>
