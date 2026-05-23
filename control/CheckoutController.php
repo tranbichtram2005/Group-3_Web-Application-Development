@@ -3,6 +3,7 @@ require_once __DIR__ . '/../model/Database.php';
 require_once __DIR__ . '/../model/OrderModel.php';
 require_once __DIR__ . '/../model/CartModel.php';
 require_once __DIR__ . '/../model/VoucherModel.php';
+require_once __DIR__ . '/../model/ListingModel.php';
 
 class CheckoutController {
 
@@ -10,6 +11,7 @@ class CheckoutController {
     private $orderModel;
     private $cartModel;
     private $voucherModel;
+    private $listingModel;
 
     public function __construct() {
 
@@ -28,6 +30,7 @@ class CheckoutController {
         $this->orderModel = new OrderModel($this->db);
         $this->cartModel = new CartModel();
         $this->voucherModel = new VoucherModel($this->db);
+        $this->listingModel = new ListingModel();
     }
 
     // =========================
@@ -38,30 +41,50 @@ class CheckoutController {
         $userId = $_SESSION['user_id'];
 
         $selectedIds = [];
+        $rawCartItems = [];
 
-        if (!empty($_POST['selected_ids'])) {
-            $selectedIds = array_map('intval', explode(',', $_POST['selected_ids']));
-        } elseif (!empty($_SESSION['checkout_selected_ids'])) {
-            $selectedIds = $_SESSION['checkout_selected_ids'];
+        // TÁCH LUỒNG 1: MUA NGAY TỪ TRANG CHI TIẾT
+        if (isset($_GET['buy_now_id'])) {
+            $productId = (int)$_GET['buy_now_id'];
+            $product = $this->listingModel->getListingDetail($productId);
+            
+            if ($product) {
+                $rawCartItems = [[
+                    'listing_id' => $product['id'],
+                    'title' => $product['title'],
+                    'image_url' => $product['image_url'] ?? '',
+                    'seller_id' => $product['user_id'],
+                    'seller_name' => $product['username'],
+                    'quantity' => 1,
+                    'price_snapshot' => $product['price'],
+                    'stock_quantity' => $product['stock_quantity']
+                ]];
+                $selectedIds = [$product['id']];
+                $_SESSION['buy_now_item'] = $rawCartItems; 
+            } else {
+                header("Location: index.php?controller=home");
+                exit;
+            }
+        } 
+        // TÁCH LUỒNG 2: MUA TỪ GIỎ HÀNG (Code cũ của bạn cậu)
+        else {
+            unset($_SESSION['buy_now_item']); 
+            if (!empty($_POST['selected_ids'])) {
+                $selectedIds = array_map('intval', explode(',', $_POST['selected_ids']));
+            } elseif (!empty($_SESSION['checkout_selected_ids'])) {
+                $selectedIds = $_SESSION['checkout_selected_ids'];
+            }
+            $cartId = $this->cartModel->getCartId($userId);
+            $rawCartItems = $this->cartModel->getCartItems($cartId);
+            if (!empty($selectedIds)) {
+                $rawCartItems = array_filter($rawCartItems, function ($item) use ($selectedIds) {
+                    return in_array($item['listing_id'], $selectedIds);
+                });
+            }
         }
-
-        $cartId = $this->cartModel->getCartId($userId);
-        $rawCartItems = $this->cartModel->getCartItems($cartId);
 
         if (empty($rawCartItems)) {
             header("Location: index.php?controller=cart");
-            exit;
-        }
-
-        // Filter selected items only
-        if (!empty($selectedIds)) {
-            $rawCartItems = array_filter($rawCartItems, function ($item) use ($selectedIds) {
-                return in_array($item['listing_id'], $selectedIds);
-            });
-        }
-
-        if (empty($rawCartItems)) {
-            header("Location: index.php?controller=cart&err=noselect");
             exit;
         }
 
@@ -244,18 +267,22 @@ class CheckoutController {
 
         $userId = $_SESSION['user_id'];
 
-        $selectedIds = $_SESSION['checkout_selected_ids'] ?? [];
-
+        $rawCartItems = [];
         $cartId = $this->cartModel->getCartId($userId);
 
-        $rawCartItems = $this->cartModel->getCartItems($cartId);
-
-        // Filter selected items
-        if (!empty($selectedIds)) {
-
-            $rawCartItems = array_filter($rawCartItems, function ($item) use ($selectedIds) {
-                return in_array($item['listing_id'], $selectedIds);
-            });
+        // TÁCH LUỒNG 1: ĐANG CHỐT ĐƠN CHO "MUA NGAY"
+        if (!empty($_SESSION['buy_now_item'])) {
+            $rawCartItems = $_SESSION['buy_now_item'];
+        } 
+        // TÁCH LUỒNG 2: CHỐT ĐƠN TỪ GIỎ HÀNG (Code cũ)
+        else {
+            $selectedIds = $_SESSION['checkout_selected_ids'] ?? [];
+            $rawCartItems = $this->cartModel->getCartItems($cartId);
+            if (!empty($selectedIds)) {
+                $rawCartItems = array_filter($rawCartItems, function ($item) use ($selectedIds) {
+                    return in_array($item['listing_id'], $selectedIds);
+                });
+            }
         }
 
         if (empty($rawCartItems)) {
@@ -375,16 +402,18 @@ class CheckoutController {
 
         if ($orderId) {
 
-            // Remove purchased items
-            foreach ($checkoutItems as $item) {
-
-                $this->cartModel->removeItem(
-                    $cartId,
-                    $item['listing_id']
-                );
+           // Remove purchased items (CHỈ XÓA NẾU KHÔNG PHẢI MUA NGAY)
+            if (empty($_SESSION['buy_now_item'])) {
+                foreach ($checkoutItems as $item) {
+                    $this->cartModel->removeItem(
+                        $cartId,
+                        $item['listing_id']
+                    );
+                }
             }
 
             unset($_SESSION['checkout_selected_ids']);
+            unset($_SESSION['buy_now_item']); // Xóa rác session mua ngay
 
             // =========================
             // PAYMENT FLOW

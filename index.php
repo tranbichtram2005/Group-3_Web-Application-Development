@@ -41,7 +41,9 @@ $action = isset($_GET['action']) ? $_GET['action'] : 'index';
 
 switch ($controller) {
     case 'home':
-        require_once __DIR__ . '/view/app/home.php';
+        require_once __DIR__ . '/control/HomeController.php';
+        $homeCtrl = new HomeController();
+        $homeCtrl->index();
         break;
 
     case 'cart':

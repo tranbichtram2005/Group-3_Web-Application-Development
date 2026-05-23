@@ -300,6 +300,43 @@
 .nav-dropdown-item i.icon-logout {
     color: var(--error-color) !important; 
 }
+
+/* --- NÂNG CẤP UI/UX TRANG CHỦ --- */
+
+/* Hiệu ứng cho Card Sản Phẩm */
+.card-product {
+    border-radius: 16px !important; /* Bo góc to hơn, hiện đại hơn */
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: #ffffff;
+}
+
+.card-product:hover {
+    transform: translateY(-8px); /* Nổi lên cao hơn */
+    box-shadow: 0 15px 30px rgba(255, 122, 61, 0.15) !important; /* Bóng đổ màu cam thương hiệu 2Life */
+}
+
+/* Hiệu ứng ảnh sản phẩm zoom nhẹ khi hover */
+.card-product .card-img-top {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    transition: transform 0.5s ease;
+}
+
+.card-product:hover .card-img-top {
+    transform: scale(1.05); /* Ảnh to ra một xíu */
+}
+
+/* Bọc ảnh để không bị tràn khi zoom */
+.card-product .position-relative {
+    overflow: hidden;
+}
+
+/* Thanh cuộn danh mục tàng hình */
+.category-scroll::-webkit-scrollbar {
+    display: none; /* Ẩn thanh cuộn ngang đi cho UX giống app điện thoại */
+}
+
     /* ========================================================
     AUTH BUTTONS (chưa đăng nhập)
     ======================================================== */

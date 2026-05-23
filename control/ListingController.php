@@ -106,4 +106,109 @@ class ListingController
             }
         }
     }
+
+    // Chức năng 2: Xử lý tìm kiếm sản phẩm phân trang
+    public function search() {
+        $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
+        $categories = $this->listingModel->getAllCategories();
+
+        $limit = 8; 
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $offset = ($page - 1) * $limit;
+
+        $totalListings = $this->listingModel->getTotalActiveListings($keyword);
+        $totalPages = ceil($totalListings / $limit);
+
+        $listings = $this->listingModel->getPaginatedListings($limit, $offset, $keyword);
+
+        // Tái sử dụng lại view home để render kết quả tìm kiếm cho sạch code
+        require_once __DIR__ . '/../view/app/home.php';
+    }
+
+
+    // Chức năng 3: Xem chi tiết sản phẩm (Tin đăng)
+    public function detail() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        // Lấy data sản phẩm + thông tin người bán
+        $product = $this->listingModel->getListingDetail($id);
+        
+        if (!$product) {
+            die("<h2 style='text-align:center; margin-top:50px; color:gray;'>Sản phẩm không tồn tại hoặc đã bị ẩn!</h2>");
+        }
+
+        // Lấy danh sách ảnh của sản phẩm
+        $images = $this->listingModel->getListingImages($id);
+
+        // Nạp giao diện trang chi tiết sản phẩm
+        require_once __DIR__ . '/../view/app/listing-detail.php';
+    }
+
+    // Chức năng 3: Xem sản phẩm theo Danh mục
+    public function category() {
+        $categoryId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        // Vẫn phải lấy danh sách các danh mục để hiển thị thanh scroll ở home
+        $categories = $this->listingModel->getAllCategories();
+
+        $limit = 8; 
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $offset = ($page - 1) * $limit;
+
+        $totalListings = $this->listingModel->getTotalActiveListingsByCategory($categoryId);
+        $totalPages = ceil($totalListings / $limit);
+
+        $listings = $this->listingModel->getPaginatedListingsByCategory($limit, $offset, $categoryId);
+
+        // Lấy tên danh mục đang chọn để hiển thị ra cho đẹp (tuỳ chọn)
+        $currentCategoryName = "Sản phẩm theo danh mục";
+        foreach($categories as $c) {
+            if($c['id'] == $categoryId) {
+                $currentCategoryName = $c['name'];
+                break;
+            }
+        }
+        // Gắn vào biến $_GET giả để file home.php nhận diện và in ra tiêu đề
+        $_GET['keyword'] = "Danh mục: " . $currentCategoryName; 
+
+        // Tái sử dụng lại view home
+        require_once __DIR__ . '/../view/app/home.php';
+    }
+
+   // Chức năng: Live Search Ajax (Bản bảo mật)
+    // Chức năng: Live Search Ajax (Bản siêu bảo mật)
+    // Chức năng: Live Search Ajax (Bản bắt bọ / Debug)
+    public function suggestAjax() {
+        // Mở mắt cho PHP để nó báo lỗi thật nếu có
+        error_reporting(E_ALL); 
+        ini_set('display_errors', 1);
+        
+        if (ob_get_length()) {
+            ob_clean();
+        }
+        
+        header('Content-Type: application/json; charset=utf-8'); 
+        
+        // BÍ KÍP CHỐNG LỖI: Bắt cả GET lẫn POST, bắt cả biến 'keyword' lẫn biến 'q'
+        $keyword = isset($_REQUEST['keyword']) ? trim($_REQUEST['keyword']) : (isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '');
+        
+        if (empty($keyword)) {
+            echo json_encode([]);
+            exit;
+        }
+
+        try {
+            // Lấy 5 sản phẩm khớp tên
+            $listings = $this->listingModel->getPaginatedListings(5, 0, $keyword);
+            
+            // Ép mảng về JSON
+            echo json_encode($listings);
+        } catch (Exception $e) {
+            // Nếu Database gào thét, nhét câu chửi của nó vào JSON để mình dễ đọc
+            echo json_encode([
+                'error_cua_phung' => 'Lỗi Database: ' . $e->getMessage()
+            ]); 
+        }
+        exit;
+    }
 }

@@ -87,4 +87,94 @@ class ListingModel
 
         return $stmt->execute();
     }
+
+  // 1. Đếm tổng số sản phẩm (Đang bán & Đã bán)
+    public function getTotalActiveListings($keyword = '') {
+        $sql = "SELECT COUNT(*) FROM product_listings WHERE status_id IN (2, 3)";
+        if (!empty($keyword)) {
+            $sql .= " AND title LIKE :keyword";
+        }
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($keyword)) {
+            $kw = "%" . $keyword . "%";
+            $stmt->bindParam(':keyword', $kw, PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
+    // 2. Lấy danh sách sản phẩm phân trang (Đang bán & Đã bán)
+    public function getPaginatedListings($limit, $offset, $keyword = '') {
+        $sql = "SELECT pl.*, w.name AS ward_name, 
+                       (SELECT image_url FROM listing_images WHERE listing_id = pl.id AND is_primary = 1 LIMIT 1) as image_url
+                FROM product_listings pl
+                LEFT JOIN wards w ON pl.ward_id = w.id
+                WHERE pl.status_id IN (2, 3)";
+        
+        if (!empty($keyword)) {
+            $sql .= " AND pl.title LIKE :keyword";
+        }
+        $sql .= " ORDER BY pl.created_at DESC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        if (!empty($keyword)) {
+            $kw = "%" . $keyword . "%";
+            $stmt->bindParam(':keyword', $kw, PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // 3. Lấy chi tiết một sản phẩm
+    public function getListingDetail($id) {
+        $sql = "SELECT pl.*, u.full_name, u.username, u.avatar_url, u.created_at as user_created_at,
+                       c.name as category_name, cond.name as condition_name, w.name as ward_name
+                FROM product_listings pl
+                JOIN users u ON pl.user_id = u.id
+                LEFT JOIN categories c ON pl.category_id = c.id
+                LEFT JOIN conditions cond ON pl.condition_id = cond.id
+                LEFT JOIN wards w ON pl.ward_id = w.id
+                WHERE pl.id = :id AND pl.status_id IN (2, 3)"; 
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // 4. Lấy toàn bộ ảnh phụ
+    public function getListingImages($listingId) {
+        $sql = "SELECT image_url, is_primary FROM listing_images WHERE listing_id = :listing_id ORDER BY sort_order ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // 5. Đếm tổng sản phẩm theo Danh mục
+    public function getTotalActiveListingsByCategory($categoryId) {
+        $sql = "SELECT COUNT(*) FROM product_listings WHERE status_id IN (2, 3) AND category_id = :cat_id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':cat_id', $categoryId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
+    // 6. Lấy danh sách sản phẩm theo Danh mục
+    public function getPaginatedListingsByCategory($limit, $offset, $categoryId) {
+        $sql = "SELECT pl.*, w.name AS ward_name, 
+                       (SELECT image_url FROM listing_images WHERE listing_id = pl.id AND is_primary = 1 LIMIT 1) as image_url
+                FROM product_listings pl
+                LEFT JOIN wards w ON pl.ward_id = w.id
+                WHERE pl.status_id IN (2, 3) AND pl.category_id = :cat_id
+                ORDER BY pl.created_at DESC LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':cat_id', $categoryId, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

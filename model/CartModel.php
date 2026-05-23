@@ -138,5 +138,43 @@ class CartModel {
             return null;
         }
     }
+
+    public function addItem($cartId, $listingId, $quantity) {
+        
+        // 1. Lấy giá tiền hiện tại của sản phẩm để làm price_snapshot
+        $sqlPrice = "SELECT price FROM product_listings WHERE id = :listing_id";
+        $stmtPrice = $this->conn->prepare($sqlPrice);
+        $stmtPrice->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
+        $stmtPrice->execute();
+        $product = $stmtPrice->fetch(PDO::FETCH_ASSOC);
+        $priceSnapshot = $product ? $product['price'] : 0;
+
+        // 2. Kiểm tra xem sản phẩm này đã có trong giỏ chưa
+        $sqlCheck = "SELECT quantity FROM cart_items WHERE cart_id = :cart_id AND listing_id = :listing_id";
+        $stmtCheck = $this->conn->prepare($sqlCheck);
+        $stmtCheck->bindParam(':cart_id', $cartId, PDO::PARAM_INT);
+        $stmtCheck->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
+        $stmtCheck->execute();
+        
+        if ($stmtCheck->rowCount() > 0) {
+            // Nếu đã có trong giỏ -> Chỉ cần cộng dồn số lượng
+            $sql = "UPDATE cart_items SET quantity = quantity + :qty WHERE cart_id = :cart_id AND listing_id = :listing_id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':cart_id', $cartId, PDO::PARAM_INT);
+            $stmt->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
+            $stmt->bindParam(':qty', $quantity, PDO::PARAM_INT);
+        } else {
+            // Nếu chưa có -> Thêm mới dòng này vào giỏ, nhớ chèn thêm price_snapshot
+            $sql = "INSERT INTO cart_items (cart_id, listing_id, quantity, price_snapshot) 
+                    VALUES (:cart_id, :listing_id, :qty, :price_snapshot)";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':cart_id', $cartId, PDO::PARAM_INT);
+            $stmt->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
+            $stmt->bindParam(':qty', $quantity, PDO::PARAM_INT);
+            $stmt->bindParam(':price_snapshot', $priceSnapshot, PDO::PARAM_INT); // Chèn giá tiền vào đây
+        }
+        
+        return $stmt->execute();
+    }
 }
 ?>
