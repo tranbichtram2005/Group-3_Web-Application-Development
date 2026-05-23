@@ -7,7 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
 // Đọc chính xác Họ và tên Admin từ mảng Session user khi đăng nhập thành công
 $adminName = isset($_SESSION['user']['full_name']) ? $_SESSION['user']['full_name'] : 'Admin Account';
 
-// Vì Database chỉ quy định rõ 2 vai trò (1 là Admin, 2 là Member), nên hiển thị nhãn vai trò là Admin
+// Hiển thị nhãn vai trò Admin hệ thống
 $adminRole = 'Admin';
 ?>
 <!DOCTYPE html>
@@ -54,6 +54,7 @@ $adminRole = 'Admin';
                             <li><a class="dropdown-item py-2" href="index.php?controller=category&action=index"><i class="bi bi-tags me-2 text-secondary"></i>Quản lý danh mục</a></li>
                             <li><a class="dropdown-item py-2" href="index.php?controller=user&action=index"><i class="bi bi-people me-2 text-secondary"></i>Quản lý tài khoản người dùng</a></li>
                             <li><a class="dropdown-item py-2" href="index.php?controller=approveseller&action=index"><i class="bi bi-card-checklist me-2 text-secondary"></i>Phê duyệt người bán</a></li>
+                            <li><a class="dropdown-item py-2" href="index.php?controller=approvelisting&action=index"><i class="bi bi-journal-check me-2 text-secondary"></i>Phê duyệt tin đăng bán</a></li>
                             <li><a class="dropdown-item py-2" href="index.php?controller=blog&action=index"><i class="bi bi-file-earmark-text me-2 text-secondary"></i>Quản lý blog</a></li>
                             <li><a class="dropdown-item py-2" href="index.php?controller=voucher&action=index"><i class="bi bi-ticket-perforated me-2 text-secondary"></i>Quản lý voucher</a></li>
                             <li><hr class="dropdown-divider"></li>
