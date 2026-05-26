@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../model/CartModel.php';
 require_once __DIR__ . '/../model/VoucherModel.php';
+require_once __DIR__ . '/../model/Database.php'; // Bổ sung để fix lỗi kết nối DB
 
 class CartController {
     private $cartModel;
@@ -14,14 +15,13 @@ class CartController {
     // Giao diện hiển thị giỏ hàng
     public function index() {
         if(!isset($_SESSION['user_id'])) {
-            header("Location: view/Auth/login.php");
+            header("Location: index.php?controller=auth&action=login");
             exit;
         }
 
         $userId = $_SESSION['user_id'];
         $cartId = $this->cartModel->getCartId($userId);
         
-        // Lấy danh sách sản phẩm từ DB
         $cartItems = $this->cartModel->getCartItems($cartId);
         
         require_once __DIR__ . '/../view/app/cart.php';
@@ -54,7 +54,6 @@ class CartController {
             } elseif ($action === 'update') {
                 $newQty = intval($input['quantity']);
                 
-                // ✅ Kiểm tra tồn kho trước khi cập nhật
                 $stock = $this->cartModel->getStock($listingId);
                 if ($newQty > $stock) {
                     echo json_encode([
@@ -88,8 +87,15 @@ class CartController {
         }
     }
 
-    // Áp dụng voucher - Trả về JSON
+    // Để phòng hờ Giỏ hàng gọi nhầm tên hàm
     public function applyVoucher() {
+        $this->applyVoucherAjax();
+    }
+
+    // ==========================================
+    // ÁP DỤNG VOUCHER (ĐÃ FIX KẾT NỐI DATABASE VÀ BIẾN SỐ)
+    // ==========================================
+    public function applyVoucherAjax() {
         header('Content-Type: application/json; charset=utf-8');
 
         if (!isset($_SESSION['user_id'])) {
@@ -99,7 +105,9 @@ class CartController {
 
         $input = json_decode(file_get_contents("php://input"), true);
         $code = trim($input['code'] ?? '');
-        $orderTotal = intval($input['orderTotal'] ?? 0);
+        
+        // Hỗ trợ cả 2 biến từ cart.php (orderTotal) và checkout.php (subtotal)
+        $orderTotal = (float)($input['subtotal'] ?? $input['orderTotal'] ?? 0);
 
         if (empty($code)) {
             echo json_encode(['status' => 'error', 'msg' => 'Vui lòng nhập mã voucher.']);
@@ -108,36 +116,59 @@ class CartController {
 
         $userId = $_SESSION['user_id'];
 
-        // ✅ Kiểm tra voucher đã dùng chưa
-        $alreadyUsed = $this->voucherModel->isVoucherUsedByUser($code, $userId);
-        if ($alreadyUsed) {
-            echo json_encode(['status' => 'error', 'msg' => 'Bạn đã dùng voucher này rồi!']);
-            return;
+        try {
+            // Tự khởi tạo kết nối DB riêng để tránh sập Model
+            $database = new Database();
+            $db = $database->getConnection();
+            
+            // 1. Tìm voucher trong CSDL
+            $stmt = $db->prepare("SELECT * FROM vouchers WHERE code = :code LIMIT 1");
+            $stmt->execute([':code' => $code]);
+            $voucher = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$voucher) {
+                echo json_encode(['status' => 'error', 'msg' => 'Mã giảm giá không tồn tại hoặc đã hết hạn!']);
+                return;
+            }
+
+            // 2. Kiểm tra xem người dùng đã sử dụng mã này chưa 
+            // (Tra cứu lịch sử mua hàng trong bảng orders)
+            $stmtCheck = $db->prepare("SELECT id FROM orders WHERE buyer_id = :user_id AND voucher_id = :voucher_id LIMIT 1");
+            $stmtCheck->execute([':user_id' => $userId, ':voucher_id' => $voucher['id']]);
+            if ($stmtCheck->fetch()) {
+                echo json_encode(['status' => 'error', 'msg' => 'Cậu đã sử dụng voucher này cho đơn hàng trước đó rồi!']);
+                return;
+            }
+
+            // 3. Kiểm tra giá trị tối thiểu
+            if ($orderTotal < $voucher['min_order_value']) {
+                echo json_encode(['status' => 'error', 'msg' => 'Đơn hàng chưa đạt tối thiểu ' . number_format($voucher['min_order_value'], 0, ',', '.') . 'đ']);
+                return;
+            }
+
+            // 4. Tính toán giảm giá thành công
+            $discount = (float)$voucher['discount_value'];
+            if ($discount > $orderTotal) {
+                $discount = $orderTotal; 
+            }
+            $finalTotal = $orderTotal - $discount;
+
+            echo json_encode([
+                'status'           => 'success',
+                'voucherId'        => $voucher['id'],
+                'discount'         => $discount,
+                'discountFormat'   => '-' . number_format($discount, 0, ',', '.') . 'đ',
+                'finalTotal'       => $finalTotal,
+                'finalTotalFormat' => number_format($finalTotal, 0, ',', '.') . 'đ',
+                'msg'              => 'Áp dụng voucher thành công!'
+            ]);
+
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'msg' => 'Lỗi truy xuất hệ thống: ' . $e->getMessage()]);
         }
-
-        $voucher = $this->voucherModel->getVoucherByCode($code, $orderTotal);
-
-        if (isset($voucher['error'])) {
-            echo json_encode(['status' => 'error', 'msg' => $voucher['error']]);
-            return;
-        }
-
-        $discount = intval($voucher['discount_value']);
-        if ($discount > $orderTotal) $discount = $orderTotal;
-        $finalTotal = $orderTotal - $discount;
-
-        echo json_encode([
-            'status'           => 'success',
-            'voucherId'        => $voucher['id'],
-            'discount'         => $discount,
-            'discountFormat'   => '-' . number_format($discount, 0, ',', '.') . 'đ',
-            'finalTotal'       => $finalTotal,
-            'finalTotalFormat' => number_format($finalTotal, 0, ',', '.') . 'đ',
-            'msg'              => 'Áp dụng voucher thành công!'
-        ]);
     }
 
-    // ✅ AJAX lấy địa chỉ của user
+    // AJAX lấy địa chỉ của user
     public function getAddresses() {
         header('Content-Type: application/json; charset=utf-8');
         if (!isset($_SESSION['user_id'])) {
@@ -148,7 +179,7 @@ class CartController {
         echo json_encode(['status' => 'success', 'addresses' => $addresses]);
     }
 
-    // ✅ AJAX thêm địa chỉ mới
+    // AJAX thêm địa chỉ mới
     public function addAddress() {
         header('Content-Type: application/json; charset=utf-8');
         if (!isset($_SESSION['user_id'])) {
@@ -179,9 +210,7 @@ class CartController {
         }
     }
 
-  // ==========================================
-    // HÀM AJAX THÊM VÀO GIỎ HÀNG (BẢN PRO)
-    // ==========================================
+    // HÀM AJAX THÊM VÀO GIỎ HÀNG
     public function addAjax() {
         header('Content-Type: application/json; charset=utf-8');
 
@@ -201,14 +230,12 @@ class CartController {
         try {
             $cartId = $this->cartModel->getCartId($userId);
             
-            // 1. Kiểm tra tồn kho gốc
             $stock = (int)$this->cartModel->getStock($listingId);
             if ($stock <= 0) {
                 echo json_encode(['status' => 'error', 'msg' => 'Sản phẩm này đã hết hàng!']);
                 return;
             }
 
-            // 2. Kiểm tra xem trong giỏ đã có bao nhiêu cái rồi
             $cartItems = $this->cartModel->getCartItems($cartId);
             $itemExists = false;
             $currentQty = 0;
@@ -223,28 +250,23 @@ class CartController {
                 }
             }
 
-            // 3. Xử lý logic cộng dồn
             if ($itemExists) {
-                // Nếu trong giỏ đã có, cộng thêm 1 xem có bị lố tồn kho không
                 if ($currentQty + 1 > $stock) {
-                    // Thông báo rõ ràng để khách không bị hoang mang
                     echo json_encode(['status' => 'error', 'msg' => "Bạn đã bỏ $currentQty món này vào giỏ rồi. Không thể thêm vượt quá tồn kho ($stock)!"]);
                     return;
                 }
                 $this->cartModel->updateQuantity($cartId, $listingId, $currentQty + 1);
             } else {
-                // Nếu chưa có thì thêm món mới
                 $this->cartModel->addItem($cartId, $listingId, 1);
             }
 
-            // 4. BÍ KÍP ĐỂ HEADER NHẢY SỐ: Đếm lại tổng số món trong giỏ và gửi về
             $updatedCart = $this->cartModel->getCartItems($cartId);
             $newCartCount = is_array($updatedCart) ? count($updatedCart) : 0;
 
             echo json_encode([
                 'status' => 'success', 
                 'msg' => 'Đã thêm vào giỏ hàng!',
-                'newCartCount' => $newCartCount // Trả số lượng về cho file JS chụp lại
+                'newCartCount' => $newCartCount 
             ]);
 
         } catch (Exception $e) {
