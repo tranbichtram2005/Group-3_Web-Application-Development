@@ -2,6 +2,9 @@
 // Code phòng thủ chống lỗi
 $product = $product ?? [];
 $images = $images ?? [];
+$avgRating = $avgRating ?? 0;
+$totalReviews = $totalReviews ?? 0;
+$productReviews = $productReviews ?? [];
 ?>
 <?php require_once __DIR__ . '/../partials/user-header.php'; ?>
 
@@ -12,7 +15,26 @@ $images = $images ?? [];
             <li class="breadcrumb-item active text-dark" aria-current="page"><?= htmlspecialchars($product['category_name'] ?? 'Sản phẩm') ?></li>
         </ol>
     </nav>
-
+    <div class="d-flex align-items-center gap-3 my-2">
+        <div class="text-warning fs-5">
+            <?php 
+            $fullStars = floor($avgRating);
+            for ($i = 1; $i <= 5; $i++) {
+                if ($i <= $fullStars) {
+                    echo '<i class="bi bi-star-fill"></i>';
+                } else if ($i == $fullStars + 1 && ($avgRating - $fullStars) >= 0.5) {
+                    echo '<i class="bi bi-star-half"></i>';
+                } else {
+                    echo '<i class="bi bi-star"></i>';
+                }
+            }
+            ?>
+            <span class="text-dark ms-1 fw-bold"><?= $avgRating ?>/5</span>
+        </div>
+        <span class="text-secondary">|</span>
+        <span class="text-muted fw-medium"><?= $totalReviews ?> Đánh giá</span>
+    </div>
+    
     <div class="row g-4">
         <div class="col-12 col-lg-8">
             <div class="bg-white border rounded-4 overflow-hidden p-3 mb-4 shadow-sm text-center">
@@ -38,6 +60,87 @@ $images = $images ?? [];
                 <h5 class="fw-bold text-dark mb-3 border-bottom pb-2">Mô tả sản phẩm</h5>
                 <p class="text-dark lh-base" style="white-space: pre-line;"><?= htmlspecialchars($product['description'] ?? 'Người bán không để lại mô tả sản phẩm.') ?></p>
             </div>
+
+            <div class="bg-white border rounded-4 p-4 shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">
+                    <i class="bi bi-chat-left-heart-fill text-warning me-2"></i>Đánh giá từ người mua thực tế
+                </h5>
+
+                <div class="row align-items-center bg-light p-3 rounded-3 mb-4 g-3 mx-0 border">
+                    <div class="col-md-4 text-center border-end border-2 border-white">
+                        <h1 class="text-warning fw-bold mb-0 display-5"><?= $avgRating ?></h1>
+                        <p class="text-muted small mb-1">trên 5 sao</p>
+                        <div class="text-warning fs-5">
+                            <?php
+                            for ($i = 1; $i <= 5; $i++) {
+                                echo $i <= floor($avgRating) ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star"></i>';
+                            }
+                            ?>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8 px-4 text-center text-md-start">
+                        <?php $currentStar = isset($_GET['star']) ? (int)$_GET['star'] : 0; ?>
+                        
+                        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+                            <a href="index.php?controller=listing&action=detail&id=<?= $product['id'] ?>" 
+                               class="btn btn-<?= $currentStar === 0 ? 'warning text-dark fw-bold' : 'outline-secondary bg-white' ?> rounded-pill px-3 py-1 fs-6 shadow-sm">
+                               Tất cả (<?= $totalReviews ?>)
+                            </a>
+                            <a href="index.php?controller=listing&action=detail&id=<?= $product['id'] ?>&star=5" 
+                               class="btn btn-<?= $currentStar === 5 ? 'warning text-dark fw-bold' : 'outline-secondary bg-white' ?> rounded-pill px-3 py-1 fs-6 shadow-sm">
+                               5 Sao
+                            </a>
+                            <a href="index.php?controller=listing&action=detail&id=<?= $product['id'] ?>&star=4" 
+                               class="btn btn-<?= $currentStar === 4 ? 'warning text-dark fw-bold' : 'outline-secondary bg-white' ?> rounded-pill px-3 py-1 fs-6 shadow-sm">
+                               4 Sao
+                            </a>
+                            <a href="index.php?controller=listing&action=detail&id=<?= $product['id'] ?>&star=3" 
+                               class="btn btn-<?= $currentStar === 3 ? 'warning text-dark fw-bold' : 'outline-secondary bg-white' ?> rounded-pill px-3 py-1 fs-6 shadow-sm">
+                               3 Sao
+                            </a>
+                            <a href="index.php?controller=listing&action=detail&id=<?= $product['id'] ?>&star=2" 
+                               class="btn btn-<?= $currentStar === 2 ? 'warning text-dark fw-bold' : 'outline-secondary bg-white' ?> rounded-pill px-3 py-1 fs-6 shadow-sm">
+                               2 Sao
+                            </a>
+                            <a href="index.php?controller=listing&action=detail&id=<?= $product['id'] ?>&star=1" 
+                               class="btn btn-<?= $currentStar === 1 ? 'warning text-dark fw-bold' : 'outline-secondary bg-white' ?> rounded-pill px-3 py-1 fs-6 shadow-sm">
+                               1 Sao
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="review-list">
+                    <?php if (empty($productReviews)): ?>
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-chat-square-dots fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            Sản phẩm này hiện tại chưa có đánh giá nào từ người mua.
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($productReviews as $review): ?>
+                            <div class="py-3 border-bottom <?php echo next($productReviews) ? '' : 'border-0'; ?>">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div>
+                                        <strong class="text-dark small d-block"><?= htmlspecialchars($review['reviewer_name']) ?></strong>
+                                        <div class="text-warning my-1" style="font-size: 13px;">
+                                            <?php
+                                            for ($i = 1; $i <= 5; $i++) {
+                                                echo $i <= $review['rating'] ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star"></i>';
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <span class="text-muted small"><i class="bi bi-clock me-1"></i><?= date('d/m/Y H:i', strtotime($review['created_at'])) ?></span>
+                                </div>
+                                <div class="bg-light p-2 rounded-2 text-secondary small mt-2 d-inline-block w-100">
+                                    <?= nl2br(htmlspecialchars($review['comment'])) ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
 
         <div class="col-12 col-lg-4">
@@ -53,7 +156,6 @@ $images = $images ?? [];
                     
                     <div class="d-grid gap-3 mt-4">
                         <?php 
-                        // Kiểm tra: Nếu Tồn kho > 0 VÀ Trạng thái không phải là 3 (Đã bán) thì mới cho mua
                         if(isset($product['stock_quantity']) && $product['stock_quantity'] > 0 && isset($product['status_id']) && $product['status_id'] != 3): 
                         ?>
                             <div class="row g-2">
@@ -92,34 +194,26 @@ $images = $images ?? [];
 <?php require_once __DIR__ . '/../partials/user-footer.php'; ?>
 
 <script>
-// 1. XỬ LÝ THÊM VÀO GIỎ HÀNG (AJAX - CÓ CẬP NHẬT HEADER DOM)
 async function actionAddToCart(listingId) {
     try {
         let res = await fetch(`index.php?controller=cart&action=addAjax&id=${listingId}`, { method: 'POST' });
         let data = await res.json(); 
         
         if(data.status === 'success') {
-            
-            // =========================================================
-            // BÍ KÍP DOM: ÉP HEADER NHẢY SỐ NGAY LẬP TỨC KHÔNG CẦN TẢI LẠI TRANG
             if(data.newCartCount !== undefined) {
                 let cartIcon = document.querySelector('a[title="Giỏ hàng"]');
                 if(cartIcon) {
                     let badge = cartIcon.querySelector('.badge');
                     if(badge) {
-                        badge.innerText = data.newCartCount; // Đã có cục đỏ thì đổi số
+                        badge.innerText = data.newCartCount; 
                     } else {
-                        // Chưa có cục đỏ (giỏ trống) thì nhét HTML vào
                         cartIcon.innerHTML += `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;">${data.newCartCount}</span>`;
                     }
-                    
-                    // Thêm hiệu ứng giật nảy nhẹ cho icon Giỏ hàng để khách chú ý (Tùy chọn cho xịn)
                     cartIcon.style.transform = 'scale(1.2)';
                     setTimeout(() => cartIcon.style.transform = 'scale(1)', 200);
                 }
             }
-            // =========================================================
-
+            
             Swal.fire({
                 icon: 'success', title: 'Đã thêm vào giỏ hàng!', text: 'Bạn có muốn chuyển đến giỏ hàng không?',
                 showCancelButton: true, confirmButtonColor: '#FF7A3D', cancelButtonColor: '#6c757d',
@@ -129,7 +223,6 @@ async function actionAddToCart(listingId) {
             });
 
         } else {
-            // Nếu lỗi (vượt tồn kho) thì hiện thông báo cảnh báo màu vàng nhẹ nhàng
             Swal.fire({ icon: 'warning', title: 'Chú ý', text: data.msg });
         }
     } catch (e) {
@@ -137,8 +230,11 @@ async function actionAddToCart(listingId) {
         Swal.fire({ icon: 'error', title: 'Lỗi Backend', text: 'Chức năng giỏ hàng đang bảo trì!', confirmButtonColor: '#d33' });
     }
 }
+
 function actionBuyNow(listingId) {
-    window.location.href = `index.php?controller=checkout&action=index&buy_now_id=${listingId}`;
+    let qtyInput = document.getElementById('quantity');
+    let qty = qtyInput ? qtyInput.value : 1;
+    window.location.href = `index.php?controller=checkout&action=index&listing_id=${listingId}&quantity=${qty}`;
 }
 
 function actionChat(sellerId, listingId) {
