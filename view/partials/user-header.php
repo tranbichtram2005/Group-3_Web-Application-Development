@@ -75,14 +75,14 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
                         
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2" aria-labelledby="userDropdown" style="border-radius: 12px; min-width: 250px; background: #fff;">
                             <li>
-                                <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-bag-check"></i> Đơn mua của tôi</a>
-                            </li>
+    <a class="dropdown-item" href="index.php?controller=order&action=index">
+        <i class="bi bi-bag-check me-2"></i>Đơn mua của tôi
+    </a>
+</li>
                             <li>
                                 <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-receipt"></i> Đơn bán của tôi</a>
                             </li>
-                            <li>
-                                <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-bar-chart"></i> Dashboard</a>
-                            </li>
+                            <li><a class="dropdown-item" href="index.php?controller=dashboard"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Dashboard</a></li>
                             <li>
                                 <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-card-list"></i> Quản lý tin đăng</a>
                             </li>
