@@ -68,6 +68,7 @@ class ListingController
             include 'view/post-product.php';
         }
     }
+    
     // =======================================================
     // HÀM PHỤ TRỢ: XỬ LÝ UPLOAD HÌNH ẢNH
     // =======================================================
@@ -126,7 +127,9 @@ class ListingController
     }
 
 
-    // Chức năng 3: Xem chi tiết sản phẩm (Tin đăng)
+    // =======================================================
+    // CHỨC NĂNG 3: XEM CHI TIẾT SẢN PHẨM (ĐÃ CHÈN LOGIC ĐÁNH GIÁ VÀO ĐÂY)
+    // =======================================================
     public function detail() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         
@@ -140,11 +143,20 @@ class ListingController
         // Lấy danh sách ảnh của sản phẩm
         $images = $this->listingModel->getListingImages($id);
 
-        // Nạp giao diện trang chi tiết sản phẩm
+        // --- GỌI MODEL ĐỂ LẤY DỮ LIỆU ĐÁNH GIÁ ---
+        // 1. Thống kê sao
+        $stats = $this->listingModel->getProductReviewStats($id);
+        $avgRating = $stats['avg_rating'] ? round($stats['avg_rating'], 1) : 0;
+        $totalReviews = $stats['total_reviews'] ?? 0;
+
+        $filterStar = isset($_GET['star']) ? (int)$_GET['star'] : 0;
+
+        // 2. Danh sách bình luận (có truyền thêm biến $filterStar xuống Model)
+        $productReviews = $this->listingModel->getProductReviews($id, $filterStar);
         require_once __DIR__ . '/../view/app/listing-detail.php';
     }
 
-    // Chức năng 3: Xem sản phẩm theo Danh mục
+    // Chức năng 4: Xem sản phẩm theo Danh mục
     public function category() {
         $categoryId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         
@@ -169,15 +181,13 @@ class ListingController
             }
         }
         // Gắn vào biến $_GET giả để file home.php nhận diện và in ra tiêu đề
-        $_GET['keyword'] = "Danh mục: " . $currentCategoryName; 
+        $_GET['keyword'] = "Danh mục: " . $currentCategoryName;
 
         // Tái sử dụng lại view home
         require_once __DIR__ . '/../view/app/home.php';
     }
 
    // Chức năng: Live Search Ajax (Bản bảo mật)
-    // Chức năng: Live Search Ajax (Bản siêu bảo mật)
-    // Chức năng: Live Search Ajax (Bản bắt bọ / Debug)
     public function suggestAjax() {
         // Mở mắt cho PHP để nó báo lỗi thật nếu có
         error_reporting(E_ALL); 
