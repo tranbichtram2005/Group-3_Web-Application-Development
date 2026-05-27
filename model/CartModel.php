@@ -26,7 +26,7 @@ class CartModel {
     }
 
     public function getCartItems($cartId) {
-        $query = "SELECT ci.listing_id, ci.quantity, ci.price_snapshot, 
+        $query = "SELECT ci.*, ci.listing_id, ci.quantity, ci.price_snapshot, 
                          p.title, p.stock_quantity, 
                          u.full_name as seller_name, u.id as seller_id,
                          img.image_url
@@ -177,10 +177,11 @@ class CartModel {
         return $stmt->execute();
     }
 
-    // 1. Kiểm tra khách hàng có Deal giá hợp lệ (thành công trong 24h) không
+// 1. Kiểm tra Deal và LẤY LUÔN SỐ LƯỢNG DEAL (po.quantity)
     public function checkValidDeal($buyerId, $listingId) {
-        $expireTime = date('Y-m-d H:i:s', time() - 86400); // Lùi lại 24 tiếng
-        $sql = "SELECT po.id, pod.proposed_price 
+        $expireTime = date('Y-m-d H:i:s', time() - 86400); 
+        // LƯU Ý: Tớ gọi thêm cột po.quantity. Nếu DB cậu chưa có cột này trong bảng price_offers thì nhớ vào phpMyAdmin add thêm nhé!
+        $sql = "SELECT po.id, pod.proposed_price, po.quantity 
                 FROM price_offers po
                 JOIN price_offer_details pod ON po.id = pod.offer_id
                 WHERE po.buyer_id = ? AND po.listing_id = ? AND po.status_id = 2 
@@ -199,16 +200,32 @@ class CartModel {
         return $stmt->fetch();
     }
 
-    // 3. Hàm Thêm/Cập nhật giỏ hàng thông minh (Lưu luôn cả giá Deal và offer_id)
+   // 3. Hàm Thêm/Cập nhật (Tự động Ghi Đè số lượng nếu là Deal)
     public function upsertCartItem($cartId, $listingId, $qty, $price, $offerId) {
         $sql = "INSERT INTO cart_items (cart_id, listing_id, quantity, price_snapshot, offer_id) 
                 VALUES (?, ?, ?, ?, ?) 
                 ON DUPLICATE KEY UPDATE 
-                quantity = quantity + VALUES(quantity),
+                quantity = IF(VALUES(offer_id) IS NOT NULL, VALUES(quantity), quantity + VALUES(quantity)),
                 price_snapshot = VALUES(price_snapshot),
                 offer_id = VALUES(offer_id)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([$cartId, $listingId, $qty, $price, $offerId]);
+    }
+    
+    // BẮT DEAL HẾT HẠN TRONG GIỎ HÀNG VÀ TRẢ VỀ GIÁ GỐC
+    public function cleanExpiredDealsInCart($cartId) {
+        $expireTime = date('Y-m-d H:i:s', time() - 86400); // Mốc 24h trước
+        
+        $sql = "UPDATE cart_items ci
+                JOIN price_offers po ON ci.offer_id = po.id
+                JOIN product_listings pl ON ci.listing_id = pl.id
+                SET ci.offer_id = NULL, ci.price_snapshot = pl.price
+                WHERE ci.cart_id = ? 
+                AND (po.updated_at < ? OR po.status_id != 2)";
+                
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$cartId, $expireTime]);
+        return $stmt->rowCount(); // Trả về số lượng SP bị tước Deal
     }
 }
 ?>
