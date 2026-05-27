@@ -70,10 +70,13 @@ switch ($controller) {
         method_exists($manageCtrl, $action) ? $manageCtrl->$action() : die("Lỗi: Không tìm thấy action!");
         break;
 
-    case 'approveseller':
+   case 'approveseller':
         require_once __DIR__ . '/control/ApproveSellerController.php';
         $approveSellerCtrl = new ApproveSellerController();
-        method_exists($approveSellerCtrl, $action) ? $approveSellerCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        
+        // Mặc định chạy action index nếu không truyền tham số action trên URL
+        $action = isset($_GET['action']) ? $_GET['action'] : 'index';
+        method_exists($approveSellerCtrl, $action) ? $approveSellerCtrl->$action() : die("Lỗi: Không tìm thấy action $action trong ApproveSellerController!");
         break;
 
     case 'profile':

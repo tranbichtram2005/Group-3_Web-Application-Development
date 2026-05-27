@@ -1,84 +1,218 @@
-<?php include 'layout/admin-header.php'; ?>
+<?php include __DIR__ . '/../partials/admin-header.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<div class="container-fluid" style="max-width: 900px; margin: 0 auto;">
-    <div class="mb-4">
-        <a href="index.php?controller=approveseller&action=index" class="text-decoration-none small text-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
+<div class="container py-4" style="min-height: 75vh;">
+    <div class="mb-3">
+        <a href="index.php?controller=approveseller" class="text-decoration-none text-muted small">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách phê duyệt
         </a>
-        <h2 class="h4 mt-2 fw-bold text-dark">Hồ Sơ Cửa Hàng: <?= htmlspecialchars($request['shop_name']) ?></h2>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-3 mb-4">
-        <div class="card-header bg-white fw-bold py-3 text-primary">
-            <i class="bi bi-info-circle me-1"></i> Thông tin Người đăng ký
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <p class="mb-1 text-secondary small">Họ và tên chủ tài khoản</p>
-                    <h6 class="fw-bold text-dark"><?= htmlspecialchars($request['full_name']) ?></h6>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Hồ sơ đăng ký gian hàng</h5>
+                
+                <div class="d-flex align-items-start gap-4 flex-wrap flex-sm-nowrap mb-4">
+                    <img src="<?= htmlspecialchars($seller['avatar_url'] ?? 'uploads/avatars/no-avatar.png') ?>" class="rounded-circle border shadow-sm" style="width: 90px; height: 90px; object-fit: cover;">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1"><?= htmlspecialchars($seller['shop_name']) ?></h4>
+                        <p class="text-muted mb-2 font-monospace small">Mã hồ sơ hệ thống: #ID-SP<?= $seller['id'] ?></p>
+                        
+                        <span id="status-badge" class="badge p-2 rounded-3 <?= $seller['is_verified'] == 1 ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning text-dark' ?>">
+                            <i class="bi bi-info-circle me-1"></i><?= $seller['is_verified'] == 1 ? 'ĐÃ KÍCH HOẠT' : 'ĐANG CHỜ XÉT DUYỆT' ?>
+                        </span>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-1 text-secondary small">Email</p>
-                    <h6 class="text-dark"><?= htmlspecialchars($request['email']) ?></h6>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-1 text-secondary small">Số điện thoại liên hệ</p>
-                    <h6 class="text-dark"><?= !empty($request['phone']) ? htmlspecialchars($request['phone']) : 'Chưa cập nhật' ?></h6>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="card border-0 shadow-sm rounded-3 mb-4">
-        <div class="card-header bg-white fw-bold py-3 text-success">
-            <i class="bi bi-shop me-1"></i> Thông tin Cửa hàng đề xuất
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <p class="mb-1 text-secondary small">Tên Shop</p>
-                    <h6 class="fw-bold fs-5 text-primary"><?= htmlspecialchars($request['shop_name']) ?></h6>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-1 text-secondary small">Mã số thuế (Tax Code)</p>
-                    <h6 class="text-dark fw-bold"><?= !empty($request['tax_code']) ? htmlspecialchars($request['tax_code']) : 'Không có' ?></h6>
-                </div>
-                <div class="col-12 mb-2">
-                    <p class="mb-1 text-secondary small">Mô tả cửa hàng</p>
-                    <div class="p-3 bg-light rounded text-dark" style="font-size: 14.5px;">
-                        <?= nl2br(htmlspecialchars($request['description'])) ?>
+                <div class="row g-3">
+                    <div class="col-md-6 bg-light p-3 rounded-3 border-light border">
+                        <small class="text-muted d-block small mb-1 fw-medium">Họ và tên người đăng ký</small>
+                        <span class="fw-bold text-dark"><?= htmlspecialchars($seller['full_name']) ?></span>
+                    </div>
+                    <div class="col-md-6 bg-light p-3 rounded-3 border-light border">
+                        <small class="text-muted d-block small mb-1 fw-medium">Tên tài khoản (Username)</small>
+                        <span class="fw-bold text-dark font-monospace">@<?= htmlspecialchars($seller['username']) ?></span>
+                    </div>
+                    <div class="col-md-6 bg-light p-3 rounded-3 border-light border">
+                        <small class="text-muted d-block small mb-1 fw-medium">Địa chỉ thư điện tử Email</small>
+                        <span class="fw-semibold text-secondary"><?= htmlspecialchars($seller['email']) ?></span>
+                    </div>
+                    <div class="col-md-6 bg-light p-3 rounded-3 border-light border">
+                        <small class="text-muted d-block small mb-1 fw-medium">Số điện thoại liên hệ</small>
+                        <span class="fw-semibold text-secondary"><?= htmlspecialchars($seller['phone'] ?? 'Chưa cung cấp') ?></span>
+                    </div>
+                    <div class="col-12 bg-light p-3 rounded-3 border-light border">
+                        <small class="text-muted d-block small mb-1 fw-medium">Mô tả định hướng kinh doanh của Shop</small>
+                        <p class="mb-0 text-dark" style="white-space: pre-line;"><?= htmlspecialchars($seller['description'] ?? 'Không có thông tin mô tả ngắn.') ?></p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <?php if ($request['is_verified'] == 0): ?>
-        <div class="card border-0 shadow-sm rounded-3 bg-light border">
-            <div class="card-body p-4 text-center">
-                <h5 class="fw-bold mb-4">Quyết định Phê duyệt</h5>
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="index.php?controller=approveseller&action=reject&id=<?= $request['id'] ?>" 
-                       class="btn btn-outline-danger px-4 py-2 fw-bold" 
-                       onclick="return confirm('Bạn muốn TỪ CHỐI và XÓA hồ sơ đăng ký này?')">
-                        <i class="bi bi-x-circle-fill me-1"></i> Từ chối hồ sơ
-                    </a>
-                    
-                    <a href="index.php?controller=approveseller&action=approve&id=<?= $request['id'] ?>&user_id=<?= $request['user_id'] ?>" 
-                       class="btn btn-success px-4 py-2 fw-bold" 
-                       onclick="return confirm('Xác nhận CẤP QUYỀN Seller cho tài khoản này?')">
-                        <i class="bi bi-check-circle-fill me-1"></i> Chấp thuận mở Shop
-                    </a>
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Thông tin pháp lý</h5>
+                <div class="mb-3">
+                    <label class="text-muted small d-block mb-1 fw-medium">Mã Số Thuế Doanh Nghiệp / Hộ Kinh Doanh:</label>
+                    <div class="fs-4 fw-bold font-monospace text-danger bg-danger-subtle px-3 py-2 rounded-3 border border-danger-subtle text-center">
+                        <?= htmlspecialchars($seller['tax_code'] ?? 'KHÔNG CÓ') ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Quyết định phê duyệt</h5>
+                <div id="panel-action-wrapper">
+                    <?php if ($seller['is_verified'] == 0): ?>
+                        <button type="button" id="btnApprove" data-profile="<?= $seller['id'] ?>" data-user="<?= $seller['user_id'] ?>" class="btn btn-success w-100 fw-bold rounded-3 p-2 mb-2">
+                            <i class="bi bi-check-circle me-2"></i>Phê duyệt kích hoạt
+                        </button>
+                        <button type="button" class="btn btn-outline-danger w-100 fw-medium rounded-3 p-2 btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="bi bi-x-circle me-2"></i>Từ chối yêu cầu
+                        </button>
+                    <?php else: ?>
+                        <div class="alert alert-success m-0 rounded-3 text-dark small">
+                            <i class="bi bi-patch-check-fill me-2 text-success"></i>Hồ sơ này đã được duyệt và cấp quyền hoạt động bán hàng chính thức vào lúc: <br>
+                            <strong class="small"><?= date('d/m/Y H:i', strtotime($seller['verified_at'])) ?></strong>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
-    <?php else: ?>
-        <div class="alert alert-success text-center py-3 shadow-sm border-0">
-            <i class="bi bi-patch-check-fill fs-4 d-block mb-2 text-success"></i>
-            <h6 class="fw-bold mb-0">Hồ sơ này đã được phê duyệt!</h6>
-        </div>
-    <?php endif; ?>
+    </div>
 </div>
 
-<?php include 'layout/admin-footer.php'; ?>
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">Lý do từ chối hồ sơ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-3">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">Nhập lý do từ chối để hệ thống gửi thông báo phản hồi đến ứng viên:</label>
+                    <textarea id="rejectReasonInput" class="form-control" rows="3" placeholder="Mã số thuế không hợp lệ..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-3 fw-semibold small" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" id="btnConfirmReject" data-profile="<?= $seller['id'] ?>" data-user="<?= $seller['user_id'] ?>" class="btn btn-danger rounded-3 fw-bold small">Xác nhận từ chối</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php include __DIR__ . '/../partials/admin-footer.php'; ?>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. Xử lý nút Phê Duyệt
+    const btnApprove = document.getElementById('btnApprove');
+    if (btnApprove) {
+        btnApprove.addEventListener('click', function() {
+            const profileId = this.getAttribute('data-profile');
+            const userId = this.getAttribute('data-user');
+            sendAjaxRequest('approve', profileId, userId, '');
+        });
+    }
+
+    // 2. Xử lý nút Từ chối (Bên trong Modal)
+    const btnConfirmReject = document.getElementById('btnConfirmReject');
+    if (btnConfirmReject) {
+        btnConfirmReject.addEventListener('click', function() {
+            const profileId = this.getAttribute('data-profile');
+            const userId = this.getAttribute('data-user');
+            const reason = document.getElementById('rejectReasonInput').value.trim();
+
+            if (!reason) {
+                // Dùng alert cơ bản để đảm bảo luôn hiển thị kể cả khi lỗi thư viện
+                alert('Admin vui lòng cung cấp lý do từ chối hồ sơ!');
+                return;
+            }
+            sendAjaxRequest('reject', profileId, userId, reason);
+        });
+    }
+
+    // 3. Hàm gửi dữ liệu đi
+    function sendAjaxRequest(actionName, profileId, userId, reason) {
+        const formData = new FormData();
+        formData.append('profile_id', profileId);
+        formData.append('user_id', userId);
+        if (actionName === 'reject') {
+            formData.append('reject_reason', reason);
+        }
+
+        // Bật loading nếu có SweetAlert
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Đang xử lý dữ liệu...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+        }
+
+        fetch(`index.php?controller=approveseller&action=${actionName}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Thành công', data.message, 'success').then(() => updateUI(actionName));
+                } else {
+                    alert(data.message);
+                    updateUI(actionName);
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Thất bại', data.message, 'error');
+                } else {
+                    alert(data.message);
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Fetch Error:", err);
+            alert('Lỗi đường truyền: Không thể kết nối tới máy chủ!');
+        });
+    }
+
+    // 4. Hàm cập nhật giao diện (ẩn Modal dọn dẹp rác)
+    function updateUI(actionName) {
+        // Dọn dẹp Modal Bootstrap triệt để
+        const modalEl = document.getElementById('rejectModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+        }
+        
+        // Cố ép xóa màn hình đen (backdrop) nếu Bootstrap bị kẹt
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+
+        // Cập nhật DOM hiển thị kết quả
+        const wrapper = document.getElementById('panel-action-wrapper');
+        const statusBadge = document.getElementById('status-badge');
+
+        if (actionName === 'approve') {
+            if(wrapper) wrapper.innerHTML = `<div class="alert alert-success m-0 rounded-3 text-dark small"><i class="bi bi-patch-check-fill me-2 text-success"></i>Hồ sơ này vừa được kích hoạt thành công.</div>`;
+            if(statusBadge) {
+                statusBadge.className = "badge p-2 rounded-3 bg-success-subtle text-success";
+                statusBadge.innerHTML = '<i class="bi bi-check-circle me-1"></i>ĐÃ KÍCH HOẠT';
+            }
+        } else {
+            if(wrapper) wrapper.innerHTML = `<div class="alert alert-secondary m-0 rounded-3 text-dark small"><i class="bi bi-x-octagon-fill me-2 text-danger"></i>Đơn đăng ký đã bị từ chối và xóa khỏi danh sách.</div>`;
+            if(statusBadge) {
+                statusBadge.className = "badge p-2 rounded-3 bg-danger-subtle text-danger";
+                statusBadge.innerHTML = '<i class="bi bi-x-circle me-1"></i>ĐÃ TỪ CHỐI';
+            }
+        }
+    }
+});
+</script>

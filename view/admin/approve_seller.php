@@ -1,66 +1,82 @@
-<?php include 'layout/admin-header.php'; ?>
+<?php include __DIR__ . '/../partials/admin-header.php'; ?>
 
-<div class="container-fluid">
-    <div class="mb-4">
-        <h2 class="h4 mb-1 fw-bold text-dark">Quản Lý Đăng Ký Bán Hàng</h2>
-        <p class="text-secondary small">Duyệt yêu cầu mở Shop của các thành viên trên hệ thống.</p>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container py-4" style="min-height: 75vh;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-dark mb-0">
+            <i class="bi bi-shield-check text-primary me-2"></i>Phê duyệt yêu cầu mở gian hàng
+        </h3>
+        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold small">Bảng điều khiển Admin</span>
     </div>
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-            <div class="d-flex gap-2">
-                <a href="index.php?controller=approveseller&action=index&tab=pending" class="btn <?= $tab === 'pending' ? 'btn-primary' : 'btn-light text-secondary' ?> btn-sm px-4">
-                    Đang chờ duyệt
-                </a>
-                <a href="index.php?controller=approveseller&action=index&tab=approved" class="btn <?= $tab === 'approved' ? 'btn-success text-white' : 'btn-light text-secondary' ?> btn-sm px-4">
-                    Shop đã phê duyệt
-                </a>
-            </div>
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-2">
+            <ul class="nav nav-pills nav-fill gap-1" id="approveTabs">
+                <li class="nav-item">
+                    <a class="nav-link tab-action active" data-status="0" href="#" style="background-color: #0d6efd; color: white;">
+                        <i class="bi bi-clock-history me-2"></i>Hồ sơ chờ phê duyệt 
+                        <span class="badge bg-danger ms-1" id="badge-pending"><?= $stats[0] ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link tab-action" data-status="1" href="#" style="color: #555;">
+                        <i class="bi bi-check2-all me-2"></i>Gian hàng đã kích hoạt 
+                        <span class="badge bg-secondary ms-1" id="badge-verified"><?= $stats[1] ?></span>
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="font-size: 14.5px;">
-                <thead class="table-light text-secondary fw-semibold">
-                    <tr>
-                        <th class="ps-4">Chủ tài khoản</th>
-                        <th>Tên Shop</th>
-                        <th>Số điện thoại</th>
-                        <th>Ngày nộp đơn</th>
-                        <th class="pe-4 text-end">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(!empty($requests)): ?>
-                        <?php foreach($requests as $row): ?>
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="fw-bold text-dark"><?= htmlspecialchars($row['full_name']) ?></div>
-                                    <small class="text-muted"><?= htmlspecialchars($row['email']) ?></small>
-                                </td>
-                                <td class="fw-medium text-primary"><?= htmlspecialchars($row['shop_name']) ?></td>
-                                <td><?= htmlspecialchars($row['phone']) ?></td>
-                                <td class="text-secondary small"><?= date('d/m/Y H:i', strtotime($row['created_at'])) ?></td>
-                                <td class="pe-4 text-end">
-                                    <a href="index.php?controller=approveseller&action=detail&id=<?= $row['id'] ?>" class="btn btn-outline-secondary btn-sm px-3">
-                                        <i class="bi bi-search me-1"></i>Xem chi tiết
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-secondary">
-                                <i class="bi bi-inbox display-6 text-muted d-block mb-2"></i>
-                                Không tìm thấy dữ liệu trong danh sách này.
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+    <div id="sellerListWrapper">
+        <?php include __DIR__ . '/approve_seller_list.php'; ?>
     </div>
 </div>
 
-<?php include 'layout/admin-footer.php'; ?>
+<?php include __DIR__ . '/../partials/admin-footer.php'; ?>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const tabs = document.querySelectorAll('.tab-action');
+    const wrapper = document.getElementById('sellerListWrapper');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            const status = this.getAttribute('data-status');
+
+            // Cập nhật phong cách hiển thị cho Tab đang click
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                t.style.backgroundColor = '';
+                t.style.color = '#555';
+            });
+            this.classList.add('active');
+            this.style.backgroundColor = '#0d6efd';
+            this.style.color = 'white';
+
+            // Loading State hiệu ứng chờ
+            wrapper.innerHTML = `
+                <div class="text-center py-5 bg-white rounded-4 border shadow-sm">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted small mb-0">Đang tải danh sách dữ liệu...</p>
+                </div>`;
+
+            // Gọi AJAX nhận HTML render mới
+            fetch(`index.php?controller=approveseller&action=fetchList&status=${status}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    wrapper.innerHTML = data.html;
+                    document.getElementById('badge-pending').innerText = data.stats[0];
+                    document.getElementById('badge-verified').innerText = data.stats[1];
+                }
+            })
+            .catch(err => {
+                wrapper.innerHTML = '<div class="alert alert-danger rounded-4 m-0">Lỗi không thể nạp danh sách dữ liệu. Vui lòng F5 thử lại.</div>';
+            });
+        });
+    });
+});
+</script>
