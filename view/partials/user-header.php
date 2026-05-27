@@ -53,11 +53,9 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
                         <?php endif; ?>
                     </a>
 
-                    <a href="index.php?controller=chat" class="position-relative text-white text-decoration-none nav-icon-hover" title="Tin nhắn">
+<a href="index.php?controller=chat" class="position-relative text-white text-decoration-none nav-icon-hover" title="Tin nhắn">
                         <i class="bi bi-chat-dots fs-5"></i>
-                        <?php if ($msgCount > 0): ?>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;"><?= $msgCount ?></span>
-                        <?php endif; ?>
+                        <span id="global-msg-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger <?= ($msgCount > 0) ? '' : 'd-none' ?>" style="font-size: 9px; padding: 2px 4px;"><?= $msgCount ?></span>
                     </a>
 
                     <a href="#" class="position-relative text-white text-decoration-none nav-icon-hover" title="Thông báo">
@@ -107,4 +105,32 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
             </div>
         </div>
     </div>
+
+    <?php if ($isLoggedIn): ?>
+<script>
+    // RADAR QUÉT TIN NHẮN CHƯA ĐỌC TOÀN HỆ THỐNG
+    setInterval(async () => {
+        try {
+            let res = await fetch('index.php?controller=chat&action=getUnreadCountsAjax');
+            let json = await res.json();
+            if(json.status === 'success') {
+                // 1. Cập nhật Badge đỏ trên Header
+                let badge = document.getElementById('global-msg-badge');
+                if(badge) {
+                    if(json.total > 0) {
+                        badge.textContent = json.total;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                }
+                
+                // 2. Phát loa thông báo cho trang Chat (Nếu đang mở trang Chat)
+                window.dispatchEvent(new CustomEvent('unreadCountsUpdated', { detail: json.per_conv }));
+            }
+        } catch(e){}
+    }, 3000); // Quét mỗi 3 giây
+</script>
+<?php endif; ?>
+
 </header>
