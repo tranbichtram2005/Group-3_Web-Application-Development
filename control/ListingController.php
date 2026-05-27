@@ -12,16 +12,26 @@ class ListingController
 
     public function create()
     {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
+        if (!isset($_SESSION['user_id'])) {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'error', 'message' => 'Vui lòng đăng nhập để đăng tin!']);
+            } else {
+                echo "<script>alert('Vui lòng đăng nhập để đăng tin!'); window.location.href='index.php?controller=auth&action=login';</script>";
+            }
+            exit();
         }
+        
+        $userId = $_SESSION['user_id']; 
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Bóc tách dữ liệu từ Form
-            $userId        = $_SESSION['user']['id'] ?? 2; // Giả lập user 2 nếu chưa đăng nhập
+            header('Content-Type: application/json');
+            
             $categoryId    = $_POST['category_id'] ?? null;
             $conditionId   = $_POST['condition_id'] ?? null;
-            $statusId      = 1; // 1 = Chờ duyệt (Pending)
+            $statusId      = 1; 
             $wardId        = $_POST['ward_id'] ?? null;
             $title         = isset($_POST['title']) ? trim($_POST['title']) : '';
             $description   = isset($_POST['description']) ? trim($_POST['description']) : '';
@@ -29,56 +39,35 @@ class ListingController
             $isNegotiable  = isset($_POST['is_negotiable']) ? 1 : 0;
             $stockQuantity = $_POST['stock_quantity'] ?? 1;
 
-            // Truyền chính xác 10 biến theo đúng thứ tự khai báo trong ListingModel
             $listingId = $this->listingModel->createListing(
-                $userId,
-                $categoryId,
-                $conditionId,
-                $statusId,
-                $wardId,
-                $title,
-                $description,
-                $price,
-                $isNegotiable,
-                $stockQuantity
+                $userId, $categoryId, $conditionId, $statusId, $wardId, 
+                $title, $description, $price, $isNegotiable, $stockQuantity
             );
 
             if ($listingId) {
                 if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
                     $this->handleImageUploads($listingId, $_FILES['images']);
                 }
-                
-                // Trả về JSON thông báo Thành công thay vì xuất thẻ <script>
-                header('Content-Type: application/json');
                 echo json_encode(['status' => 'success', 'message' => 'Đăng tin thành công! Tin của bạn đang chờ duyệt.']);
-                exit();
             } else {
-                
-                // Trả về JSON thông báo Lỗi
-                header('Content-Type: application/json');
                 echo json_encode(['status' => 'error', 'message' => 'Có lỗi xảy ra khi lưu tin đăng vào hệ thống.']);
-                exit();
             }
+            exit();
+            
         } else {
-            // ĐÃ SỬA LỖI: Gọi đúng tên hàm get data từ Model để hiển thị giao diện
             $categories = $this->listingModel->getAllCategories();
             $conditions = $this->listingModel->getAllConditions();
-            $wards      = $this->listingModel->getWards();
-
+            // Lấy danh sách Tỉnh Thành thay vì Phường Xã
+            $provinces  = $this->listingModel->getProvinces(); 
+            
             include 'view/post-product.php';
         }
     }
-    // =======================================================
-    // HÀM PHỤ TRỢ: XỬ LÝ UPLOAD HÌNH ẢNH
-    // =======================================================
+
     private function handleImageUploads($listingId, $files)
     {
         $uploadDir = 'uploads/listings/';
-
-        // Tạo thư mục nếu chưa tồn tại
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
         $totalImages = count($files['name']);
         $sortOrder = 1;
@@ -86,20 +75,16 @@ class ListingController
         for ($i = 0; $i < $totalImages; $i++) {
             if ($files['error'][$i] === UPLOAD_ERR_OK) {
                 $fileExtension = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
-
-                // Validate định dạng ảnh
                 $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
                 if (!in_array($fileExtension, $allowedExtensions)) continue;
 
-                // Đổi tên file để tránh trùng lặp
                 $newFileName = time() . '_' . rand(1000, 9999) . '.' . $fileExtension;
                 $targetFilePath = $uploadDir . $newFileName;
 
-                // Di chuyển file từ thư mục tạm vào thư mục dự án
                 if (move_uploaded_file($files['tmp_name'][$i], $targetFilePath)) {
-                    $imageUrl = '/' . $targetFilePath;
-                    $isPrimary = ($i === 0) ? 1 : 0; // Ảnh đầu tiên là ảnh đại diện
-
+                    // ĐÃ FIX LỖI ẢNH: Xóa dấu / ở đầu
+                    $imageUrl = $targetFilePath; 
+                    $isPrimary = ($i === 0) ? 1 : 0;
                     $this->listingModel->addListingImage($listingId, $imageUrl, $sortOrder, $isPrimary);
                     $sortOrder++;
                 }
@@ -107,60 +92,38 @@ class ListingController
         }
     }
 
-    // Chức năng 2: Xử lý tìm kiếm sản phẩm phân trang
     public function search() {
         $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
         $categories = $this->listingModel->getAllCategories();
-
         $limit = 8; 
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
         $offset = ($page - 1) * $limit;
-
         $totalListings = $this->listingModel->getTotalActiveListings($keyword);
         $totalPages = ceil($totalListings / $limit);
-
         $listings = $this->listingModel->getPaginatedListings($limit, $offset, $keyword);
-
-        // Tái sử dụng lại view home để render kết quả tìm kiếm cho sạch code
         require_once __DIR__ . '/../view/app/home.php';
     }
 
-
-    // Chức năng 3: Xem chi tiết sản phẩm (Tin đăng)
     public function detail() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
-        // Lấy data sản phẩm + thông tin người bán
         $product = $this->listingModel->getListingDetail($id);
-        
         if (!$product) {
             die("<h2 style='text-align:center; margin-top:50px; color:gray;'>Sản phẩm không tồn tại hoặc đã bị ẩn!</h2>");
         }
-
-        // Lấy danh sách ảnh của sản phẩm
         $images = $this->listingModel->getListingImages($id);
-
-        // Nạp giao diện trang chi tiết sản phẩm
         require_once __DIR__ . '/../view/app/listing-detail.php';
     }
 
-    // Chức năng 3: Xem sản phẩm theo Danh mục
     public function category() {
         $categoryId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
-        // Vẫn phải lấy danh sách các danh mục để hiển thị thanh scroll ở home
         $categories = $this->listingModel->getAllCategories();
-
         $limit = 8; 
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
         $offset = ($page - 1) * $limit;
-
         $totalListings = $this->listingModel->getTotalActiveListingsByCategory($categoryId);
         $totalPages = ceil($totalListings / $limit);
-
         $listings = $this->listingModel->getPaginatedListingsByCategory($limit, $offset, $categoryId);
 
-        // Lấy tên danh mục đang chọn để hiển thị ra cho đẹp (tuỳ chọn)
         $currentCategoryName = "Sản phẩm theo danh mục";
         foreach($categories as $c) {
             if($c['id'] == $categoryId) {
@@ -168,28 +131,130 @@ class ListingController
                 break;
             }
         }
-        // Gắn vào biến $_GET giả để file home.php nhận diện và in ra tiêu đề
         $_GET['keyword'] = "Danh mục: " . $currentCategoryName; 
-
-        // Tái sử dụng lại view home
         require_once __DIR__ . '/../view/app/home.php';
     }
 
-   // Chức năng: Live Search Ajax (Bản bảo mật)
-    // Chức năng: Live Search Ajax (Bản siêu bảo mật)
-    // Chức năng: Live Search Ajax (Bản bắt bọ / Debug)
+    public function edit() {
+        if (session_status() == PHP_SESSION_NONE) session_start();
+        
+        if (!isset($_SESSION['user_id'])) {
+            echo "<script>alert('Vui lòng đăng nhập!'); window.location.href='index.php?controller=auth&action=login';</script>";
+            return;
+        }
+        $userId = $_SESSION['user_id']; 
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $product = $this->listingModel->getListingForEdit($id, $userId);
+
+        if (!$product) {
+            echo "<script>alert('Tin đăng không tồn tại hoặc bạn không có quyền sửa!'); history.back();</script>";
+            return;
+        }
+
+        // BỔ SUNG: Lấy toàn bộ ảnh cũ của tin đăng này để truyền qua View
+        $images     = $this->listingModel->getListingImages($id); 
+        
+        $categories = $this->listingModel->getAllCategories();
+        $conditions = $this->listingModel->getAllConditions();
+        $provinces  = $this->listingModel->getProvinces(); 
+        
+        // --- BỔ SUNG: Truy xuất ngược Quận, Phường cũ để đổ ra Edit form ---
+        $districts = [];
+        $wards = [];
+        if (isset($product['province_id']) && $product['province_id']) {
+            $districts = $this->listingModel->getDistrictsByProvince($product['province_id']);
+        }
+        if (isset($product['district_id']) && $product['district_id']) {
+            $wards = $this->listingModel->getWardsByDistrict($product['district_id']);
+        }
+
+        include 'view/post-product.php';
+    }
+
+    public function update() {
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
+        if (!isset($_SESSION['user_id'])) {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'error', 'message' => 'Vui lòng đăng nhập lại!']);
+            }
+            exit();
+        }
+        $userId = $_SESSION['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json'); 
+            
+            $listingId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+            if ($listingId === 0) {
+                echo json_encode(['status' => 'error', 'message' => 'Không tìm thấy ID tin đăng!']);
+                exit();
+            }
+
+            $categoryId    = $_POST['category_id'] ?? null;
+            $conditionId   = $_POST['condition_id'] ?? null;
+            $wardId        = $_POST['ward_id'] ?? null;
+            $title         = isset($_POST['title']) ? trim($_POST['title']) : '';
+            $description   = isset($_POST['description']) ? trim($_POST['description']) : '';
+            $price         = $_POST['price'] ?? 0;
+            $stockQuantity = $_POST['stock_quantity'] ?? 1;
+
+            $statusId = 1; 
+
+            $result = $this->listingModel->updateListing(
+                $listingId, $userId, $categoryId, $conditionId, $statusId, 
+                $wardId, $title, $description, $price, $stockQuantity
+            );
+
+            if ($result) {
+                if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+                    $this->listingModel->deleteListingImages($listingId);
+                    $this->handleImageUploads($listingId, $_FILES['images']);
+                }
+                echo json_encode(['status' => 'success', 'message' => 'Cập nhật tin đăng thành công!']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Cập nhật thất bại (Hoặc bạn chưa thay đổi thông tin nào).']);
+            }
+            exit();
+        }
+    }
+
+    // =======================================================
+    // CÁC HÀM AJAX API LẤY DROPDOWN ĐỊA CHỈ
+    // =======================================================
+    public function getDistrictsAjax() {
+        header('Content-Type: application/json');
+        $provinceId = isset($_GET['province_id']) ? (int)$_GET['province_id'] : 0;
+        if ($provinceId > 0) {
+            $districts = $this->listingModel->getDistrictsByProvince($provinceId);
+            echo json_encode($districts);
+        } else {
+            echo json_encode([]);
+        }
+        exit();
+    }
+
+    public function getWardsAjax() {
+        header('Content-Type: application/json');
+        $districtId = isset($_GET['district_id']) ? (int)$_GET['district_id'] : 0;
+        if ($districtId > 0) {
+            $wards = $this->listingModel->getWardsByDistrict($districtId);
+            echo json_encode($wards);
+        } else {
+            echo json_encode([]);
+        }
+        exit();
+    }
+
     public function suggestAjax() {
-        // Mở mắt cho PHP để nó báo lỗi thật nếu có
         error_reporting(E_ALL); 
         ini_set('display_errors', 1);
-        
-        if (ob_get_length()) {
-            ob_clean();
-        }
+        if (ob_get_length()) ob_clean();
         
         header('Content-Type: application/json; charset=utf-8'); 
-        
-        // BÍ KÍP CHỐNG LỖI: Bắt cả GET lẫn POST, bắt cả biến 'keyword' lẫn biến 'q'
         $keyword = isset($_REQUEST['keyword']) ? trim($_REQUEST['keyword']) : (isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '');
         
         if (empty($keyword)) {
@@ -198,17 +263,12 @@ class ListingController
         }
 
         try {
-            // Lấy 5 sản phẩm khớp tên
             $listings = $this->listingModel->getPaginatedListings(5, 0, $keyword);
-            
-            // Ép mảng về JSON
             echo json_encode($listings);
         } catch (Exception $e) {
-            // Nếu Database gào thét, nhét câu chửi của nó vào JSON để mình dễ đọc
-            echo json_encode([
-                'error_cua_phung' => 'Lỗi Database: ' . $e->getMessage()
-            ]); 
+            echo json_encode(['error_cua_phung' => 'Lỗi Database: ' . $e->getMessage()]); 
         }
         exit;
     }
 }
+?>
