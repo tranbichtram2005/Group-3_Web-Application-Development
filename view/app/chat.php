@@ -315,7 +315,6 @@
     }
 
     // HIỂN THỊ BANNER DEAL
-    // HIỂN THỊ BANNER DEAL
     function renderDealCard(offer) {
         actOfferId = offer.id;
         actOfferPrice = offer.proposed_price;
@@ -348,13 +347,24 @@
                 </div>
             </div>`;
         } 
-        else if (offer.status_id == 2) {
+       else if (offer.status_id == 2) {
             // TRẠNG THÁI: DEAL THÀNH CÔNG
             if(btnDeal) btnDeal.disabled = true;
             let updatedTime = new Date(offer.updated_at).getTime();
             let expireTime = updatedTime + (24 * 60 * 60 * 1000); 
             let now = new Date().getTime();
             
+            // 🚨 BẮT BỆNH Ở ĐÂY: Phân biệt chính xác Người Mua / Người Bán
+            let isBuyer = false;
+            // Ưu tiên 1: Lấy trực tiếp buyer_id từ cục offer để so sánh với người đang đăng nhập
+            if (offer.buyer_id) {
+                isBuyer = (currentUserId == offer.buyer_id);
+            } 
+            // Ưu tiên 2: Nếu API không trả offer.buyer_id, xài biến toàn cục actBuyer của phòng chat
+            else if (typeof actBuyer !== 'undefined') {
+                isBuyer = (currentUserId == actBuyer);
+            }
+
             if (now > expireTime) {
                 html = `<div class="deal-banner opacity-75"><div class="fw-bold text-secondary">⏰ Deal đã hết hạn (Quá 24h)</div></div>`;
                 if(btnDeal) btnDeal.disabled = false; 
@@ -365,18 +375,30 @@
                 if (!headerPriceEl.dataset.origPrice) headerPriceEl.dataset.origPrice = headerPriceEl.innerText; 
                 headerPriceEl.innerHTML = `<del class="text-muted small">${headerPriceEl.dataset.origPrice}</del> <strong class="text-danger fs-6">${formatPrice}</strong>`;
 
-                // 2. GIAO DIỆN ĐỦ 2 NÚT (THÊM GIỎ & MUA NGAY) NẰM ĐÚNG CHỖ NÀY
-                html = `
-                <div class="deal-banner">
-                    <div class="deal-banner-info">
-                        <div class="deal-banner-price text-success">🎉 Thành Công: ${formatPrice}</div>
-                        <div class="deal-banner-desc">Giá áp dụng cho <b>${actOfferQty}</b> sản phẩm. Hạn: 24h</div>
-                    </div>
-                    <div class="deal-banner-actions">
-                        <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="addDealToCart(${actListing}, ${actOfferId}, ${actOfferQty}, false)"><i class="bi bi-cart-plus"></i> Thêm Giỏ Hàng</button>
-                        <button class="btn btn-sm btn-danger fw-bold text-white" onclick="addDealToCart(${actListing}, ${actOfferId}, ${actOfferQty}, true)"><i class="bi bi-bag-check"></i> Mua Ngay</button>
-                    </div>
-                </div>`;
+                // 2. HIỂN THỊ NÚT ĐÚNG THEO VAI TRÒ
+                if (isBuyer) {
+                    // Cấp quyền cho NGƯỜI MUA: Hiện nút Mua / Thêm Giỏ
+                    html = `
+                    <div class="deal-banner">
+                        <div class="deal-banner-info">
+                            <div class="deal-banner-price text-success">🎉 Thành Công: ${formatPrice}</div>
+                            <div class="deal-banner-desc">Giá áp dụng cho <b>${actOfferQty}</b> sản phẩm. Hạn: 24h</div>
+                        </div>
+                        <div class="deal-banner-actions">
+                            <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="addDealToCart(${actListing}, ${actOfferId}, ${actOfferQty}, false)"><i class="bi bi-cart-plus"></i> Thêm Giỏ</button>
+                            <button class="btn btn-sm btn-danger fw-bold text-white" onclick="addDealToCart(${actListing}, ${actOfferId}, ${actOfferQty}, true)"><i class="bi bi-bag-check"></i> Mua Ngay</button>
+                        </div>
+                    </div>`;
+                } else {
+                    // Tước quyền NGƯỜI BÁN: Ẩn tịt nút đi, chỉ hiện chữ chờ thanh toán
+                    html = `
+                    <div class="deal-banner" style="background-color: #e8f5e9; border-color: #c8e6c9;">
+                        <div class="deal-banner-info">
+                            <div class="deal-banner-price text-success">🎉 Deal Thành Công: ${formatPrice}</div>
+                            <div class="deal-banner-desc text-dark">Đang chờ người mua thanh toán cho <b>${actOfferQty}</b> sản phẩm.</div>
+                        </div>
+                    </div>`;
+                }
             }
         }
         
@@ -519,9 +541,8 @@
             
             if(json.status === 'success') {
                 if (isBuyNow) {
-                    // Nếu bấm Mua Ngay: Bay thẳng ra màn hình Checkout
-                    window.location.href = 'index.php?controller=checkout';
-                } else {
+                   // Gắn ID sản phẩm vào URL để Checkout biết mà lọc
+window.location.href = `index.php?controller=checkout&selected_ids=${listingId}`;                } else {
                     // Nếu bấm Thêm Giỏ Hàng: Hiện Popup SweetAlert2
                     Swal.fire({
                         icon: 'success',
