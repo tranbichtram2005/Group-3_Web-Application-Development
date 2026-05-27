@@ -59,6 +59,7 @@
                             <div class="fw-bold fs-6"><?= htmlspecialchars($pName) ?></div>
                             <small class="text-muted text-truncate d-block">SP: <?= htmlspecialchars($conv['product_title']) ?></small>
                         </div>
+                        <span class="position-absolute top-50 end-0 translate-middle-y me-3 badge bg-danger rounded-pill unread-badge d-none" style="font-size: 10px;">0</span>
                     </div>
                     <?php endforeach; else: ?>
                         <div class="p-4 text-center text-muted">Chưa có cuộc trò chuyện.</div>
@@ -160,6 +161,29 @@
     let pollInterval = null;
     let currentDealAction = 'create';
     let isFirstLoad = true; 
+    // LẮNG NGHE RADAR TỪ HEADER ĐỂ HIỆN CHẤM ĐỎ Ở SIDEBAR
+    window.addEventListener('unreadCountsUpdated', (e) => {
+        let perConv = e.detail; // Lấy dữ liệu json.per_conv truyền sang
+        
+        document.querySelectorAll('.chat-list-item[data-type="trade"]').forEach(item => {
+            let cId = item.dataset.convId;
+            let badge = item.querySelector('.unread-badge');
+            
+            // Nếu đây là phòng chat ĐANG MỞ, giấu chấm đỏ ngay lập tức (Vì mình đang xem mà)
+            if (cId == actConv) {
+                badge.classList.add('d-none');
+                return;
+            }
+
+            // Nếu phòng chat khác có tin mới, bật chấm đỏ lên
+            if (perConv[cId] && perConv[cId] > 0) {
+                badge.textContent = perConv[cId]; // Số lượng tin chưa đọc
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none'); // Hết tin mới thì tắt đi
+            }
+        });
+    });
 
     // XỬ LÝ CLICK MỞ CHAT
     document.querySelectorAll('.chat-list-item').forEach(item => {
@@ -178,6 +202,9 @@
             document.getElementById('dedicated-deal-zone').style.display = 'none'; 
             lastMsgId = 0;
             isFirstLoad = true;
+            // Tắt ngay chấm đỏ khi người dùng vừa click vào
+            let badgeEl = this.querySelector('.unread-badge');
+            if (badgeEl) badgeEl.classList.add('d-none');
 
             if (actChatType === 'trade') {
                 actListing = this.dataset.listingId;
