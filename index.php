@@ -109,5 +109,24 @@ switch ($controller) {
     default:
         echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
         break;
+    case 'order':
+        require_once __DIR__ . '/control/OrderController.php';
+        $orderCtrl = new OrderController();
+        method_exists($orderCtrl, $action) ? $orderCtrl->$action() : die("Lỗi: Không tìm thấy action!");
+        break;
+    case 'dashboard':
+            require_once 'control/DashboardController.php';
+            $controllerObj = new DashboardController();
+            
+            // Bắt action từ URL (nếu không có thì mặc định chạy hàm index)
+            $action = isset($_GET['action']) ? $_GET['action'] : 'index';
+            
+            // Ra lệnh cho Controller chạy hàm
+            if (method_exists($controllerObj, $action)) {
+                $controllerObj->$action();
+            } else {
+                $controllerObj->index();
+            }
+            break;
 }
 ?>

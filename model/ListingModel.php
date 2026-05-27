@@ -30,6 +30,16 @@ class ListingModel
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    // =======================================================
+    // LẤY THỐNG KÊ ĐÁNH GIÁ (SỐ SAO, TỔNG SỐ ĐÁNH GIÁ)
+    // =======================================================
+    public function getProductReviewStats($listingId) {
+        $sql = "SELECT AVG(rating) as avg_rating, COUNT(id) as total_reviews FROM reviews WHERE listing_id = :listing_id";
+        // Đã sửa $this->db thành $this->conn để khớp với Model của cậu
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':listing_id' => $listingId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
     // API Tỉnh / Quận / Phường
     public function getProvinces() {
@@ -55,6 +65,29 @@ class ListingModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // =======================================================
+    // LẤY DANH SÁCH BÌNH LUẬN CHI TIẾT
+    // =======================================================
+    public function getProductReviews($listingId, $star = 0) {
+        $sql = "SELECT r.*, u.full_name as reviewer_name 
+                FROM reviews r 
+                JOIN users u ON r.reviewer_id = u.id 
+                WHERE r.listing_id = :listing_id";
+        
+        $params = [':listing_id' => $listingId];
+
+        // Nếu có chọn lọc sao (từ 1 đến 5) thì thêm điều kiện vào SQL
+        if ($star > 0 && $star <= 5) {
+            $sql .= " AND r.rating = :star";
+            $params[':star'] = $star;
+        }
+
+        $sql .= " ORDER BY r.created_at DESC";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
     // =======================================================
     // NHÓM HÀM THÊM DỮ LIỆU VÀO DATABASE (POST)
     // =======================================================

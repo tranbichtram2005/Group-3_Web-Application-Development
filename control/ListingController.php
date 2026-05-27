@@ -111,6 +111,17 @@ class ListingController
             die("<h2 style='text-align:center; margin-top:50px; color:gray;'>Sản phẩm không tồn tại hoặc đã bị ẩn!</h2>");
         }
         $images = $this->listingModel->getListingImages($id);
+
+        // --- GỌI MODEL ĐỂ LẤY DỮ LIỆU ĐÁNH GIÁ ---
+        // 1. Thống kê sao
+        $stats = $this->listingModel->getProductReviewStats($id);
+        $avgRating = $stats['avg_rating'] ? round($stats['avg_rating'], 1) : 0;
+        $totalReviews = $stats['total_reviews'] ?? 0;
+
+        $filterStar = isset($_GET['star']) ? (int)$_GET['star'] : 0;
+
+        // 2. Danh sách bình luận (có truyền thêm biến $filterStar xuống Model)
+        $productReviews = $this->listingModel->getProductReviews($id, $filterStar);
         require_once __DIR__ . '/../view/app/listing-detail.php';
     }
 
