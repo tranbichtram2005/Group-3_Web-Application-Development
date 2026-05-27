@@ -80,7 +80,7 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
     </a>
 </li>
                             <li>
-                                <a href="#" class="nav-dropdown-item dropdown-item"><i class="bi bi-receipt"></i> Đơn bán của tôi</a>
+                                <a href="index.php?controller=manageorderseller&action=index" class="nav-dropdown-item dropdown-item"><i class="bi bi-receipt"></i> Đơn bán của tôi</a>
                             </li>
                             <li><a class="dropdown-item" href="index.php?controller=dashboard"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Dashboard</a></li>
                             <li>

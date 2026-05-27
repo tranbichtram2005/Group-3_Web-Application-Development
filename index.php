@@ -114,6 +114,14 @@ switch ($controller) {
         $orderCtrl = new OrderController();
         method_exists($orderCtrl, $action) ? $orderCtrl->$action() : die("Lỗi: Không tìm thấy action!");
         break;
+    case 'manageorderseller':
+        require_once __DIR__ . '/control/ManageOrderSellerController.php';
+        $manageOrderSellerCtrl = new ManageOrderSellerController();
+        
+        // Kiểm tra xem action có tồn tại không, nếu không thì mặc định chạy hàm index()
+        $action = isset($_GET['action']) ? $_GET['action'] : 'index';
+        method_exists($manageOrderSellerCtrl, $action) ? $manageOrderSellerCtrl->$action() : die("Lỗi: Không tìm thấy action $action trong ManageOrderSellerController!");
+        break;
     case 'dashboard':
             require_once 'control/DashboardController.php';
             $controllerObj = new DashboardController();
