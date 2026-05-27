@@ -59,10 +59,26 @@ class CheckoutController {
                 ];
             }
         } 
-        // Luồng 2: Thanh toán toàn bộ sản phẩm từ giỏ hàng
+// Luồng 2: Thanh toán toàn bộ sản phẩm từ giỏ hàng
         else {
             $cartId = $this->cartModel->getCartId($userId);
+            
+            // FIX BUG 6: Quét sạch Deal hết hạn trước khi load trang Checkout
+            $this->cartModel->cleanExpiredDealsInCart($cartId);
             $rawCartItems = $this->cartModel->getCartItems($cartId);
+
+            // FIX BUG 7: Nhớ các món đã tick chọn và lưu vào Session
+            $selectedIds = $_POST['selected_ids'] ?? $_GET['selected_ids'] ?? '';
+            if (!empty($selectedIds)) {
+                $_SESSION['checkout_selected_ids'] = $selectedIds; // Lưu lại để tí qua hàm Order còn biết
+                $idArray = explode(',', $selectedIds);
+                $rawCartItems = array_filter($rawCartItems, function($item) use ($idArray) {
+                    return in_array($item['listing_id'], $idArray);
+                });
+            } else {
+                unset($_SESSION['checkout_selected_ids']); // Xóa nếu không có
+            }
+
             foreach ($rawCartItems as $item) {
                 $checkoutItems[] = [
                     'listing_id' => $item['listing_id'],
@@ -216,8 +232,19 @@ class CheckoutController {
                         'seller_id' => $product['seller_id']
                     ];
                 }
-            } else {
+} else {
+                // FIX BUG 6: Quét lại một lần nữa phòng hờ khách treo trang web qua ngày hôm sau
+                $this->cartModel->cleanExpiredDealsInCart($cartId);
                 $rawCartItems = $this->cartModel->getCartItems($cartId);
+                
+                // FIX BUG 7: Chỉ bốc đúng những món đã tick hồi nãy
+                if (!empty($_SESSION['checkout_selected_ids'])) {
+                    $idArray = explode(',', $_SESSION['checkout_selected_ids']);
+                    $rawCartItems = array_filter($rawCartItems, function($item) use ($idArray) {
+                        return in_array($item['listing_id'], $idArray);
+                    });
+                }
+
                 foreach ($rawCartItems as $item) {
                     $checkoutItems[] = [
                         'listing_id' => $item['listing_id'],
