@@ -176,5 +176,39 @@ class CartModel {
         
         return $stmt->execute();
     }
+
+    // 1. Kiểm tra khách hàng có Deal giá hợp lệ (thành công trong 24h) không
+    public function checkValidDeal($buyerId, $listingId) {
+        $expireTime = date('Y-m-d H:i:s', time() - 86400); // Lùi lại 24 tiếng
+        $sql = "SELECT po.id, pod.proposed_price 
+                FROM price_offers po
+                JOIN price_offer_details pod ON po.id = pod.offer_id
+                WHERE po.buyer_id = ? AND po.listing_id = ? AND po.status_id = 2 
+                AND po.updated_at >= ? 
+                ORDER BY pod.id DESC LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$buyerId, $listingId, $expireTime]);
+        return $stmt->fetch();
+    }
+
+    // 2. Lấy giá gốc và tồn kho của sản phẩm để so sánh
+    public function getListingInfo($listingId) {
+        $sql = "SELECT price, stock_quantity FROM product_listings WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$listingId]);
+        return $stmt->fetch();
+    }
+
+    // 3. Hàm Thêm/Cập nhật giỏ hàng thông minh (Lưu luôn cả giá Deal và offer_id)
+    public function upsertCartItem($cartId, $listingId, $qty, $price, $offerId) {
+        $sql = "INSERT INTO cart_items (cart_id, listing_id, quantity, price_snapshot, offer_id) 
+                VALUES (?, ?, ?, ?, ?) 
+                ON DUPLICATE KEY UPDATE 
+                quantity = quantity + VALUES(quantity),
+                price_snapshot = VALUES(price_snapshot),
+                offer_id = VALUES(offer_id)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([$cartId, $listingId, $qty, $price, $offerId]);
+    }
 }
 ?>

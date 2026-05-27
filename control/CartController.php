@@ -210,7 +210,9 @@ class CartController {
         }
     }
 
-    // HÀM AJAX THÊM VÀO GIỎ HÀNG
+ // ==========================================
+    // HÀM AJAX THÊM VÀO GIỎ HÀNG (BẢN PRO ĐỒNG BỘ DEAL)
+    // ==========================================
     public function addAjax() {
         header('Content-Type: application/json; charset=utf-8');
 
@@ -220,7 +222,10 @@ class CartController {
         }
 
         $userId = $_SESSION['user_id'];
-        $listingId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+        
+        // 1. Hỗ trợ bắt ID từ GET (Trang chủ) và POST (Phòng Chat)
+        $listingId = isset($_POST['listing_id']) ? intval($_POST['listing_id']) : (isset($_GET['id']) ? intval($_GET['id']) : 0);
+        $qtyToAdd = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
 
         if ($listingId <= 0) {
             echo json_encode(['status' => 'error', 'msg' => 'Sản phẩm không hợp lệ!']);
@@ -230,43 +235,54 @@ class CartController {
         try {
             $cartId = $this->cartModel->getCartId($userId);
             
-            $stock = (int)$this->cartModel->getStock($listingId);
-            if ($stock <= 0) {
+            // 2. Lấy thông tin sản phẩm (Giá gốc và Tồn kho)
+            $product = $this->cartModel->getListingInfo($listingId);
+            if (!$product || $product['stock_quantity'] <= 0) {
                 echo json_encode(['status' => 'error', 'msg' => 'Sản phẩm này đã hết hàng!']);
                 return;
             }
 
+            $stock = (int)$product['stock_quantity'];
+            $finalPrice = $product['price']; // Tạm thời dùng giá gốc
+            $offerId = null;
+
+            // ===============================================
+            // 3. KIỂM TRA DEAL GIÁ (Sự kỳ diệu nằm ở đây)
+            // ===============================================
+            $validDeal = $this->cartModel->checkValidDeal($userId, $listingId);
+            if ($validDeal) {
+                $finalPrice = $validDeal['proposed_price']; // Phát hiện Deal! Ghi đè giá rẻ vào.
+                $offerId = $validDeal['id'];                // Cột offer_id sẽ lưu vết cái Deal này
+            }
+
+            // 4. Kiểm tra số lượng trong giỏ xem có vượt tồn kho không
             $cartItems = $this->cartModel->getCartItems($cartId);
-            $itemExists = false;
             $currentQty = 0;
-            
             if (is_array($cartItems)) {
                 foreach ($cartItems as $item) {
                     if ($item['listing_id'] == $listingId) {
-                        $itemExists = true;
                         $currentQty = (int)$item['quantity'];
                         break;
                     }
                 }
             }
 
-            if ($itemExists) {
-                if ($currentQty + 1 > $stock) {
-                    echo json_encode(['status' => 'error', 'msg' => "Bạn đã bỏ $currentQty món này vào giỏ rồi. Không thể thêm vượt quá tồn kho ($stock)!"]);
-                    return;
-                }
-                $this->cartModel->updateQuantity($cartId, $listingId, $currentQty + 1);
-            } else {
-                $this->cartModel->addItem($cartId, $listingId, 1);
+            if ($currentQty + $qtyToAdd > $stock) {
+                echo json_encode(['status' => 'error', 'msg' => "Giỏ hàng đã có $currentQty món này. Kho chỉ còn $stock, không thể thêm!"]);
+                return;
             }
 
+            // 5. Lưu vào Database (Hàm upsert thông minh sẽ tự cập nhật giá mới nếu trùng)
+            $this->cartModel->upsertCartItem($cartId, $listingId, $qtyToAdd, $finalPrice, $offerId);
+
+            // 6. Cập nhật đếm số lượng giỏ hàng trên Header
             $updatedCart = $this->cartModel->getCartItems($cartId);
             $newCartCount = is_array($updatedCart) ? count($updatedCart) : 0;
 
             echo json_encode([
                 'status' => 'success', 
                 'msg' => 'Đã thêm vào giỏ hàng!',
-                'newCartCount' => $newCartCount 
+                'newCartCount' => $newCartCount
             ]);
 
         } catch (Exception $e) {

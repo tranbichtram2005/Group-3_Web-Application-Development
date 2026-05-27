@@ -18,6 +18,14 @@
     </div>
 </footer>
 
+<a href="index.php?controller=chat&action=startSupport" 
+   class="btn shadow-lg d-flex align-items-center justify-content-center text-white" 
+   style="position: fixed; bottom: 30px; right: 30px; width: 55px; height: 55px; background-color: #FF7A3D; border-radius: 50%; z-index: 9999; transition: transform 0.2s; text-decoration: none;" 
+   onmouseover="this.style.transform='scale(1.1)'" 
+   onmouseout="this.style.transform='scale(1)'" 
+   title="Chat hỗ trợ với Admin">
+    <i class="bi bi-headset fs-4"></i>
+</a>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="layout/script.js"></script>

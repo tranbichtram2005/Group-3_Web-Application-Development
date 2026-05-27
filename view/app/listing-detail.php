@@ -169,8 +169,7 @@ $productReviews = $productReviews ?? [];
                             
                             <button type="button" onclick="actionBuyNow(<?= $product['id'] ?? 0 ?>)" class="btn btn-lg text-white fw-bold py-3 rounded-3 shadow-sm btn-hover-zoom" style="background-color: #FF7A3D; border: none; font-size: 16px;">MUA NGAY (Giao dịch an toàn)</button>
 
-                            <button type="button" class="btn btn-sm btn-light border w-100 py-2 rounded-3 text-secondary fw-semibold small" onclick="Swal.fire({icon: 'info', title: 'Thông báo', text: 'Tính năng Thương lượng giá đang được phát triển, bạn quay lại sau nhé!', confirmButtonColor: '#FF7A3D'})"><i class="bi bi-tags me-1 text-warning"></i> Bạn muốn trả giá? Yêu cầu thương lượng</button>
-                        <?php else: ?>
+<button type="button" class="btn btn-sm btn-light border w-100 py-2 rounded-3 text-secondary fw-semibold small" onclick="actionChat(<?= $product['user_id'] ?? 0 ?>, <?= $product['id'] ?? 0 ?>, true)"><i class="bi bi-tags me-1 text-warning"></i> Bạn muốn trả giá? Yêu cầu thương lượng</button>                        <?php else: ?>
                             <button class="btn btn-lg btn-secondary fw-bold py-3 rounded-3 shadow-sm" disabled><i class="bi bi-x-circle me-2"></i> Sản phẩm đã hết hàng</button>
                         <?php endif; ?>
                     </div>
@@ -237,14 +236,33 @@ function actionBuyNow(listingId) {
     window.location.href = `index.php?controller=checkout&action=index&listing_id=${listingId}&quantity=${qty}`;
 }
 
-function actionChat(sellerId, listingId) {
+function actionChat(sellerId, listingId, isDeal = false) {
     let currentUserId = '<?= $_SESSION['user_id'] ?? 0 ?>';
+    
+    // Yêu cầu đăng nhập trước khi chat
+    if (currentUserId == 0 || currentUserId == '') {
+        window.location.href = 'index.php?controller=auth&action=login';
+        return;
+    }
+    
+    // Không cho tự chat với chính mình
     if(currentUserId == sellerId) {
         Swal.fire({ icon: 'warning', title: 'Ơ kìa...', text: 'Bạn không thể tự chat với chính mình được nha!' });
         return;
     }
-    window.location.href = `index.php?controller=chat&action=room&with=${sellerId}&listing=${listingId}`;
+    
+    // Link dẫn sang chức năng Chat mới xây
+    let url = `index.php?controller=chat&action=startTrade&listing_id=${listingId}&seller_id=${sellerId}`;
+    
+    // Nếu là bấm nút Thương lượng (isDeal = true) thì nối thêm lệnh deal=1
+    if (isDeal) {
+        url += '&deal=1';
+    }
+    
+    // Chuyển trang
+    window.location.href = url;
 }
+
 </script>
 
 <style>

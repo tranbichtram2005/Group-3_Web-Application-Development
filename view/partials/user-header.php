@@ -53,7 +53,7 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
                         <?php endif; ?>
                     </a>
 
-                    <a href="#" class="position-relative text-white text-decoration-none nav-icon-hover" title="Tin nhắn">
+                    <a href="index.php?controller=chat" class="position-relative text-white text-decoration-none nav-icon-hover" title="Tin nhắn">
                         <i class="bi bi-chat-dots fs-5"></i>
                         <?php if ($msgCount > 0): ?>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;"><?= $msgCount ?></span>

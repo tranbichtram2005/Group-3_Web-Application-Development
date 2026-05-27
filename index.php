@@ -109,6 +109,28 @@ switch ($controller) {
         $approveListingCtrl = new ApproveListingController();
         method_exists($approveListingCtrl, $action) ? $approveListingCtrl->$action() : die("Lỗi: Không tìm thấy action!");
         break;
+
+case 'chat':
+        require_once 'control/ChatController.php';
+        $chatController = new ChatController();
+        
+        if ($action == 'getTradeMessagesAjax') {
+            $chatController->getTradeMessagesAjax();
+        } elseif ($action == 'getSupportMessagesAjax') {
+            $chatController->getSupportMessagesAjax();
+        } elseif ($action == 'sendAjax') {
+            $chatController->sendAjax();
+        } elseif ($action == 'dealAjax') {
+            $chatController->dealAjax();
+        } elseif ($action == 'startTrade') { 
+            $chatController->startTrade();
+        } elseif ($action == 'startSupport') { 
+            $chatController->startSupport();
+        } else {
+            $chatController->index(); 
+        }
+        break;
+
     default:
         echo "<h1 style='text-align:center; margin-top:50px;'>404 - Không tìm thấy trang!</h1>";
         break;

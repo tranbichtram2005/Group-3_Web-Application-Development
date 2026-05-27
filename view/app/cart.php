@@ -43,8 +43,16 @@ require_once __DIR__ . '/../partials/user-header.php';
                         
                         <img src="<?= htmlspecialchars($sp['image_url'] ?? 'https://via.placeholder.com/200') ?>" alt="Product Image">
                         
-                        <div class="item-info" style="flex: 1;">
+<div class="item-info" style="flex: 1;">
                             <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 6px 0; color: var(--text-primary);"><?= htmlspecialchars($sp['title']) ?></h3>
+                            
+                            <?php if(!empty($sp['offer_id'])): ?>
+                                <div style="margin-bottom: 6px;">
+                                    <span class="badge bg-danger px-2 py-1" style="font-size: 11px; border-radius: 4px; font-weight: 600;">
+                                        <i class="bi bi-tags-fill me-1"></i> Giá áp dụng từ Thương lượng
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                             <p class="seller-name" style="font-size: 13px; color: var(--text-secondary); margin: 0 0 4px 0;"><i class="bi bi-person-circle me-1"></i>Người bán: <?= htmlspecialchars($sp['seller_name']) ?></p>
                             <span style="font-size:11px;background:#E8F5E9;color:#388E3C;padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block">Kho: <?= $sp['stock_quantity'] ?></span>
                         </div>
