@@ -21,8 +21,17 @@ class CartController {
 
         $userId = $_SESSION['user_id'];
         $cartId = $this->cartModel->getCartId($userId);
-        
+        $expiredDealsCount = $this->cartModel->cleanExpiredDealsInCart($cartId);
         $cartItems = $this->cartModel->getCartItems($cartId);
+        // --- CHÊM ĐOẠN NÀY VÀO ĐỂ LỌC SẢN PHẨM ---
+        $selectedIds = $_POST['selected_ids'] ?? $_GET['selected_ids'] ?? '';
+        if (!empty($selectedIds)) {
+            $idArray = explode(',', $selectedIds);
+            // Lọc giỏ hàng, chỉ giữ lại những món khách đã tick chọn
+            $cartItems = array_filter($cartItems, function($item) use ($idArray) {
+                return in_array($item['listing_id'], $idArray);
+            });
+        }
         
         require_once __DIR__ . '/../view/app/cart.php';
     }
@@ -246,13 +255,15 @@ class CartController {
             $finalPrice = $product['price']; // Tạm thời dùng giá gốc
             $offerId = null;
 
-            // ===============================================
-            // 3. KIỂM TRA DEAL GIÁ (Sự kỳ diệu nằm ở đây)
+// ===============================================
+            // 3. KIỂM TRA DEAL GIÁ (Ép cứng số lượng)
             // ===============================================
             $validDeal = $this->cartModel->checkValidDeal($userId, $listingId);
             if ($validDeal) {
-                $finalPrice = $validDeal['proposed_price']; // Phát hiện Deal! Ghi đè giá rẻ vào.
-                $offerId = $validDeal['id'];                // Cột offer_id sẽ lưu vết cái Deal này
+                $finalPrice = $validDeal['proposed_price']; 
+                $offerId = $validDeal['id'];                
+                // Ép cứng qtyToAdd bằng đúng số lượng chốt Deal (Chống gian lận Lỗi 2, Lỗi 3)
+                $qtyToAdd = isset($validDeal['quantity']) ? (int)$validDeal['quantity'] : 1; 
             }
 
             // 4. Kiểm tra số lượng trong giỏ xem có vượt tồn kho không
