@@ -23,6 +23,26 @@ class ChatController {
         require_once __DIR__ . '/../view/app/chat.php';
     }
 
+    // API Quét tin nhắn chưa đọc Real-time (Radar)
+    public function getUnreadCountsAjax() {
+        header('Content-Type: application/json; charset=utf-8');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['status' => 'error']);
+            return;
+        }
+        $userId = $_SESSION['user_id'];
+        
+        // Lấy dữ liệu từ Model
+        $totalUnread = $this->chatModel->countTotalUnreadMessages($userId);
+        $unreadPerConv = $this->chatModel->getUnreadCountPerConversation($userId);
+        
+        echo json_encode([
+            'status' => 'success',
+            'total' => $totalUnread,
+            'per_conv' => $unreadPerConv
+        ]);
+    }
+
     // API Lấy tin nhắn & Deal
     public function getTradeMessagesAjax() {
         header('Content-Type: application/json; charset=utf-8');
