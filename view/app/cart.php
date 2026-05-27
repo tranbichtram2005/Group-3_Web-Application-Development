@@ -57,16 +57,30 @@ require_once __DIR__ . '/../partials/user-header.php';
                             <span style="font-size:11px;background:#E8F5E9;color:#388E3C;padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block">Kho: <?= $sp['stock_quantity'] ?></span>
                         </div>
                         
-                        <div class="item-quantity">
-                            <button class="qty-btn" onclick="changeQty(this, <?= $sp['listing_id'] ?>, -1)">−</button>
-                            <input type="text" value="<?= $sp['quantity'] ?>" class="qty-input" 
-                                   id="qty-<?= $sp['listing_id'] ?>" 
-                                   data-dongia="<?= $sp['price_snapshot'] ?>"
-                                   data-stock="<?= (int)$sp['stock_quantity'] ?>"
-                                   readonly>
-                            <button class="qty-btn" onclick="changeQty(this, <?= $sp['listing_id'] ?>, 1)">+</button>
+                      <div class="item-quantity" style="display: flex; flex-wrap: wrap; justify-content: center;">
+                            <?php if(!empty($sp['offer_id'])): ?>
+                                <button class="qty-btn" disabled style="background:#f1f4f6; cursor:not-allowed; opacity:0.5">−</button>
+                                <input type="text" value="<?= $sp['quantity'] ?>" class="qty-input" 
+                                       id="qty-<?= $sp['listing_id'] ?>" 
+                                       data-dongia="<?= $sp['price_snapshot'] ?>"
+                                       data-stock="<?= (int)$sp['stock_quantity'] ?>"
+                                       readonly style="background:#fff3cd; color:#dc3545; font-weight:700;">
+                                <button class="qty-btn" disabled style="background:#f1f4f6; cursor:not-allowed; opacity:0.5">+</button>
+                                <div style="display: block; width: 100%; text-align: center; margin-top: 5px; font-size: 11px; color: var(--error-color);">
+                                    <i class="bi bi-lock-fill"></i> Slg Deal cố định
+                                </div>
+                            <?php else: ?>
+                                <button class="qty-btn" onclick="changeQty(this, <?= $sp['listing_id'] ?>, -1)">−</button>
+                                <input type="number" value="<?= $sp['quantity'] ?>" class="qty-input" 
+                                       id="qty-<?= $sp['listing_id'] ?>" 
+                                       data-dongia="<?= $sp['price_snapshot'] ?>"
+                                       data-stock="<?= (int)$sp['stock_quantity'] ?>"
+                                       onchange="manualChangeQty(this, <?= $sp['listing_id'] ?>)"
+                                       style="width: 40px; text-align: center; border: none; outline: none; -moz-appearance: textfield;">
+                                <button class="qty-btn" onclick="changeQty(this, <?= $sp['listing_id'] ?>, 1)">+</button>
+                            <?php endif; ?>
                         </div>
-                        
+
                         <div class="item-price" id="price-<?= $sp['listing_id'] ?>">
                             <?= number_format($sp['price_snapshot'] * $sp['quantity'], 0, ',', '.') ?>đ
                         </div>
@@ -165,32 +179,72 @@ async function sendCartActionToDB(payload) {
 
 // ── Tăng / Giảm số lượng ──────────────────────────────────
 async function changeQty(btn, listingId, delta) {
+    let container = btn.closest('.item-quantity');
+    container.style.pointerEvents = 'none'; // Khóa tạm thời chống Spam
+    container.style.opacity = '0.5';
+
     const input  = document.getElementById('qty-' + listingId);
     let currentQty = parseInt(input.value);
     let newQty     = currentQty + delta;
     const stock    = parseInt(input.dataset.stock);
 
     if (newQty <= 0) {
-        removeItem(listingId);
-        return;
+        container.style.pointerEvents = 'auto'; container.style.opacity = '1';
+        removeItem(listingId); return;
     }
-
-    // ✅ Check tồn kho ngay trên client trước
     if (newQty > stock) {
         showToast(`Chỉ còn ${stock} sản phẩm trong kho!`, 'error');
-        return;
+        container.style.pointerEvents = 'auto'; container.style.opacity = '1'; return;
     }
+
+    input.value = newQty;
+    const priceEl  = document.getElementById('price-' + listingId);
+    const unitPrice = parseInt(input.dataset.dongia);
+    priceEl.textContent = (unitPrice * newQty).toLocaleString('vi-VN') + 'đ';
+    updateSummary();
 
     let success = await sendCartActionToDB({ action: 'update', listingId: listingId, quantity: newQty });
     if (success) {
-        input.value = newQty;
-        const priceEl  = document.getElementById('price-' + listingId);
-        const unitPrice = parseInt(input.dataset.dongia);
-        priceEl.textContent = (unitPrice * newQty).toLocaleString('vi-VN') + 'đ';
-        resetVoucher();
-        updateSummary();
-        updateOrderBtn();
+        resetVoucher(); updateOrderBtn();
+    } else { // Trả số cũ nếu lỗi
+        input.value = currentQty;
+        priceEl.textContent = (unitPrice * currentQty).toLocaleString('vi-VN') + 'đ'; updateSummary();
     }
+    container.style.pointerEvents = 'auto'; container.style.opacity = '1';
+}
+
+// ── Xử lý khi khách tự gõ số vào ô input ──────────────────────────────────
+async function manualChangeQty(input, listingId) {
+    let container = input.closest('.item-quantity');
+    container.style.pointerEvents = 'none';
+    container.style.opacity = '0.5';
+
+    let newQty = parseInt(input.value);
+    const stock = parseInt(input.dataset.stock);
+
+    if (isNaN(newQty) || newQty <= 0) {
+        container.style.pointerEvents = 'auto'; container.style.opacity = '1';
+        removeItem(listingId); return;
+    }
+
+    if (newQty > stock) {
+        showToast(`Chỉ còn ${stock} sản phẩm trong kho!`, 'error');
+        newQty = stock; // Ép về max kho
+        input.value = newQty;
+    }
+
+    const priceEl  = document.getElementById('price-' + listingId);
+    const unitPrice = parseInt(input.dataset.dongia);
+    priceEl.textContent = (unitPrice * newQty).toLocaleString('vi-VN') + 'đ';
+    updateSummary();
+
+    let success = await sendCartActionToDB({ action: 'update', listingId: listingId, quantity: newQty });
+    if (success) {
+        resetVoucher(); updateOrderBtn();
+    } else {
+        window.location.reload(); 
+    }
+    container.style.pointerEvents = 'auto'; container.style.opacity = '1';
 }
 
 // ── Xóa 1 sản phẩm ───────────────────────────────────────
@@ -390,6 +444,19 @@ function showToast(msg, type = 'info') {
 updateSummary();
 updateOrderBtn();
 </script>
+
+<?php if(isset($expiredDealsCount) && $expiredDealsCount > 0): ?>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Deal đã hết hạn!',
+            text: 'Có <?= $expiredDealsCount ?> sản phẩm trong giỏ hàng đã quá hạn Deal 24h nên hệ thống đã tự động khôi phục về giá gốc.',
+            confirmButtonColor: '#FF7A3D'
+        });
+    });
+</script>
+<?php endif; ?>
 
 <?php
 require_once __DIR__ . '/../partials/user-footer.php';
