@@ -130,6 +130,39 @@ class ChatModel {
         $res = $stmt->fetch();
         return $res['max_read_id'] ?? 0;
     }
+
+    // Đếm TỔNG số tin nhắn chưa đọc của toàn bộ hệ thống (Cho Header)
+    public function countTotalUnreadMessages($userId) {
+        $sql = "SELECT COUNT(tm.id) as total
+                FROM trade_messages tm
+                JOIN trade_conversations tc ON tm.trade_conversation_id = tc.id
+                WHERE (tc.buyer_id = ? OR tc.seller_id = ?)
+                  AND tm.sender_id != ?
+                  AND tm.is_read = 0";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$userId, $userId, $userId]);
+        return $stmt->fetchColumn() ?: 0;
+    }
+
+    // Đếm số tin chưa đọc CỦA TỪNG PHÒNG CHAT (Cho Sidebar Chat)
+    public function getUnreadCountPerConversation($userId) {
+        $sql = "SELECT tc.id as conv_id, COUNT(tm.id) as unread_count
+                FROM trade_conversations tc
+                JOIN trade_messages tm ON tc.id = tm.trade_conversation_id
+                WHERE (tc.buyer_id = ? OR tc.seller_id = ?)
+                  AND tm.sender_id != ?
+                  AND tm.is_read = 0
+                GROUP BY tc.id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$userId, $userId, $userId]);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $map = [];
+        foreach($results as $row) {
+            $map[$row['conv_id']] = $row['unread_count'];
+        }
+        return $map;
+    }
     // ==========================================
     // NHÓM HÀM ADMIN SUPPORT (GIỮ NGUYÊN)
     // ==========================================
