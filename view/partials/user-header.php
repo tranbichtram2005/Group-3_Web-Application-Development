@@ -43,9 +43,10 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
             <div class="col-8 col-md-5 order-2 order-md-3 d-flex justify-content-end align-items-center gap-3 gap-md-4">
                 
                 <?php if ($isLoggedIn): ?>
-                    <a href="index.php?controller=listing&action=create" class="btn btn-2life-primary d-none d-sm-block rounded-pill py-1 px-3 fw-bold" style="font-size: 13px;">
-                        <i class="bi bi-plus-circle me-1"></i> Đăng tin
-                    </a>
+<a href="index.php?controller=listing&action=create" class="btn btn-2life-primary d-flex rounded-pill py-1 px-3 fw-bold align-items-center" style="font-size: 13px;">
+    <i class="bi bi-plus-circle me-sm-1"></i> 
+    <span class="d-none d-sm-inline">Đăng tin</span>
+</a>
 
                     <a href="index.php?controller=cart" class="position-relative text-white text-decoration-none nav-icon-hover" title="Giỏ hàng">
                         <i class="bi bi-cart3 fs-5"></i>
