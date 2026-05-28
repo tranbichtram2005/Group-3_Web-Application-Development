@@ -17,25 +17,22 @@ $listings = $listings ?? [];
     <div class="mb-5">
         <h4 class="fw-bold mb-4" style="color: var(--nav-color);">Danh Mục Nổi Bật</h4>
         <div class="d-flex gap-3 overflow-x-auto pb-2" style="scrollbar-width: thin;">
-            <?php if(!empty($categories)): foreach($categories as $cat): ?>
-            <a href="index.php?controller=listing&action=category&id=<?= $cat['id'] ?>" class="text-decoration-none text-center" style="min-width: 100px;">
-                <div class="bg-white border rounded-4 shadow-sm d-flex align-items-center justify-content-center mx-auto mb-2" 
-                     style="width: 70px; height: 70px; transition: 0.2s;" 
-                     onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='#fff'">
-                    
-                    <?php if(!empty($cat['icon_url'])): ?>
-                        <img src="<?= htmlspecialchars($cat['icon_url']) ?>" alt="<?= $cat['name'] ?>" 
-                             style="width: 40px; height: 40px; object-fit: contain;"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <i class="bi bi-box-seam fs-3" style="color: #FF7A3D; display: none;"></i>
-                    <?php else: ?>
-                        <i class="bi bi-box-seam fs-3" style="color: #FF7A3D;"></i>
-                    <?php endif; ?>
+<?php if(!empty($categories)): foreach($categories as $cat): ?>
+<a href="index.php?controller=listing&action=category&id=<?= $cat['id'] ?>" class="text-decoration-none text-center" style="min-width: 100px;">
+    <div class="bg-white border rounded-4 shadow-sm d-flex align-items-center justify-content-center mx-auto mb-2" 
+         style="width: 70px; height: 70px; transition: 0.2s;">
+        
+        <?php if(!empty($cat['icon_url'])): ?>
+            <img src="<?= htmlspecialchars($cat['icon_url']) ?>" alt="<?= htmlspecialchars($cat['name']) ?>" 
+                 style="width: 40px; height: 40px; object-fit: contain;">
+        <?php else: ?>
+            <i class="bi bi-box-seam fs-3" style="color: #FF7A3D;"></i>
+        <?php endif; ?>
 
-                </div>
-                <span class="small text-dark fw-semibold"><?= htmlspecialchars($cat['name']) ?></span>
-            </a>
-            <?php endforeach; endif; ?>
+    </div>
+    <span class="small text-dark fw-semibold"><?= htmlspecialchars($cat['name']) ?></span>
+</a>
+<?php endforeach; endif; ?>
         </div>
     </div>
 
