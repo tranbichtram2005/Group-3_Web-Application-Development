@@ -17,34 +17,73 @@ class ChatController {
     }
 
     public function index() {
+        // ===============================================
+        // TRICK: BẮT SÓNG RADAR ĐỂ VƯỢT RÀO INDEX.PHP
+        // ===============================================
+        if (isset($_GET['ajax_radar'])) {
+            while (ob_get_level() > 0) { ob_end_clean(); }
+            header('Content-Type: application/json; charset=utf-8');
+            
+            if (!isset($_SESSION['user_id'])) {
+                echo json_encode(['status' => 'error', 'msg' => 'Mất Session']);
+                exit;
+            }
+            
+            $userId = $_SESSION['user_id'];
+            $totalUnread = $this->chatModel->countTotalUnreadMessages($userId);
+            $unreadPerConv = $this->chatModel->getUnreadCountPerConversation($userId);
+            
+            echo json_encode([
+                'status' => 'success',
+                'total' => $totalUnread,
+                'per_conv' => (object)$unreadPerConv
+            ]);
+            exit; // Bắt buộc exit để không in ra giao diện chat
+        }
+        // ===============================================
+
+        // LUỒNG HIỂN THỊ TRANG CHAT BÌNH THƯỜNG
+        if(!isset($_SESSION['user_id'])) {
+            header("Location: index.php?controller=auth&action=login");
+            exit;
+        }
         $userId = $_SESSION['user_id'];
         $tradeConvs = $this->chatModel->getTradeConversations($userId);
         $supportConvs = $this->chatModel->getSupportConversations($userId);
         require_once __DIR__ . '/../view/app/chat.php';
     }
 
-    // API Quét tin nhắn chưa đọc Real-time (Radar)
+ // ===============================================
+    // 3 HÀM API REAL-TIME (ĐÃ BỌC BỘ BẮT LỖI)
+    // ===============================================
     public function getUnreadCountsAjax() {
+        while (ob_get_level() > 0) { ob_end_clean(); } // Càn quét sạch 100% rác
         header('Content-Type: application/json; charset=utf-8');
+        
         if (!isset($_SESSION['user_id'])) {
-            echo json_encode(['status' => 'error']);
-            return;
+            echo json_encode(['status' => 'error', 'msg' => 'Mất Session đăng nhập']);
+            exit;
         }
-        $userId = $_SESSION['user_id'];
         
-        // Lấy dữ liệu từ Model
-        $totalUnread = $this->chatModel->countTotalUnreadMessages($userId);
-        $unreadPerConv = $this->chatModel->getUnreadCountPerConversation($userId);
-        
-        echo json_encode([
-            'status' => 'success',
-            'total' => $totalUnread,
-            'per_conv' => $unreadPerConv
-        ]);
+        try {
+            $userId = $_SESSION['user_id'];
+            $totalUnread = $this->chatModel->countTotalUnreadMessages($userId);
+            $unreadPerConv = $this->chatModel->getUnreadCountPerConversation($userId);
+            
+            echo json_encode([
+                'status' => 'success',
+                'total' => $totalUnread,
+                'per_conv' => (object)$unreadPerConv
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'msg' => 'Lỗi DB: ' . $e->getMessage()]);
+        }
+        exit;
     }
 
-    // API Lấy tin nhắn & Deal
+   // API Lấy tin nhắn Mua Bán
     public function getTradeMessagesAjax() {
+        ob_clean();
         header('Content-Type: application/json; charset=utf-8');
         $convId = isset($_GET['conv_id']) ? intval($_GET['conv_id']) : 0;
         $lastId = isset($_GET['last_id']) ? intval($_GET['last_id']) : 0;
@@ -53,32 +92,41 @@ class ChatController {
         $userId = $_SESSION['user_id'];
         
         if ($convId > 0) {
-            // 1. Ngay khi kéo tin nhắn, tự động đánh dấu MÌNH đã đọc tin của HỌ
-            $this->chatModel->markMessagesAsRead($convId, $userId);
-
-            // 2. Kéo tin nhắn mới về
+            $this->chatModel->markMessagesAsRead($convId, $userId); // Báo đã xem tin Mua Bán
             $messages = $this->chatModel->getTradeMessages($convId, $lastId);
             $offer = $this->chatModel->getActiveOffer($listingId, $buyerId);
-            
-            // 3. Kiểm tra HỌ đã đọc tin của MÌNH tới đâu rồi (Trả về cái ID)
             $readUntilId = $this->chatModel->getLastReadMessageId($convId, $userId);
 
             echo json_encode(['status' => 'success', 'data' => $messages, 'offer' => $offer, 'read_until_id' => $readUntilId]);
         }
-    }
-    public function getSupportMessagesAjax() {
-        header('Content-Type: application/json; charset=utf-8');
-        $convId = isset($_GET['conv_id']) ? intval($_GET['conv_id']) : 0;
-        $lastId = isset($_GET['last_id']) ? intval($_GET['last_id']) : 0;
-        if ($convId > 0) {
-            $messages = $this->chatModel->getSupportMessages($convId, $lastId);
-            echo json_encode(['status' => 'success', 'data' => $messages]);
-        }
+        exit;
     }
 
-    // API Nghiệp vụ Deal Giá
-    public function dealAjax() {
+   public function getSupportMessagesAjax() {
+        while (ob_get_level() > 0) { ob_end_clean(); }
         header('Content-Type: application/json; charset=utf-8');
+        try {
+            $convId = isset($_GET['conv_id']) ? intval($_GET['conv_id']) : 0;
+            $lastId = isset($_GET['last_id']) ? intval($_GET['last_id']) : 0;
+            
+            if ($convId > 0) {
+                $this->chatModel->markSupportMessagesAsRead($convId);
+                $messages = $this->chatModel->getSupportMessages($convId, $lastId);
+                echo json_encode(['status' => 'success', 'data' => $messages]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'msg' => 'Lỗi DB: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+   // ===============================================
+    // API Nghiệp vụ Deal Giá (ĐÃ FIX LỖI TƯƠNG TỰ)
+    // ===============================================
+    public function dealAjax() {
+        if (ob_get_level() > 0) @ob_clean(); // Quét sạch rác HTML
+        header('Content-Type: application/json; charset=utf-8');
+        
         $action = isset($_POST['action']) ? $_POST['action'] : ''; 
         $listingId = isset($_POST['listing_id']) ? intval($_POST['listing_id']) : 0;
         $buyerId = isset($_POST['buyer_id']) ? intval($_POST['buyer_id']) : 0;
@@ -108,11 +156,17 @@ class ChatController {
         }
         
         echo json_encode(['status' => 'success']);
+        
+        exit; // 🚨 CỰC KỲ QUAN TRỌNG: Bắt buộc ngắt luồng tại đây!
     }
 
-    // API Gửi tin nhắn (Optimistic UI Server-side)
+   // ===============================================
+    // API Gửi tin nhắn (ĐÃ FIX LỖI LAG VÀ KẸT ĐANG GỬI)
+    // ===============================================
     public function sendAjax() {
+        if (ob_get_level() > 0) @ob_clean(); // Quét sạch rác HTML
         header('Content-Type: application/json; charset=utf-8');
+        
         $convId = isset($_POST['conv_id']) ? intval($_POST['conv_id']) : 0;
         $chatType = isset($_POST['chat_type']) ? $_POST['chat_type'] : 'trade';
         $content = isset($_POST['content']) ? trim($_POST['content']) : '';
@@ -136,7 +190,11 @@ class ChatController {
                 $this->chatModel->sendSupportMessage($convId, $_SESSION['user_id'], $typeId, $content, $attachment);
             }
             echo json_encode(['status' => 'success']);
+        } else {
+            echo json_encode(['status' => 'error', 'msg' => 'Dữ liệu rỗng']);
         }
+        
+        exit; // 🚨 CỰC KỲ QUAN TRỌNG: Bắt buộc ngắt luồng tại đây!
     }
 
     public function startTrade() {
