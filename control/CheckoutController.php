@@ -35,7 +35,6 @@ class CheckoutController {
             $directListingId = (int)$_GET['listing_id'];
             $directQuantity = (int)$_GET['quantity'];
 
-            // ĐÃ SỬA: p.price as price_snapshot để không bị lỗi dòng 44 nữa
             $query = "SELECT p.id as listing_id, p.title, p.price as price_snapshot, p.stock_quantity, p.user_id as seller_id, 
                              u.full_name as seller_name, img.image_url
                       FROM product_listings p
@@ -47,6 +46,25 @@ class CheckoutController {
             $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($product) {
+                // RÀO RULE: Kiểm tra Deal cho luồng Mua Ngay
+                $isDeal = false;
+                $dealQty = 0;
+                $validDeal = $this->cartModel->checkValidDeal($userId, $product['listing_id']);
+                
+                if ($validDeal) {
+                    $dealQty = (int)$validDeal['quantity'];
+                    if ($directQuantity != $dealQty) {
+                        $_SESSION['checkout_error'] = [
+                            'title' => 'Cảnh báo gian lận!',
+                            'msg'   => 'Sản phẩm "' . $product['title'] . '" đã chốt Deal với số lượng ' . $dealQty . '. Bạn không thể thay đổi số lượng!'
+                        ];
+                        header("Location: index.php?controller=cart");
+                        exit;
+                    }
+                    $product['price_snapshot'] = $validDeal['proposed_price'];
+                    $isDeal = true;
+                }
+
                 $checkoutItems[] = [
                     'listing_id' => $product['listing_id'],
                     'product_name' => $product['title'],
@@ -55,31 +73,63 @@ class CheckoutController {
                     'seller_name' => $product['seller_name'],
                     'quantity' => $directQuantity,
                     'unit_price' => $product['price_snapshot'],
-                    'stock' => $product['stock_quantity'] ?? 99
+                    'stock' => $product['stock_quantity'] ?? 99,
+                    'is_deal' => $isDeal,
+                    'deal_qty' => $dealQty
                 ];
             }
         } 
-// Luồng 2: Thanh toán toàn bộ sản phẩm từ giỏ hàng
+        // Luồng 2: Thanh toán CÁC SẢN PHẨM ĐƯỢC CHỌN từ giỏ hàng
         else {
             $cartId = $this->cartModel->getCartId($userId);
             
-            // FIX BUG 6: Quét sạch Deal hết hạn trước khi load trang Checkout
             $this->cartModel->cleanExpiredDealsInCart($cartId);
             $rawCartItems = $this->cartModel->getCartItems($cartId);
 
-            // FIX BUG 7: Nhớ các món đã tick chọn và lưu vào Session
-            $selectedIds = $_POST['selected_ids'] ?? $_GET['selected_ids'] ?? '';
-            if (!empty($selectedIds)) {
-                $_SESSION['checkout_selected_ids'] = $selectedIds; // Lưu lại để tí qua hàm Order còn biết
-                $idArray = explode(',', $selectedIds);
-                $rawCartItems = array_filter($rawCartItems, function($item) use ($idArray) {
-                    return in_array($item['listing_id'], $idArray);
-                });
-            } else {
-                unset($_SESSION['checkout_selected_ids']); // Xóa nếu không có
+            // BẮT BUỘC: Lấy danh sách ID đã tick từ Cart gửi sang (Hoặc từ Session nếu load lại trang)
+            $selectedIds = $_POST['selected_ids'] ?? $_GET['selected_ids'] ?? ($_SESSION['checkout_selected_ids'] ?? '');
+            
+            // RULE: Nếu rỗng (chưa tick món nào) -> Đá văng về giỏ hàng
+            if (empty($selectedIds)) {
+                echo "<script>alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!'); window.location.href='index.php?controller=cart';</script>";
+                exit;
+            }
+
+            // Lưu lại vào Session để lát nữa processOrder() biết đường mà trừ Database
+            $_SESSION['checkout_selected_ids'] = $selectedIds; 
+            $idArray = explode(',', $selectedIds);
+            
+            // Lọc dứt điểm: CHỈ lấy những món có ID nằm trong danh sách đã tick
+            $rawCartItems = array_filter($rawCartItems, function($item) use ($idArray) {
+                return in_array($item['listing_id'], $idArray);
+            });
+
+            // Nếu lọc xong mà không còn sản phẩm nào hợp lệ -> Đá về giỏ hàng
+            if (empty($rawCartItems)) {
+                header("Location: index.php?controller=cart");
+                exit;
             }
 
             foreach ($rawCartItems as $item) {
+                // RÀO RULE: Kiểm tra Deal cho luồng Giỏ hàng
+                $isDeal = false;
+                $dealQty = 0;
+                $validDeal = $this->cartModel->checkValidDeal($userId, $item['listing_id']);
+                
+                // Nếu item có offer_id và offer đó vẫn đang hợp lệ
+                if ($validDeal && isset($item['offer_id']) && $item['offer_id'] == $validDeal['id']) {
+                    $dealQty = (int)$validDeal['quantity'];
+                    if ((int)$item['quantity'] != $dealQty) {
+                        $_SESSION['checkout_error'] = [
+                            'title' => 'Cảnh báo gian lận!',
+                            'msg'   => 'Sản phẩm "' . $item['title'] . '" đã chốt Deal với số lượng ' . $dealQty . '. Vui lòng không thay đổi số lượng!'
+                        ];
+                        header("Location: index.php?controller=cart");
+                        exit;
+                    }
+                    $isDeal = true;
+                }
+
                 $checkoutItems[] = [
                     'listing_id' => $item['listing_id'],
                     'product_name' => $item['title'],
@@ -88,7 +138,9 @@ class CheckoutController {
                     'seller_name' => $item['seller_name'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['price_snapshot'],
-                    'stock' => $item['stock_quantity'] ?? 99
+                    'stock' => $item['stock_quantity'] ?? 99,
+                    'is_deal' => $isDeal,
+                    'deal_qty' => $dealQty
                 ];
             }
         }
@@ -154,9 +206,6 @@ class CheckoutController {
         require_once __DIR__ . '/../view/checkout.php';
     }
 
-    // ===============================================
-    // API: LẤY DỮ LIỆU ĐỊA CHỈ TỪ DATABASE
-    // ===============================================
     public function getProvinces() {
         header('Content-Type: application/json');
         $stmt = $this->db->query("SELECT id, name FROM provinces ORDER BY name ASC");
@@ -182,9 +231,6 @@ class CheckoutController {
         exit;
     }
 
-    // ===============================================
-    // AJAX: LƯU TRỮ TẠM THỜI ĐỊA CHỈ VÀO SESSION
-    // ===============================================
     public function saveAddressSessionAjax() {
         header('Content-Type: application/json; charset=utf-8');
         $input = json_decode(file_get_contents("php://input"), true);
@@ -205,7 +251,7 @@ class CheckoutController {
     }
 
     // ===============================================
-    // TIẾN HÀNH TẠO ĐƠN HÀNG
+    // TIẾN HÀNH TẠO ĐƠN HÀNG (BẮT LỖI GIAN LẬN CODE)
     // ===============================================
     public function processOrder() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -217,14 +263,23 @@ class CheckoutController {
                 $listingId = (int)$_POST['direct_listing_id'];
                 $quantity = (int)$_POST['direct_quantity'];
                 
-                // ĐÃ SỬA Ở ĐÂY: Đổi 'price_snapshot' thành 'price as price_snapshot' 
-                // để khớp với bảng product_listings
                 $query = "SELECT id as listing_id, price as price_snapshot, user_id as seller_id FROM product_listings WHERE id = :listing_id LIMIT 1";
                 $stmt = $this->db->prepare($query);
                 $stmt->execute([':listing_id' => $listingId]);
                 $product = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 if ($product) {
+                    // CHỐT CHẶN CUỐI: Chặn hack qua inspect phần tử lúc submit
+                    $validDeal = $this->cartModel->checkValidDeal($userId, $listingId);
+                    if ($validDeal) {
+                        if ($quantity != $validDeal['quantity']) {
+                            $_SESSION['checkout_error'] = ['title' => 'Cảnh báo gian lận!', 'msg' => 'Phát hiện hành vi thay đổi số lượng sản phẩm Deal trái phép.'];
+                            header("Location: index.php?controller=cart");
+                            exit;
+                        }
+                        $product['price_snapshot'] = $validDeal['proposed_price'];
+                    }
+
                     $checkoutItems[] = [
                         'listing_id' => $product['listing_id'],
                         'quantity' => $quantity,
@@ -232,20 +287,35 @@ class CheckoutController {
                         'seller_id' => $product['seller_id']
                     ];
                 }
-} else {
-                // FIX BUG 6: Quét lại một lần nữa phòng hờ khách treo trang web qua ngày hôm sau
+            } else {
+                // Luồng thanh toán từ giỏ hàng
                 $this->cartModel->cleanExpiredDealsInCart($cartId);
                 $rawCartItems = $this->cartModel->getCartItems($cartId);
                 
-                // FIX BUG 7: Chỉ bốc đúng những món đã tick hồi nãy
-                if (!empty($_SESSION['checkout_selected_ids'])) {
-                    $idArray = explode(',', $_SESSION['checkout_selected_ids']);
-                    $rawCartItems = array_filter($rawCartItems, function($item) use ($idArray) {
-                        return in_array($item['listing_id'], $idArray);
-                    });
+                // RULE: Ép buộc phải có SESSION lưu các ID đã tick
+                if (empty($_SESSION['checkout_selected_ids'])) {
+                    header("Location: index.php?controller=cart");
+                    exit;
                 }
 
+                $idArray = explode(',', $_SESSION['checkout_selected_ids']);
+                
+                // Cắt bỏ toàn bộ những sản phẩm không được tick
+                $rawCartItems = array_filter($rawCartItems, function($item) use ($idArray) {
+                    return in_array($item['listing_id'], $idArray);
+                });
+
                 foreach ($rawCartItems as $item) {
+                    // CHỐT CHẶN CUỐI TỪ GIỎ HÀNG: Chống gian lận Deal
+                    $validDeal = $this->cartModel->checkValidDeal($userId, $item['listing_id']);
+                    if ($validDeal && isset($item['offer_id']) && $item['offer_id'] == $validDeal['id']) {
+                        if ((int)$item['quantity'] != (int)$validDeal['quantity']) {
+                            $_SESSION['checkout_error'] = ['title' => 'Cảnh báo gian lận!', 'msg' => 'Phát hiện hành vi thay đổi số lượng sản phẩm Deal trái phép.'];
+                            header("Location: index.php?controller=cart");
+                            exit;
+                        }
+                    }
+
                     $checkoutItems[] = [
                         'listing_id' => $item['listing_id'],
                         'quantity' => $item['quantity'],
@@ -290,6 +360,9 @@ class CheckoutController {
                 'items'             => $checkoutItems
             ];
 
+            // ... (Đoạn code mảng $orderData ở trên giữ nguyên) ...
+
+            // DÒNG NÀY RẤT QUAN TRỌNG: Gọi Model lưu vào Database và lấy ra ID đơn hàng
             $orderId = $this->orderModel->placeOrder($orderData);
 
             if ($orderId) {
@@ -299,28 +372,70 @@ class CheckoutController {
                     }
                 }
                 
-                // Rẽ nhánh thanh toán
                 if ($paymentMethod === 2) {
                     $this->vnpayPayment($orderId, $totalFinal);
                 } else {
-                    // COD - Tiền mặt
-                    echo "<script>alert('Đặt hàng thành công!'); window.location.href='index.php?controller=order';</script>";
+                    // Dùng SweetAlert2 thay cho alert() phèn của trình duyệt
+                    echo "<!DOCTYPE html>
+                          <html lang='vi'>
+                          <head>
+                              <meta charset='UTF-8'>
+                              <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                              <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+                          </head>
+                          <body style='background-color: #f5f5f5;'>
+                              <script>
+                                  document.addEventListener('DOMContentLoaded', function() {
+                                      Swal.fire({
+                                          icon: 'success',
+                                          title: 'Đặt hàng thành công!',
+                                          text: 'Cảm ơn cậu đã mua sắm tại 2Life.',
+                                          confirmButtonColor: '#FF7A3D',
+                                          confirmButtonText: 'Xem đơn hàng',
+                                          allowOutsideClick: false
+                                      }).then((result) => {
+                                          window.location.href = 'index.php?controller=order';
+                                      });
+                                  });
+                              </script>
+                          </body>
+                          </html>";
                 }
                 exit;
             } else {
-                echo "<script>alert('Lỗi hệ thống khi tạo đơn hàng!'); history.back();</script>";
+                // Đổi luôn cả thông báo lỗi hệ thống cho đồng bộ
+                echo "<!DOCTYPE html>
+                      <html lang='vi'>
+                      <head>
+                          <meta charset='UTF-8'>
+                          <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                          <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+                      </head>
+                      <body style='background-color: #f5f5f5;'>
+                          <script>
+                              document.addEventListener('DOMContentLoaded', function() {
+                                  Swal.fire({
+                                      icon: 'error',
+                                      title: 'Thất bại!',
+                                      text: 'Có lỗi hệ thống xảy ra khi tạo đơn hàng!',
+                                      confirmButtonColor: '#dc3545',
+                                      confirmButtonText: 'Quay lại'
+                                  }).then(() => {
+                                      history.back();
+                                  });
+                              });
+                          </script>
+                      </body>
+                      </html>";
             }
         }
     }
 
-    // ==========================================
-    // KHỐI API VNPAY
-    // ==========================================
     private function vnpayPayment($orderId, $amount) {
         date_default_timezone_set('Asia/Ho_Chi_Minh'); 
 
-        $vnp_TmnCode = "FRCAG0XC"; // Thay bằng mã Sandbox của bạn
-        $vnp_HashSecret = "2L1YRFYMFU0MKYMVJGTH1VJHKSGC97DK"; // Thay bằng mã Sandbox của bạn
+        $vnp_TmnCode = "FRCAG0XC"; 
+        $vnp_HashSecret = "2L1YRFYMFU0MKYMVJGTH1VJHKSGC97DK"; 
         $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
         
         $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
@@ -380,18 +495,15 @@ class CheckoutController {
         $vnp_ResponseCode = $_GET['vnp_ResponseCode'] ?? '';
         
         if ($vnp_ResponseCode === '00') {
-            // Tách lấy mã order_id từ chuỗi vnp_TxnRef (Định dạng lúc tạo: orderId_timestamp)
             $vnp_TxnRef = $_GET['vnp_TxnRef'] ?? '';
             $parts = explode('_', $vnp_TxnRef);
             $orderId = (int)$parts[0];
 
             if ($orderId > 0) {
-                // CHỐT: Thanh toán xong tự động cập nhật sang trạng thái CHỜ CHUẨN BỊ (status_id = 2)
                 $stmt = $this->db->prepare("UPDATE orders SET status_id = 2 WHERE id = :order_id");
                 $stmt->execute([':order_id' => $orderId]);
             }
 
-            // Đồng bộ với hộp thoại Toast xanh cam cậu vừa làm luôn nhe
             $_SESSION['toast_msg'] = 'Thanh toán đơn hàng qua VNPay thành công!';
             header("Location: index.php?controller=order");
             exit;
