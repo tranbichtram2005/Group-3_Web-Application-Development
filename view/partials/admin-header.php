@@ -62,7 +62,7 @@ $adminRole = 'Admin';
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="index.php?controller=support&action=index"><i class="bi bi-headset me-1"></i> Hỗ trợ</a>
+                        <a class="nav-link" href="index.php?controller=admin_chat"><i class="bi bi-headset me-1"></i> Hỗ trợ</a>
                     </li>
                 </ul>
 

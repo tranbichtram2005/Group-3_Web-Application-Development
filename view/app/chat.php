@@ -236,13 +236,28 @@
         });
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
+   window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // 1. Tự động mở phòng Chat Mua Bán
         if (urlParams.has('active_trade')) {
             let target = document.getElementById('trade-item-' + urlParams.get('active_trade'));
             if (target) {
                 target.click();
                 if (urlParams.has('deal')) setTimeout(() => openDealModal('create'), 500); 
+            }
+        }
+        
+        // 2. Tự động chuyển Tab và mở phòng Chat Hỗ Trợ
+        if (urlParams.has('active_support')) {
+            // Chuyển Bootstrap Tab sang Hỗ Trợ
+            let supportTabBtn = document.querySelector('button[data-bs-target="#support-chat"]');
+            if (supportTabBtn) supportTabBtn.click();
+            
+            // Click vào đúng phòng chat với Admin
+            let target = document.getElementById('support-item-' + urlParams.get('active_support'));
+            if (target) {
+                target.click();
             }
         }
     });
