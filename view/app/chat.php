@@ -9,8 +9,7 @@
 /* Khu vực Chat & Thanh cuộn */
 .chat-messages { background: #f1f4f6; overflow-y: auto; flex: 1 1 0; padding: 1.5rem; scroll-behavior: smooth; }
 .chat-input-area { background: #fff; border-top: 1px solid #eee; padding: 15px; flex-shrink: 0; }
-.chat-list-item { transition: background-color 0.2s; cursor: pointer; }
-.chat-list-item:hover { background-color: #e9ecef; }
+.chat-list-item { transition: background-color 0.2s; cursor: pointer; position: relative; }.chat-list-item:hover { background-color: #e9ecef; }
 
 /* Bong bóng tin nhắn */
 .msg-bubble { max-width: 75%; padding: 10px 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
@@ -75,6 +74,7 @@
                             <div class="fw-bold fs-6">Admin 2Life</div>
                             <small class="text-muted text-truncate d-block">Chủ đề: <?= htmlspecialchars($conv['category_name']) ?></small>
                         </div>
+                        <span class="position-absolute top-50 end-0 translate-middle-y me-3 badge bg-danger rounded-pill unread-badge d-none" style="font-size: 10px;">0</span>
                     </div>
                     <?php endforeach; else: ?>
                         <div class="p-4 text-center text-muted">Chưa có yêu cầu hỗ trợ.</div>
@@ -161,26 +161,31 @@
     let pollInterval = null;
     let currentDealAction = 'create';
     let isFirstLoad = true; 
-    // LẮNG NGHE RADAR TỪ HEADER ĐỂ HIỆN CHẤM ĐỎ Ở SIDEBAR
+
+  // LẮNG NGHE RADAR TỪ HEADER ĐỂ HIỆN CHẤM ĐỎ CẢ MUA BÁN VÀ HỖ TRỢ
     window.addEventListener('unreadCountsUpdated', (e) => {
-        let perConv = e.detail; // Lấy dữ liệu json.per_conv truyền sang
+        let perConv = e.detail; 
         
-        document.querySelectorAll('.chat-list-item[data-type="trade"]').forEach(item => {
+        document.querySelectorAll('.chat-list-item').forEach(item => {
             let cId = item.dataset.convId;
+            let cType = item.dataset.type; // 'trade' hoặc 'support'
             let badge = item.querySelector('.unread-badge');
+            if(!badge) return;
             
-            // Nếu đây là phòng chat ĐANG MỞ, giấu chấm đỏ ngay lập tức (Vì mình đang xem mà)
-            if (cId == actConv) {
+            let jsonKey = cType + '_' + cId; // VD: trade_1 hoặc support_1
+            
+            // Đang mở đúng phòng này thì tắt luôn chấm đỏ
+            if (cId == actConv && actChatType == cType) {
                 badge.classList.add('d-none');
                 return;
             }
 
-            // Nếu phòng chat khác có tin mới, bật chấm đỏ lên
-            if (perConv[cId] && perConv[cId] > 0) {
-                badge.textContent = perConv[cId]; // Số lượng tin chưa đọc
+            // Phòng khác có tin thì bật lên
+            if (perConv[jsonKey] && perConv[jsonKey] > 0) {
+                badge.textContent = perConv[jsonKey];
                 badge.classList.remove('d-none');
             } else {
-                badge.classList.add('d-none'); // Hết tin mới thì tắt đi
+                badge.classList.add('d-none');
             }
         });
     });
@@ -242,16 +247,23 @@
         }
     });
 
-    // =========================================================
-    // LẤY TIN NHẮN TỪ SERVER (ĐÃ FIX LỖI SO SÁNH CHUỖI GÂY MẤT TIN)
+  // =========================================================
+    // LẤY TIN NHẮN TỪ SERVER (ĐÃ FIX LỖI NHIỄU TIN NHẮN GIỮA CÁC PHÒNG)
     // =========================================================
     async function fetchMessages() {
         if(!actConv) return;
+        
+        // 🚨 1. CHỐT ID PHÒNG CHAT HIỆN TẠI TRƯỚC KHI GỌI MẠNG (Phát thẻ tên)
+        let requestedConvId = actConv; 
+        
         let actionUrl = actChatType === 'trade' ? 'getTradeMessagesAjax' : 'getSupportMessagesAjax';
         
         try {
             let res = await fetch(`index.php?controller=chat&action=${actionUrl}&conv_id=${actConv}&last_id=${lastMsgId}&listing_id=${actListing}&buyer_id=${actBuyer}`);
             let json = await res.json();
+            
+            // 🚨 2. CỔNG KIỂM SOÁT: Nếu User đã chuyển sang phòng khác trong lúc chờ mạng -> Vứt data này đi!
+            if (requestedConvId !== actConv) return; 
             
             if(json.status === 'success') {
                 if (actChatType === 'trade' && json.offer) {
@@ -266,7 +278,7 @@
                     let scrollArea = document.getElementById('chat-messages');
                     let isAtBottom = (scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight) < 100;
 
-// BẮT ĐẦU VÒNG LẶP IN TIN NHẮN
+                    // BẮT ĐẦU VÒNG LẶP IN TIN NHẮN
                     json.data.forEach(msg => {
                         let msgId = parseInt(msg.id, 10);
                         
@@ -277,15 +289,13 @@
                             let align = isMe ? 'justify-content-end' : 'justify-content-start';
                             let bubbleClass = isMe ? 'msg-me' : 'msg-partner';
                             
-                            // 1. CHUẨN HÓA MÚI GIỜ
                             let timeStr = new Date(msg.sent_at.replace(' ', 'T')).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                             
-                            // 2. TẠO DẤU TICK (CHỈ ÁP DỤNG CHO TIN NHẮN MÌNH GỬI)
                             let tickIcon = '';
                             if (isMe) {
                                 tickIcon = (msg.is_read == 1) 
-                                    ? `<i class="bi bi-check2-all text-primary ms-1 msg-check" data-msg-id="${msgId}"></i>` // Xanh: Đã xem
-                                    : `<i class="bi bi-check2 text-secondary ms-1 msg-check" data-msg-id="${msgId}"></i>`; // Xám: Đã gửi
+                                    ? `<i class="bi bi-check2-all text-primary ms-1 msg-check" data-msg-id="${msgId}"></i>` 
+                                    : `<i class="bi bi-check2 text-secondary ms-1 msg-check" data-msg-id="${msgId}"></i>`; 
                             }
                             
                             let msgContent = msg.content;
@@ -298,7 +308,6 @@
                                 }
                             }
 
-                            // 3. CHÈN HTML CÓ DẤU TICK VÀO
                             let htmlStr = `
                                 <div class="d-flex mb-3 ${align}" id="msg-${msgId}">
                                     <div class="msg-bubble ${bubbleClass}">
@@ -313,23 +322,16 @@
                             box.insertAdjacentHTML('beforeend', htmlStr);
                         }
                     });
-                    // KẾT THÚC VÒNG LẶP IN TIN NHẮN
                     
-                    // ===============================================
-                    // ĐOẠN NÀY LÀ CẬP NHẬT TICK XANH VÀ XÓA VÒNG XOAY
-                    // ===============================================
-                    
-                    // Biến các dấu tích xám thành xanh nếu đối phương đã đọc
                     if (json.read_until_id > 0) {
                         document.querySelectorAll('.msg-check').forEach(el => {
                             if (parseInt(el.dataset.msgId) <= json.read_until_id) {
                                 el.classList.remove('bi-check2', 'text-secondary');
-                                el.classList.add('bi-check2-all', 'text-primary'); // Lên màu xanh
+                                el.classList.add('bi-check2-all', 'text-primary'); 
                             }
                         });
                     }
                     
-                    // Xóa Spinner Loading (nếu có) khi mở chat lần đầu
                     document.getElementById('chat-loading-spinner')?.remove();
                     
                     if (isFirstLoad || isAtBottom) {
