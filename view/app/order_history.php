@@ -22,7 +22,19 @@ $orders = $orders ?? [];
         .status-badge { font-weight: 600; text-transform: uppercase; font-size: 14px; }
         .product-item { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
         .product-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
-        .order-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; }
+        /* CSS chia lại bố cục Mobile - Desktop cho phần chân đơn hàng */
+        .order-footer { border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; display: flex; flex-direction: column; gap: 15px; }
+        @media (min-width: 768px) {
+            .order-footer { flex-direction: row; justify-content: space-between; align-items: center; }
+        }
+        
+        .action-btns { display: flex; gap: 10px; width: 100%; }
+        .action-btns button, .action-btns form { flex: 1; text-align: center; padding: 8px 0; font-weight: 500; }
+        @media (min-width: 768px) {
+            .action-btns { width: auto; justify-content: flex-end; }
+            .action-btns button { flex: none; padding: 6px 16px; }
+            .action-btns form { flex: none; }
+        }
         
         /* TOAST THÔNG BÁO XANH CAM */
         .toast-2life { position: fixed; top: 30px; right: 30px; z-index: 10000; background-color: #4CAF50; border-left: 6px solid #FF7A3D; color: #fff; padding: 15px 25px; border-radius: 6px; font-weight: 600; font-size: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease; }
@@ -106,20 +118,22 @@ $orders = $orders ?? [];
                 <?php endforeach; ?>
 
                 <div class="order-footer">
-                    <div>
+                    <div class="w-100">
                         <span class="text-muted d-block small mb-1">Địa chỉ giao: <?= htmlspecialchars($order['street_address']) ?></span>
                         <span class="text-muted d-block small">Thành tiền: <strong class="text-danger fs-5"><?= number_format($order['total_amount'], 0, ',', '.') ?>đ</strong></span>
                     </div>
-                    <div>
+                    
+                    <div class="action-btns">
                         <?php if (in_array($order['status_id'], [1, 2])): ?>
                             <?php if ($order['status_id'] == 1): ?>
-                                <button class="btn btn-outline-primary btn-sm me-2" onclick="openUpdateModal(<?= $order['id'] ?>, '<?= htmlspecialchars($order['street_address']) ?>', '<?= htmlspecialchars($order['shipping_note']) ?>')">Cập nhật thông tin</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="openUpdateModal(<?= $order['id'] ?>, '<?= htmlspecialchars($order['street_address']) ?>', '<?= htmlspecialchars($order['shipping_note'] ?? '') ?>')">Cập nhật thông tin</button>
                             <?php endif; ?>
                             <button class="btn btn-outline-danger btn-sm" onclick="openCancelModal(<?= $order['id'] ?>)">Hủy đơn hàng</button>
+                            
                         <?php elseif ($order['status_id'] == 3): ?>
-                            <form action="index.php?controller=order&action=confirmReceived" method="POST" class="d-inline">
+                            <form action="index.php?controller=order&action=confirmReceived" method="POST" class="d-inline w-100">
                                 <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                <button type="submit" class="btn btn-success btn-sm">Đã nhận được hàng</button>
+                                <button type="submit" class="btn btn-success btn-sm w-100">Đã nhận được hàng</button>
                             </form>
                         <?php endif; ?>
                     </div>
@@ -129,28 +143,55 @@ $orders = $orders ?? [];
     <?php endif; ?>
 </div>
 
-<div class="modal fade" id="updateModal" tabindex="-1">
-    <div class="modal-dialog">
+<!-- MODAL CẬP NHẬT THÔNG TIN NHẬN HÀNG -->
+<div class="modal fade" id="updateAddressModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"> <!-- Thêm class này để ra chính giữa -->
         <div class="modal-content">
-            <form action="index.php?controller=order&action=updateShippingInfo" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Cập nhật thông tin nhận hàng</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+            <div class="modal-header" style="background-color: var(--btn-primary, #FF7A3D); color: #fff;">
+                <h5 class="modal-title fw-bold">Cập nhật thông tin nhận hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form action="index.php?controller=order&action=updateShippingInfo" method="POST" id="updateOrderForm">
                 <div class="modal-body">
-                    <input type="hidden" name="order_id" id="updateOrderId">
-                    <div class="mb-3">
-                        <label class="form-label">Địa chỉ giao hàng mới</label>
-                        <input type="text" name="street_address" id="updateAddress" class="form-control" required>
+                    <!-- Các input ẩn để gửi ID đơn hàng và gửi nguyên 1 chuỗi địa chỉ về Backend -->
+                    <input type="hidden" name="order_id" id="updateOrderId" value="">
+                    <input type="hidden" name="street_address" id="fullAddressInput">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" style="font-size:13px;">Tỉnh / Thành phố *</label>
+                            <select id="updProvince" class="form-select form-select-sm" onchange="loadUpdDistricts()" required>
+                                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" style="font-size:13px;">Quận / Huyện *</label>
+                            <select id="updDistrict" class="form-select form-select-sm" onchange="loadUpdWards()" disabled required>
+                                <option value="">-- Chọn Quận/Huyện --</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" style="font-size:13px;">Phường / Xã *</label>
+                            <select id="updWard" class="form-select form-select-sm" disabled required>
+                                <option value="">-- Chọn Phường/Xã --</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" style="font-size:13px;">Số nhà, tên đường *</label>
+                            <input type="text" id="updStreet" class="form-control form-control-sm" placeholder="Ví dụ: 730 Sư Vạn Hạnh" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Ghi chú giao hàng</label>
-                        <textarea name="shipping_note" id="updateNote" class="form-control" rows="2"></textarea>
+                    
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold" style="font-size:13px;">Ghi chú giao hàng</label>
+                        <textarea name="shipping_note" id="updateOrderNote" class="form-control" rows="3" placeholder="Lời nhắn cho người bán..."></textarea>
                     </div>
                 </div>
+                
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-sm text-white fw-bold" style="background-color: var(--btn-primary, #FF7A3D); border: none;">Lưu thay đổi</button>
                 </div>
             </form>
         </div>
@@ -225,18 +266,101 @@ $orders = $orders ?? [];
 <script>
     let uModal, cModal, rModal;
     document.addEventListener('DOMContentLoaded', () => {
-        uModal = new bootstrap.Modal(document.getElementById('updateModal'));
+        // Sửa ID cho khớp với form mới updateAddressModal
+        uModal = new bootstrap.Modal(document.getElementById('updateAddressModal'));
         cModal = new bootstrap.Modal(document.getElementById('cancelModal'));
         rModal = new bootstrap.Modal(document.getElementById('reviewModal'));
     });
 
-    function openUpdateModal(id, addr, note) {
+    // 1. Hàm mở Modal và Tự động gọi API tải Tỉnh/Thành phố
+    async function openUpdateModal(id, addr, note) {
         document.getElementById('updateOrderId').value = id;
-        document.getElementById('updateAddress').value = addr;
-        document.getElementById('updateNote').value = note;
-        uModal.show();
+        document.getElementById('updateOrderNote').value = note; // Gán ghi chú
+        
+        uModal.show(); // Hiển thị Modal ra chính giữa
+
+        // Gọi API load tỉnh thành ngay khi mở modal
+        let provSelect = document.getElementById('updProvince');
+        if (provSelect.options.length <= 1) { // Chỉ load 1 lần để tránh lag
+            try {
+                let res = await fetch('index.php?controller=checkout&action=getProvinces');
+                let data = await res.json();
+                let html = '<option value="">-- Chọn Tỉnh/Thành phố --</option>';
+                data.forEach(p => html += `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`);
+                provSelect.innerHTML = html;
+            } catch (e) { console.error('Lỗi load tỉnh thành'); }
+        }
     }
 
+    // 2. Tải Quận/Huyện khi chọn Tỉnh
+    async function loadUpdDistricts() {
+        let provId = document.getElementById('updProvince').value;
+        let distSelect = document.getElementById('updDistrict');
+        let wardSelect = document.getElementById('updWard');
+        
+        wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>'; 
+        wardSelect.disabled = true;
+        
+        if(!provId) { 
+            distSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>'; 
+            distSelect.disabled = true; 
+            return; 
+        }
+        
+        let res = await fetch(`index.php?controller=checkout&action=getDistricts&province_id=${provId}`);
+        let data = await res.json();
+        let html = '<option value="">-- Chọn Quận/Huyện --</option>';
+        data.forEach(d => html += `<option value="${d.id}" data-name="${d.name}">${d.name}</option>`);
+        distSelect.innerHTML = html; 
+        distSelect.disabled = false;
+    }
+
+    // 3. Tải Phường/Xã khi chọn Quận
+    async function loadUpdWards() {
+        let distId = document.getElementById('updDistrict').value;
+        let wardSelect = document.getElementById('updWard');
+        
+        if(!distId) { 
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>'; 
+            wardSelect.disabled = true; 
+            return; 
+        }
+        
+        let res = await fetch(`index.php?controller=checkout&action=getWards&district_id=${distId}`);
+        let data = await res.json();
+        let html = '<option value="">-- Chọn Phường/Xã --</option>';
+        data.forEach(w => html += `<option value="${w.id}" data-name="${w.name}">${w.name}</option>`);
+        wardSelect.innerHTML = html; 
+        wardSelect.disabled = false;
+    }
+
+    // 4. Gộp toàn bộ địa chỉ thành 1 chuỗi text trước khi gửi lên PHP
+    document.getElementById('updateOrderForm').addEventListener('submit', function(e) {
+        let provSel = document.getElementById('updProvince');
+        let distSel = document.getElementById('updDistrict');
+        let wardSel = document.getElementById('updWard');
+        let street  = document.getElementById('updStreet').value.trim();
+
+        // Rào lỗi nếu chọn thiếu
+        if (provSel.selectedIndex <= 0 || distSel.selectedIndex <= 0 || wardSel.selectedIndex <= 0 || !street) {
+            e.preventDefault();
+            alert("Vui lòng chọn đầy đủ thông tin địa chỉ!");
+            return false;
+        }
+
+        // Bóc tách tên địa danh ra
+        let provinceName = provSel.options[provSel.selectedIndex].dataset.name;
+        let districtName = distSel.options[distSel.selectedIndex].dataset.name;
+        let wardName     = wardSel.options[wardSel.selectedIndex].dataset.name;
+        
+        // Gộp chuỗi giống format cũ
+        let fullAddr = street + ', ' + wardName + ', ' + districtName + ', ' + provinceName;
+        
+        // Nạp chuỗi đó vào ô input ẩn để gửi lên Controller
+        document.getElementById('fullAddressInput').value = fullAddr;
+    });
+
+    // CÁC HÀM CŨ GIỮ NGUYÊN
     function openCancelModal(id) {
         document.getElementById('cancelOrderId').value = id;
         cModal.show();

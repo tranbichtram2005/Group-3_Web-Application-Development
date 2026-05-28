@@ -39,7 +39,7 @@ $productReviews = $productReviews ?? [];
         <div class="col-12 col-lg-8">
             <div class="bg-white border rounded-4 overflow-hidden p-3 mb-4 shadow-sm text-center">
                 <?php $mainImg = !empty($images) ? $images[0]['image_url'] : 'https://ui-avatars.com/api/?name=No+Image&background=f1f1f1&color=999&size=500'; ?>
-                <img src="<?= htmlspecialchars($mainImg) ?>" id="mainProductImg" class="img-fluid object-fit-contain" style="max-height: 450px; width: 100%;">
+                <img src="<?= htmlspecialchars($mainImg) ?>" id="mainProductImg" class="img-fluid object-fit-contain" style="height: 450px; width: 100%; background-color: #fafafa; border-radius: 8px;">
                 
                 <?php if(count($images) > 1): ?>
                     <div class="d-flex gap-2 justify-content-center mt-3 overflow-x-auto py-1">
