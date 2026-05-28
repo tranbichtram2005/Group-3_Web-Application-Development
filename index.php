@@ -110,6 +110,12 @@ switch ($controller) {
         method_exists($approveListingCtrl, $action) ? $approveListingCtrl->$action() : die("Lỗi: Không tìm thấy action!");
         break;
 
+case 'admin_chat':
+        require_once __DIR__ . '/control/AdminChatController.php';
+        $adminChatCtrl = new AdminChatController();
+        method_exists($adminChatCtrl, $action) ? $adminChatCtrl->$action() : $adminChatCtrl->index();
+        break;
+
 case 'chat':
         require_once 'control/ChatController.php';
         $chatController = new ChatController();
