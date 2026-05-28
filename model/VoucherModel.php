@@ -25,37 +25,38 @@ public function isCodeExists($code) {
     return $stmt->fetchColumn() > 0;
 }
 
-public function createVoucher($code, $discountValue, $minOrderValue, $expiryDate) {
-    try {
-        $createdBy = $_SESSION['user_id'] ?? 1;
-        $query = "INSERT INTO vouchers 
-                    (code, type_id, discount_value, min_order_value, total_quantity, used_quantity, starts_at, expires_at, status_id, created_by) 
-                  VALUES 
-                    (:code, 2, :discountValue, :minOrderValue, 1000, 0, NOW(), :expiresAt, 1, :createdBy)";
-        $stmt = $this->db->prepare($query);
-        return $stmt->execute([
-            ':code'          => $code,
-            ':discountValue' => $discountValue,
-            ':minOrderValue' => $minOrderValue,
-            ':expiresAt'     => $expiryDate,
-            ':createdBy'     => $createdBy,
-        ]);
-    } catch (PDOException $e) {
-        return false;
+public function createVoucher($code, $typeId, $discountValue, $maxDiscount, $minOrderValue, $totalQty, $startsAt, $expiresAt) {
+        try {
+            $createdBy = $_SESSION['user_id'] ?? 1;
+            $query = "INSERT INTO vouchers 
+                        (code, type_id, discount_value, max_discount_amount, min_order_value, total_quantity, used_quantity, starts_at, expires_at, status_id, created_by) 
+                      VALUES 
+                        (:code, :typeId, :discountValue, :maxDiscount, :minOrderValue, :totalQty, 0, :startsAt, :expiresAt, 1, :createdBy)";
+            $stmt = $this->db->prepare($query);
+            return $stmt->execute([
+                ':code'          => $code,
+                ':typeId'        => $typeId,
+                ':discountValue' => $discountValue,
+                ':maxDiscount'   => $maxDiscount ?: null, // Nếu rỗng thì lưu NULL
+                ':minOrderValue' => $minOrderValue ?: 0,
+                ':totalQty'      => $totalQty,
+                ':startsAt'      => $startsAt,
+                ':expiresAt'     => $expiresAt,
+                ':createdBy'     => $createdBy,
+            ]);
+        } catch (PDOException $e) {
+            return false;
+        }
     }
-}
 
 public function deleteVoucher($voucherId) {
-    // Gỡ FK trong orders trước để tránh constraint violation
-    $nullify = "UPDATE orders SET voucher_id = NULL WHERE voucher_id = :voucherId";
-    $stmt = $this->db->prepare($nullify);
-    $stmt->execute([':voucherId' => $voucherId]);
-
-    // Rồi mới xóa voucher
-    $query = "DELETE FROM vouchers WHERE id = :voucherId";
-    $stmt = $this->db->prepare($query);
-    return $stmt->execute([':voucherId' => $voucherId]);
-}
+        // Chỉ cho phép xóa khi chưa có lượt sử dụng nào (used_quantity = 0)
+        $query = "DELETE FROM vouchers WHERE id = :voucherId AND used_quantity = 0";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':voucherId' => $voucherId]);
+        // Trả về true nếu xóa thành công (có dòng bị ảnh hưởng), false nếu voucher đã dùng hoặc không tồn tại
+        return $stmt->rowCount() > 0;
+    }
 
 public function getVoucherByCode($code, $orderTotal) {
     $code = strtoupper(trim($code));

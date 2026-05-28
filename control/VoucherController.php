@@ -5,44 +5,58 @@ class VoucherController {
     private $voucherModel;
 
     public function __construct() {
-        // Kiểm tra quyền Admin (Role = 3) bảo mật cho module
-        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] != 2) {
+        // Ép múi giờ Việt Nam cho tất cả các thao tác ngày tháng
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Tạm tắt bảo vệ phân quyền để cậu test
+        /*
+        if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] != 1) { 
             header("Location: index.php?controller=auth&action=login");
             exit;
         }
+        */
+        
         $this->voucherModel = new VoucherModel();
     }
 
-    // action=index (alias cho manageVouchers — navbar gọi action=index)
     public function index() {
-        $this->manageVouchers();
-    }
-
-    public function manageVouchers() {
         $vouchers = $this->voucherModel->getAllVouchers();
+        // Đã sửa đường dẫn trỏ vào thư mục admin
         require_once __DIR__ . '/../view/admin/manage_voucher.php';
     }
 
     public function createVoucher() {
-        $hasError     = false;
+        $hasError = false;
         $errorMessage = "";
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $code          = strtoupper(trim($_POST['code']         ?? ''));
-            $discountValue = intval($_POST['discountValue']          ?? 0);
-            $minOrderValue = intval($_POST['minOrderValue']          ?? 0);
-            $expiryDate    = $_POST['expiryDate']                    ?? '';
+            $code          = strtoupper(trim($_POST['code'] ?? ''));
+            $typeId        = intval($_POST['typeId'] ?? 2); 
+            $discountValue = intval($_POST['discountValue'] ?? 0);
+            $maxDiscount   = !empty($_POST['maxDiscount']) ? intval($_POST['maxDiscount']) : null;
+            $minOrderValue = intval($_POST['minOrderValue'] ?? 0);
+            $totalQty      = intval($_POST['totalQuantity'] ?? 100);
+            $startsAt      = $_POST['startsAt'] ?? date('Y-m-d H:i:s');
+            $expiryDate    = $_POST['expiryDate'] ?? '';
 
-            if (empty($code) || $discountValue <= 0 || empty($expiryDate)) {
+            if (empty($code) || $discountValue <= 0 || empty($expiryDate) || $totalQty <= 0) {
                 $hasError     = true;
-                $errorMessage = "Vui lòng điền đầy đủ và chính xác thông tin voucher.";
-            } elseif (strtotime($expiryDate) < strtotime('today')) {
+                $errorMessage = "Vui lòng điền đầy đủ các thông tin bắt buộc.";
+            } elseif ($typeId == 1 && $discountValue > 100) { // Chặn % > 100
                 $hasError     = true;
-                $errorMessage = "Ngày hết hạn phải từ hôm nay trở đi.";
+                $errorMessage = "Mức giảm phần trăm không được vượt quá 100%.";
+            } elseif (strtotime($expiryDate) <= strtotime($startsAt)) {
+                $hasError     = true;
+                $errorMessage = "Ngày kết thúc phải sau ngày bắt đầu.";
             } else {
-                $isCreated = $this->voucherModel->createVoucher($code, $discountValue, $minOrderValue, $expiryDate);
+                $isCreated = $this->voucherModel->createVoucher($code, $typeId, $discountValue, $maxDiscount, $minOrderValue, $totalQty, $startsAt, $expiryDate);
                 if ($isCreated) {
-                    header("Location: index.php?controller=voucher&action=index&success=1");
+                    // Chuyển hướng kèm biến msg báo thành công
+                    header("Location: index.php?controller=voucher&action=index&msg=create_success");
                     exit;
                 } else {
                     $hasError     = true;
@@ -56,11 +70,19 @@ class VoucherController {
     }
 
     public function deleteVoucher() {
-    $voucherId = intval($_GET['id'] ?? 0);
-    if ($voucherId > 0) {
-        $this->voucherModel->deleteVoucher($voucherId);
+        $voucherId = intval($_GET['id'] ?? 0);
+        if ($voucherId > 0) {
+            $isDeleted = $this->voucherModel->deleteVoucher($voucherId);
+            if ($isDeleted) {
+                header("Location: index.php?controller=voucher&action=index&msg=delete_success");
+            } else {
+                // Xóa thất bại (do đã được sử dụng)
+                header("Location: index.php?controller=voucher&action=index&msg=delete_fail_used");
+            }
+            exit;
+        }
+        header("Location: index.php?controller=voucher&action=index");
+        exit;
     }
-    header("Location: index.php?controller=voucher&action=index&deleted=1");
-    exit;
 }
-}
+?>
