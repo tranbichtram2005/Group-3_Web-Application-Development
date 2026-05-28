@@ -10,17 +10,29 @@ class ApproveListingModel {
     }
 
     // Lấy danh sách tin đăng theo trạng thái (có kèm tên người bán và danh mục)
-    public function getListingsByStatus($status_id) {
+    public function getListingsByStatus($status_id, $limit = 10, $offset = 0) {
         $sql = "SELECT p.*, u.full_name as seller_name, c.name as category_name
                 FROM product_listings p
                 JOIN users u ON p.user_id = u.id
                 JOIN categories c ON p.category_id = c.id
                 WHERE p.status_id = :status_id
-                ORDER BY p.created_at DESC";
+                ORDER BY p.created_at DESC
+                LIMIT :limit OFFSET :offset";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':status_id', $status_id, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    // Thêm mới: Hàm đếm tổng số lượng tin đăng theo trạng thái
+    public function countListingsByStatus($status_id) {
+        $sql = "SELECT COUNT(id) as total FROM product_listings WHERE status_id = :status_id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindParam(':status_id', $status_id, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'];
     }
 
     // Lấy chi tiết 1 tin đăng cụ thể (để Admin xem xét kỹ trước khi duyệt)

@@ -12,24 +12,58 @@
         <div class="card-body p-3">
             <ul class="nav nav-pills gap-2">
                 <li class="nav-item">
-                    <a class="nav-link <?= $tab == 'pending' ? 'active bg-primary' : 'bg-light text-dark' ?>" 
-                       href="index.php?controller=approvelisting&action=index&tab=pending">Chờ duyệt</a>
+                    <a class="nav-link <?= $tab == 'pending' ? 'active bg-primary' : 'bg-light text-dark' ?>"
+                        href="index.php?controller=approvelisting&action=index&tab=pending">
+                        Chờ duyệt (<?= $countPending ?>)
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?= $tab == 'active' ? 'active bg-success' : 'bg-light text-dark' ?>" 
-                       href="index.php?controller=approvelisting&action=index&tab=active">Đang hiển thị</a>
+                    <a class="nav-link <?= $tab == 'active' ? 'active bg-success' : 'bg-light text-dark' ?>"
+                        href="index.php?controller=approvelisting&action=index&tab=active">
+                        Đang hiển thị (<?= $countActive ?>)
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?= $tab == 'rejected' ? 'active bg-danger' : 'bg-light text-dark' ?>" 
-                       href="index.php?controller=approvelisting&action=index&tab=rejected">Đã từ chối</a>
+                    <a class="nav-link <?= $tab == 'rejected' ? 'active bg-danger' : 'bg-light text-dark' ?>"
+                        href="index.php?controller=approvelisting&action=index&tab=rejected">
+                        Đã từ chối (<?= $countRejected ?>)
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?= $tab == 'hidden' ? 'active bg-secondary' : 'bg-light text-dark' ?>" 
-                       href="index.php?controller=approvelisting&action=index&tab=hidden">Bị ẩn / Gỡ</a>
+                    <a class="nav-link <?= $tab == 'hidden' ? 'active bg-secondary' : 'bg-light text-dark' ?>"
+                        href="index.php?controller=approvelisting&action=index&tab=hidden">
+                        Bị ẩn / Gỡ (<?= $countHidden ?>)
+                    </a>
                 </li>
             </ul>
         </div>
     </div>
+
+    <?php if (isset($totalPages) && $totalPages > 1): ?>
+        <div class="card-footer bg-white border-0 py-3">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-end mb-0">
+                    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                        <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $page - 1 ?>" aria-label="Previous">
+                            <span aria-hidden="true">&laquo; Trước</span>
+                        </a>
+                    </li>
+
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                            <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $i ?>"><?= $i ?></a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                        <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $page + 1 ?>" aria-label="Next">
+                            <span aria-hidden="true">Sau &raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    <?php endif; ?>
 
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">

@@ -19,7 +19,7 @@ class ApproveListingController {
 
     // Hiển thị danh sách tin đăng theo Tab
     public function index() {
-        // Tab mặc định là pending (Chờ duyệt = 1)
+        // 1. Xác định tab hiện tại
         $tab = isset($_GET['tab']) ? $_GET['tab'] : 'pending';
         $status_id = 1; 
 
@@ -27,13 +27,29 @@ class ApproveListingController {
         elseif ($tab == 'rejected') $status_id = 3;
         elseif ($tab == 'hidden') $status_id = 4;
 
-        // Lấy dữ liệu từ Model
-        $listings = $this->approveListingModel->getListingsByStatus($status_id);
+        // 2. Logic Phân trang
+        $limit = 10; // Tối thiểu 10 dòng
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($page < 1) $page = 1;
+        
+        $offset = ($page - 1) * $limit;
+
+        // Tính tổng số trang cho tab hiện tại
+        $totalRecords = $this->approveListingModel->countListingsByStatus($status_id);
+        $totalPages = ceil($totalRecords / $limit);
+
+        // Lấy dữ liệu danh sách cho trang hiện tại
+        $listings = $this->approveListingModel->getListingsByStatus($status_id, $limit, $offset);
+
+        // 3. Lấy số lượng báo hiệu cho tất cả các tab
+        $countPending = $this->approveListingModel->countListingsByStatus(1);
+        $countActive = $this->approveListingModel->countListingsByStatus(2);
+        $countRejected = $this->approveListingModel->countListingsByStatus(3);
+        $countHidden = $this->approveListingModel->countListingsByStatus(4);
 
         $pageTitle = "Phê duyệt tin đăng - Admin";
         include 'view/admin/approve_listing.php';
     }
-
     // Hiển thị chi tiết tin đăng
   // Hiển thị chi tiết tin đăng (Đã cập nhật lấy hình ảnh)
     public function detail() {
