@@ -156,5 +156,13 @@ class User {
         ':description' => $description
     ]);
 }
+
+// Hàm kiểm tra xem user đã gửi form đăng ký bán hàng chưa
+    public function getSellerProfile($userId) {
+        $query = "SELECT * FROM seller_profiles WHERE user_id = :user_id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':user_id' => $userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
 ?>

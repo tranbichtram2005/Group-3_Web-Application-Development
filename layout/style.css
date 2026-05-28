@@ -261,7 +261,7 @@
     .tag-blue { background-color: var(--btn-secondary); }
 
 
-    /* ========================================================
+/* ========================================================
     5. TRANG CHI TIẾT SẢN PHẨM & GIỎ HÀNG
     ======================================================== */
     .page-title {
@@ -271,64 +271,6 @@
         margin-bottom: 24px;
     }
 
-    .cart-item {
-        background-color: #fff;
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 20px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin-bottom: 16px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-    }
-
-    .cart-item img {
-        width: 90px;
-        height: 90px;
-        object-fit: cover;
-        border-radius: 12px;
-        background-color: var(--bg-card);
-    }
-
-    .item-quantity {
-        display: flex;
-        align-items: center;
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        overflow: hidden;
-        background: #fff;
-    }
-
-    .qty-btn {
-        width: 36px;
-        height: 36px;
-        background: none;
-        border: none;
-        font-size: 16px;
-        color: var(--text-primary);
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    .qty-input {
-        width: 40px;
-        height: 36px;
-        text-align: center;
-        border: none;
-        border-left: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        font-weight: 600;
-    }
-
-    .item-price {
-        font-size: 17px;
-        font-weight: 700;
-        color: var(--btn-primary);
-        min-width: 120px;
-        text-align: right;
-    }
-
     .cart-summary {
         background-color: #fff;
         border: 1px solid var(--border-color);
@@ -336,6 +278,121 @@
         padding: 24px;
         position: sticky;
         top: 20px;
+    }
+
+    /* BỐ CỤC MẶC ĐỊNH CHO LAPTOP (FLEXBOX NẰM NGANG) */
+    .cart-item {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        position: relative;
+    }
+    
+    .cart-item .item-check { 
+        margin-right: 15px; flex-shrink: 0; accent-color: var(--btn-primary); width: 18px; height: 18px; cursor: pointer; 
+    }
+    
+    .cart-item img { 
+        width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-right: 20px; flex-shrink: 0; border: 1px solid #eee; 
+    }
+    
+    /* Vùng chứa Tên & Shop: Ép min-width: 0 để Flexbox cho phép cắt chữ (...) */
+    .cart-item .item-info { 
+        flex: 1; 
+        min-width: 0; /* Thuộc tính 'sống còn' để text-overflow hoạt động */
+        padding-right: 15px; 
+    }
+    
+    /* Cắt chữ Tên sản phẩm (... nếu dài quá 2 dòng) */
+    .cart-item .item-info h3 {
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    /* Cắt chữ Tên người bán (... nếu dài quá 1 dòng) */
+    .cart-item .item-info .seller-name {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block; /* Ép thành block để nowrap chạy */
+    }
+    
+    /* Vùng chứa Số lượng và Giá (Cho Laptop) */
+    .cart-item .item-bottom-row { 
+        display: flex; 
+        align-items: center; 
+        gap: 30px; 
+        flex-shrink: 0; /* Cứng ngắc, không bị tên sản phẩm ép nhỏ lại */
+        margin-right: 45px; /* Chừa khoảng trống an toàn cho nút thùng rác */
+    }
+    
+    .item-qty-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    
+    .item-quantity {
+        display: flex; align-items: center; border: 1px solid var(--border-color);
+        border-radius: 6px; overflow: hidden; background: #fff; height: 32px;
+    }
+    .qty-btn { width: 32px; height: 100%; border: none; background: #f8f9fa; font-weight: bold; cursor: pointer; color: var(--text-primary); transition: 0.2s; }
+    .qty-btn:hover:not(:disabled) { background: #e9ecef; }
+    .qty-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+    .qty-input { width: 40px; height: 100%; border: none; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); text-align: center; font-weight: 600; outline: none; }
+    
+    .cart-item .item-price { 
+        font-size: 17px; 
+        font-weight: 700; 
+        color: var(--btn-primary); 
+        min-width: 110px; /* Đảm bảo giá tiền thẳng tắp thành 1 cột */
+        text-align: right; 
+    }
+
+    .btn-remove { position: absolute; right: 15px; background: none; border: none; color: var(--error-color); cursor: pointer; padding: 8px; border-radius: 8px; transition: 0.2s; }
+    .btn-remove:hover { background: #ffebee; }
+
+    /* =========================================
+       BẺ KHUNG CSS GRID CHO MÀN HÌNH ĐIỆN THOẠI
+       ========================================= */
+    @media (max-width: 768px) {
+        .cart-item {
+            display: grid;
+            grid-template-columns: 20px 75px 1fr;
+            grid-template-rows: auto auto;
+            grid-template-areas: 
+                "chk img info"
+                ".   .   bottom";
+            gap: 12px;
+            padding: 12px;
+            align-items: start;
+        }
+        
+        .cart-item .item-check { grid-area: chk; margin-top: 28px; margin-right: 0; width: 16px; height: 16px; }
+        .cart-item img { grid-area: img; width: 75px; height: 75px; margin: 0; }
+        
+        .cart-item .item-info { 
+            grid-area: info; 
+            padding-right: 25px; /* Chừa chỗ cho thùng rác trên mobile */
+        } 
+        
+        .cart-item .item-bottom-row {
+            grid-area: bottom;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end; 
+            width: 100%;
+            margin-top: 6px;
+            margin-right: 0;
+            gap: 10px;
+        }
+        
+        .item-qty-wrapper { align-items: flex-start; } 
+        .cart-item .item-price { font-size: 16px !important; min-width: auto; margin-bottom: 3px; }
+        .btn-remove { top: 12px; right: 10px; padding: 5px; }
     }
 
     /* ========================================================

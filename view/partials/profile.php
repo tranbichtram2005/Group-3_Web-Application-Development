@@ -178,8 +178,19 @@ async function registerSeller() {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
     });
     const result = await res.json();
-    Swal.fire({ icon: result.status, title: 'Thông báo', text: result.msg, confirmButtonColor: '#FF7A3D' });
-    if(result.status === 'success') document.getElementById('form-seller').reset();
+    // Gọi thông báo đẹp đẹp
+    Swal.fire({ 
+        icon: result.status, 
+        title: 'Thông báo', 
+        text: result.msg, 
+        confirmButtonColor: '#FF7A3D' 
+    }).then((resAlert) => {
+        // Nếu thành công thì reset form cho sạch sẽ
+        if (result.status === 'success') {
+            document.getElementById('form-seller').reset();
+         Optional: window.location.reload(); 
+        }
+    });
 }
 
 // Preview ảnh

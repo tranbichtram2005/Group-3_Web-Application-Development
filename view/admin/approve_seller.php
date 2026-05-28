@@ -25,6 +25,12 @@
                         <span class="badge bg-secondary ms-1" id="badge-verified"><?= $stats[1] ?></span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link tab-action" data-status="2" href="#" style="color: #555;">
+                        <i class="bi bi-x-circle me-2"></i>Hồ sơ bị từ chối 
+                        <span class="badge bg-secondary ms-1" id="badge-rejected"><?= $stats[2] ?? 0 ?></span>
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
@@ -71,6 +77,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     wrapper.innerHTML = data.html;
                     document.getElementById('badge-pending').innerText = data.stats[0];
                     document.getElementById('badge-verified').innerText = data.stats[1];
+                    if(document.getElementById('badge-rejected')) document.getElementById('badge-rejected').innerText = data.stats[2];
                 }
             })
             .catch(err => {
