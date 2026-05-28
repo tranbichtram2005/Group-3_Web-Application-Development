@@ -131,38 +131,50 @@ class ChatModel {
         return $res['max_read_id'] ?? 0;
     }
 
-    // Đếm TỔNG số tin nhắn chưa đọc của toàn bộ hệ thống (Cho Header)
+// Đếm TỔNG số tin nhắn chưa đọc (Gồm cả Mua bán + Admin)
     public function countTotalUnreadMessages($userId) {
-        $sql = "SELECT COUNT(tm.id) as total
-                FROM trade_messages tm
-                JOIN trade_conversations tc ON tm.trade_conversation_id = tc.id
-                WHERE (tc.buyer_id = ? OR tc.seller_id = ?)
-                  AND tm.sender_id != ?
-                  AND tm.is_read = 0";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$userId, $userId, $userId]);
-        return $stmt->fetchColumn() ?: 0;
+        // Đếm tin Mua Bán
+        $sql1 = "SELECT COUNT(tm.id) FROM trade_messages tm JOIN trade_conversations tc ON tm.trade_conversation_id = tc.id WHERE (tc.buyer_id = ? OR tc.seller_id = ?) AND tm.sender_id != ? AND tm.is_read = 0";
+        $stmt1 = $this->conn->prepare($sql1);
+        $stmt1->execute([$userId, $userId, $userId]);
+        $tradeCount = $stmt1->fetchColumn() ?: 0;
+
+        // Đếm tin Hỗ Trợ (Từ Admin gửi tới User)
+        $sql2 = "SELECT COUNT(sm.id) FROM support_messages sm JOIN support_conversations sc ON sm.support_conversation_id = sc.id WHERE sc.user_id = ? AND sm.sender_type_id = 2 AND sm.is_read = 0";
+        $stmt2 = $this->conn->prepare($sql2);
+        $stmt2->execute([$userId]);
+        $supportCount = $stmt2->fetchColumn() ?: 0;
+
+        return $tradeCount + $supportCount;
     }
 
-    // Đếm số tin chưa đọc CỦA TỪNG PHÒNG CHAT (Cho Sidebar Chat)
+   // Đếm số tin chưa đọc CỦA TỪNG PHÒNG CHAT (Phân biệt rõ Mua Bán / Hỗ Trợ)
     public function getUnreadCountPerConversation($userId) {
-        $sql = "SELECT tc.id as conv_id, COUNT(tm.id) as unread_count
-                FROM trade_conversations tc
-                JOIN trade_messages tm ON tc.id = tm.trade_conversation_id
-                WHERE (tc.buyer_id = ? OR tc.seller_id = ?)
-                  AND tm.sender_id != ?
-                  AND tm.is_read = 0
-                GROUP BY tc.id";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$userId, $userId, $userId]);
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
         $map = [];
-        foreach($results as $row) {
-            $map[$row['conv_id']] = $row['unread_count'];
+        // Mua Bán (Gắn tiền tố trade_)
+        $sql1 = "SELECT tc.id as conv_id, COUNT(tm.id) as unread_count FROM trade_conversations tc JOIN trade_messages tm ON tc.id = tm.trade_conversation_id WHERE (tc.buyer_id = ? OR tc.seller_id = ?) AND tm.sender_id != ? AND tm.is_read = 0 GROUP BY tc.id";
+        $stmt1 = $this->conn->prepare($sql1);
+        $stmt1->execute([$userId, $userId, $userId]);
+        foreach($stmt1->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $map['trade_' . $row['conv_id']] = $row['unread_count'];
+        }
+
+        // Hỗ Trợ (Gắn tiền tố support_)
+        $sql2 = "SELECT sc.id as conv_id, COUNT(sm.id) as unread_count FROM support_conversations sc JOIN support_messages sm ON sc.id = sm.support_conversation_id WHERE sc.user_id = ? AND sm.sender_type_id = 2 AND sm.is_read = 0 GROUP BY sc.id";
+        $stmt2 = $this->conn->prepare($sql2);
+        $stmt2->execute([$userId]);
+        foreach($stmt2->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $map['support_' . $row['conv_id']] = $row['unread_count'];
         }
         return $map;
     }
+
+    // Hàm báo "Đã xem" cho tin nhắn Admin
+    public function markSupportMessagesAsRead($convId) {
+        $sql = "UPDATE support_messages SET is_read = 1 WHERE support_conversation_id = ? AND sender_type_id = 2 AND is_read = 0";
+        $this->conn->prepare($sql)->execute([$convId]);
+    }
+    
     // ==========================================
     // NHÓM HÀM ADMIN SUPPORT (GIỮ NGUYÊN)
     // ==========================================
@@ -190,6 +202,32 @@ class ChatModel {
         if ($conv = $stmtCheck->fetch(PDO::FETCH_ASSOC)) return $conv['id'];
         $this->conn->prepare("INSERT INTO support_conversations (user_id, category_id, status_id) VALUES (?, ?, 1)")->execute([$userId, $categoryId]);
         return $this->conn->lastInsertId();
+    }
+
+    // ==========================================
+    // NHÓM HÀM CHO ADMIN XỬ LÝ HỖ TRỢ (HELPDESK)
+    // ==========================================
+    public function getAdminSupportConversations($adminId) {
+        $sql = "SELECT sc.*, cat.name AS category_name, u.full_name AS user_name, u.avatar_url AS user_avatar
+                FROM support_conversations sc JOIN support_categories cat ON sc.category_id = cat.id JOIN users u ON sc.user_id = u.id
+                WHERE (sc.admin_id IS NULL OR sc.admin_id = ?) ORDER BY sc.status_id ASC, sc.last_message_at DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$adminId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function claimSupportTicket($convId, $adminId) {
+        return $this->conn->prepare("UPDATE support_conversations SET admin_id = ?, status_id = 2 WHERE id = ? AND admin_id IS NULL")->execute([$adminId, $convId]);
+    }
+
+    public function sendAdminSupportMessage($convId, $adminId, $typeId, $content, $attachment = null) {
+        $this->conn->prepare("INSERT INTO support_messages (support_conversation_id, sender_id, sender_type_id, message_type_id, content, attachment_url) VALUES (?, ?, 2, ?, ?, ?)")->execute([$convId, $adminId, $typeId, $content, $attachment]);
+        $this->conn->prepare("UPDATE support_conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?")->execute([$convId]);
+        return true;
+    }
+    
+    public function closeSupportTicket($convId) {
+        return $this->conn->prepare("UPDATE support_conversations SET status_id = 3 WHERE id = ?")->execute([$convId]);
     }
 }
 ?>
