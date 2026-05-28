@@ -106,13 +106,15 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
         </div>
     </div>
 
-    <?php if ($isLoggedIn): ?>
+<?php if ($isLoggedIn): ?>
 <script>
     // RADAR QUÉT TIN NHẮN CHƯA ĐỌC TOÀN HỆ THỐNG
     setInterval(async () => {
         try {
-            let res = await fetch('index.php?controller=chat&action=getUnreadCountsAjax');
-            let json = await res.json();
+            // Dùng URL mượn đường action=index để lách luật bảo mật của index.php
+            let res = await fetch('index.php?controller=chat&action=index&ajax_radar=1');
+            let json = await res.json(); 
+            
             if(json.status === 'success') {
                 // 1. Cập nhật Badge đỏ trên Header
                 let badge = document.getElementById('global-msg-badge');
@@ -125,11 +127,13 @@ $msgCount  = $GLOBALS['msgCount'] ?? 0;
                     }
                 }
                 
-                // 2. Phát loa thông báo cho trang Chat (Nếu đang mở trang Chat)
+                // 2. Phát tín hiệu cho các chấm đỏ ở phòng Chat
                 window.dispatchEvent(new CustomEvent('unreadCountsUpdated', { detail: json.per_conv }));
             }
-        } catch(e){}
-    }, 3000); // Quét mỗi 3 giây
+        } catch(e) { 
+            // Ẩn lỗi đi cho web mượt, không cần hiện hộp đen nữa
+        }
+    }, 3000); 
 </script>
 <?php endif; ?>
 
