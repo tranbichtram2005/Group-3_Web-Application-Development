@@ -85,19 +85,41 @@ require_once __DIR__ . '/../view/partials/profile.php';    }
     }
 
 public function registerSellerAjax() {
-    $userId = $_SESSION['user_id'];
-    $data = json_decode(file_get_contents('php://input'), true);
+        $userId = $_SESSION['user_id'];
+        $data = json_decode(file_get_contents('php://input'), true);
 
-    $shopName = $data['shop_name'];
-    $taxCode = $data['tax_code']; // Đón dữ liệu mới
-    $description = $data['description'];
+        $shopName = $data['shop_name'];
+        $taxCode = $data['tax_code']; 
+        $description = $data['description'];
 
-    // Gọi Model để lưu (Cậu nhớ cập nhật hàm trong Model User/SellerProfile để nhận thêm biến $taxCode)
-    if ($this->userModel->registerSeller($userId, $shopName, $taxCode, $description)) {
-        echo json_encode(['status' => 'success', 'msg' => 'Gửi yêu cầu đăng ký thành công!']);
-    } else {
-        echo json_encode(['status' => 'error', 'msg' => 'Bạn đã gửi yêu cầu trước đó hoặc có lỗi xảy ra.']);
+        // 1. Kiểm tra xem user đã có hồ sơ đăng ký chưa
+        $profile = $this->userModel->getSellerProfile($userId);
+        
+        if ($profile) {
+            // Nếu is_verified = 0 (Đang chờ duyệt)
+            if ($profile['is_verified'] == 0) {
+                echo json_encode([
+                    'status' => 'info', 
+                    'msg' => 'Hồ sơ của cậu đang được xét duyệt rồi. Vui lòng kiên nhẫn đợi Ban quản trị nhé!'
+                ]);
+                return;
+            }
+            // Nếu is_verified = 1 (Đã duyệt)
+            if ($profile['is_verified'] == 1) {
+                echo json_encode([
+                    'status' => 'info', 
+                    'msg' => 'Cậu đã là Người bán uy tín rồi, không cần gửi đăng ký thêm nữa đâu!'
+                ]);
+                return;
+            }
+        }
+
+        // 2. Nếu chưa có hồ sơ thì mới gọi Model để lưu
+        if ($this->userModel->registerSeller($userId, $shopName, $taxCode, $description)) {
+            echo json_encode(['status' => 'success', 'msg' => 'Gửi yêu cầu thành công! Chúng tôi sẽ xét duyệt trong 24h.']);
+        } else {
+            echo json_encode(['status' => 'error', 'msg' => 'Có lỗi kết nối cơ sở dữ liệu, vui lòng thử lại sau.']);
+        }
     }
-}
 }
 ?>
