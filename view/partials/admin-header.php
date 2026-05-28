@@ -66,7 +66,7 @@ $adminRole = 'Admin';
     <nav class="navbar navbar-expand-lg navbar-dark admin-navbar shadow-sm sticky-top">
         <div class="container-fluid px-3 px-md-4">
             
-            <a href="index.php?controller=admin&action=dashboard" class="navbar-brand admin-logo d-flex align-items-center">
+            <a href="index.php?controller=admin-home" class="navbar-brand admin-logo d-flex align-items-center">
                 2Life <span style="color: #38bdf8; margin-left: 6px;">Admin</span>
             </a>
 
