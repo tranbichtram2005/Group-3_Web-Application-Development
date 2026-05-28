@@ -274,5 +274,19 @@ class ListingModel
         $stmt->bindParam(':listing_id', $listingId, PDO::PARAM_INT);
         return $stmt->execute();
     }
+
+public function getSearchSuggestions($keyword, $limit = 5) {
+    $sql = "SELECT pl.id, pl.title, pl.price, 
+                   (SELECT image_url FROM listing_images WHERE listing_id = pl.id AND is_primary = 1 LIMIT 1) as image_url
+            FROM product_listings pl
+            WHERE pl.title LIKE :keyword AND pl.status_id IN (2, 3)
+            LIMIT :limit";
+    $stmt = $this->conn->prepare($sql);
+    $kw = "%" . $keyword . "%";
+    $stmt->bindParam(':keyword', $kw, PDO::PARAM_STR);
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }
 ?>
