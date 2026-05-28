@@ -56,6 +56,23 @@
         white-space: nowrap;
     }
 
+    /* Style cho box chứa icon danh mục */
+.category-item-box {
+    width: 70px; 
+    height: 70px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #eee;
+    transition: transform 0.2s;
+}
+.category-item-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
     /* ========================================================
     TINH CHỈNH HEADER & DROPDOWN MỚI (Đã dọn dẹp code rác)
     ======================================================== */
@@ -241,6 +258,7 @@
     }
 
     .tag-blue { background-color: var(--btn-secondary); }
+
 
     /* ========================================================
     5. TRANG CHI TIẾT SẢN PHẨM & GIỎ HÀNG

@@ -17,7 +17,7 @@ class ListingModel
 
     public function getAllCategories()
     {
-        $sql = "SELECT id, name FROM categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC";
+        $sql = "SELECT id, name, icon_url FROM categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -150,27 +150,32 @@ class ListingModel
         return $stmt->fetchColumn();
     }
 
-    public function getPaginatedListings($limit, $offset, $keyword = '') {
-        $sql = "SELECT pl.*, w.name AS ward_name, 
-                       (SELECT image_url FROM listing_images WHERE listing_id = pl.id AND is_primary = 1 LIMIT 1) as image_url
-                FROM product_listings pl
-                LEFT JOIN wards w ON pl.ward_id = w.id
-                WHERE pl.status_id IN (2, 3)";
-        if (!empty($keyword)) {
-            $sql .= " AND pl.title LIKE :keyword";
-        }
-        $sql .= " ORDER BY pl.created_at DESC LIMIT :limit OFFSET :offset";
-
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        if (!empty($keyword)) {
-            $kw = "%" . $keyword . "%";
-            $stmt->bindParam(':keyword', $kw, PDO::PARAM_STR);
-        }
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+public function getPaginatedListings($limit, $offset, $keyword = '') {
+    $sql = "SELECT pl.*, w.name AS ward_name, 
+                   (SELECT image_url FROM listing_images WHERE listing_id = pl.id AND is_primary = 1 LIMIT 1) as image_url
+            FROM product_listings pl
+            LEFT JOIN wards w ON pl.ward_id = w.id
+            WHERE pl.status_id IN (2, 3)";
+    
+    if (!empty($keyword)) {
+        $sql .= " AND pl.title LIKE :keyword";
     }
+
+    $sql .= " ORDER BY CASE WHEN pl.stock_quantity = 0 THEN 1 ELSE 0 END ASC, pl.created_at DESC 
+              LIMIT :limit OFFSET :offset";
+
+    $stmt = $this->conn->prepare($sql);
+    
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+
+    if (!empty($keyword)) {
+        $stmt->bindValue(':keyword', "%" . $keyword . "%", PDO::PARAM_STR);
+    }
+
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
     public function getListingDetail($id) {
         $sql = "SELECT pl.*, u.full_name, u.username, u.avatar_url, u.created_at as user_created_at,
@@ -203,22 +208,24 @@ class ListingModel
         return $stmt->fetchColumn();
     }
 
-    public function getPaginatedListingsByCategory($limit, $offset, $categoryId) {
-        $sql = "SELECT pl.*, w.name AS ward_name, 
-                       (SELECT image_url FROM listing_images WHERE listing_id = pl.id AND is_primary = 1 LIMIT 1) as image_url
-                FROM product_listings pl
-                LEFT JOIN wards w ON pl.ward_id = w.id
-                WHERE pl.status_id IN (2, 3) AND pl.category_id = :cat_id
-                ORDER BY pl.created_at DESC LIMIT :limit OFFSET :offset";
-        
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':cat_id', $categoryId, PDO::PARAM_INT);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
+public function getPaginatedListingsByCategory($limit, $offset, $categoryId) {
+    $sql = "SELECT pl.*, w.name AS ward_name, 
+                   (SELECT image_url FROM listing_images WHERE listing_id = pl.id AND is_primary = 1 LIMIT 1) as image_url
+            FROM product_listings pl
+            LEFT JOIN wards w ON pl.ward_id = w.id
+            WHERE pl.status_id IN (2, 3) AND pl.category_id = :cat_id
+            ORDER BY CASE WHEN pl.stock_quantity = 0 THEN 1 ELSE 0 END ASC, pl.created_at DESC 
+            LIMIT :limit OFFSET :offset";
+    
+    $stmt = $this->conn->prepare($sql);
+    
+    $stmt->bindValue(':cat_id', (int)$categoryId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
     // =======================================================
     // NHÓM HÀM CHỈNH SỬA (EDIT & UPDATE)
     // =======================================================
