@@ -36,8 +36,10 @@ class ApproveListingModel {
     }
 
     // Lấy chi tiết 1 tin đăng cụ thể (để Admin xem xét kỹ trước khi duyệt)
+// Lấy chi tiết 1 tin đăng cụ thể
     public function getListingDetail($id) {
-        $sql = "SELECT p.*, u.full_name as seller_name, u.phone, u.email, 
+        // CẬP NHẬT: Đổi u.phone thành u.phone as phone_number
+        $sql = "SELECT p.*, u.full_name as seller_name, u.phone as phone_number, u.email, 
                        c.name as category_name, w.name as ward_name, cond.name as condition_name
                 FROM product_listings p
                 JOIN users u ON p.user_id = u.id
@@ -50,7 +52,6 @@ class ApproveListingModel {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
     // Bổ sung thêm hàm lấy danh sách tất cả hình ảnh của 1 tin đăng
     public function getListingImages($listing_id) {
         $sql = "SELECT image_url, is_primary FROM listing_images WHERE listing_id = :listing_id ORDER BY is_primary DESC, sort_order ASC";

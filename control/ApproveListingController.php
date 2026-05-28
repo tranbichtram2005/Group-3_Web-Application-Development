@@ -69,7 +69,11 @@ class ApproveListingController {
     }
 
     // Hàm thực thi đổi trạng thái (Duyệt / Từ chối / Ẩn)
+    // Hàm thực thi đổi trạng thái (Duyệt / Từ chối / Ẩn) bằng AJAX
     public function changeStatus() {
+        // Khai báo header trả về định dạng JSON
+        header('Content-Type: application/json');
+        
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $type = isset($_GET['type']) ? $_GET['type'] : '';
         
@@ -89,11 +93,22 @@ class ApproveListingController {
             }
 
             if ($this->approveListingModel->updateListingStatus($id, $status_id)) {
-                echo "<script>alert('$msg'); window.location.href='index.php?controller=approvelisting';</script>";
-                return;
+                // Trả về JSON thành công kèm theo status_id mới để FE cập nhật giao diện
+                echo json_encode([
+                    'success' => true,
+                    'message' => $msg,
+                    'status_id' => $status_id
+                ]);
+                exit();
             }
         }
-        echo "<script>alert('Có lỗi xảy ra, vui lòng thử lại!'); history.back();</script>";
+        
+        // Trả về JSON thất bại nếu có lỗi xảy ra
+        echo json_encode([
+            'success' => false,
+            'message' => 'Có lỗi xảy ra, vui lòng thử lại!'
+        ]);
+        exit();
     }
 }
 ?>
