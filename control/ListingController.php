@@ -261,25 +261,18 @@ class ListingController
     }
 
     public function suggestAjax() {
-        error_reporting(E_ALL); 
-        ini_set('display_errors', 1);
-        if (ob_get_length()) ob_clean();
-        
-        header('Content-Type: application/json; charset=utf-8'); 
-        $keyword = isset($_REQUEST['keyword']) ? trim($_REQUEST['keyword']) : (isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '');
-        
-        if (empty($keyword)) {
-            echo json_encode([]);
-            exit;
-        }
-
-        try {
-            $listings = $this->listingModel->getPaginatedListings(5, 0, $keyword);
-            echo json_encode($listings);
-        } catch (Exception $e) {
-            echo json_encode(['error_cua_phung' => 'Lỗi Database: ' . $e->getMessage()]); 
-        }
+    header('Content-Type: application/json; charset=utf-8'); 
+    $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
+    
+    if (strlen($keyword) < 2) { // Nếu gõ dưới 2 ký tự thì trả về rỗng ngay
+        echo json_encode([]);
         exit;
     }
+
+    // Gọi hàm mới tối ưu (siêu nhanh)
+    $listings = $this->listingModel->getSearchSuggestions($keyword, 5);
+    echo json_encode($listings);
+    exit;
+}
 }
 ?>
