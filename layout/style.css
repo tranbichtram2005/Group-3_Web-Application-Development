@@ -1,4 +1,4 @@
-    /* ========================================================
+/* ========================================================
     1. CÀI ĐẶT BIẾN MÀU SẮC & CƠ BẢN (Dùng chung)
     ======================================================== */
     :root {
@@ -46,19 +46,6 @@
         box-shadow: 0 2px 12px rgba(0,0,0,0.18);
     }
 
-    /* Row ngang bên trong header */
-    .nav-inner {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        width: 100%;
-        height: 100%;
-        padding: 0 8px;
-    }
-
-    /* ========================================================
-    LOGO
-    ======================================================== */
     .logo {
         font-size: 24px;
         font-weight: 800;
@@ -70,336 +57,125 @@
     }
 
     /* ========================================================
-    SEARCH FORM — gọn, không bự chiều cao
+    TINH CHỈNH HEADER & DROPDOWN MỚI (Đã dọn dẹp code rác)
     ======================================================== */
-    .nav-search-form {
-        flex: 1;
-        max-width: 520px;
-        display: flex;
-        align-items: center;
-        background: rgba(255,255,255,0.12);
-        border: 1.5px solid rgba(255,255,255,0.22);
-        border-radius: 10px;
-        height: 38px;               /* chiều cao cố định, không tràn header */
-        overflow: hidden;
-        transition: border-color 0.2s, background 0.2s;
-        padding: 0 4px 0 12px;
-    }
+    .nav-icon-hover { transition: color 0.2s, transform 0.2s; }
+    .nav-icon-hover:hover { color: var(--btn-hover) !important; transform: translateY(-1px); }
 
-    .nav-search-form:focus-within {
-        background: rgba(255,255,255,0.2);
-        border-color: var(--btn-primary);
-    }
-
-    .nav-search-icon {
-        color: rgba(255,255,255,0.55);
-        font-size: 14px;
-        flex-shrink: 0;
-        margin-right: 8px;
-    }
-
-    .nav-search-input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        outline: none;
-        color: #fff;
-        font-size: 13.5px;
-        font-weight: 400;
-        height: 100%;
-    }
-
-    .nav-search-input::placeholder {
-        color: rgba(255,255,255,0.45);
-    }
-
-    .nav-search-btn {
-        background: var(--btn-primary);
-        color: #fff;
-        border: none;
-        border-radius: 7px;
-        padding: 0 14px;
-        height: 30px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        flex-shrink: 0;
-        transition: background 0.2s;
-        white-space: nowrap;
-    }
-
-    .nav-search-btn:hover {
-        background: var(--error-color);
-    }
-
-    /* ========================================================
-    NAV ACTIONS — nhóm các icon bên phải
-    ======================================================== */
-    .nav-actions {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-left: auto;
-        flex-shrink: 0;
-    }
-
-    /* Nút Đăng tin */
-    .btn-post {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: var(--btn-primary);
-        color: #fff !important;
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 600;
-        padding: 0 14px;
-        height: 34px;
-        border-radius: 8px;
-        transition: background 0.2s, transform 0.15s;
-        white-space: nowrap;
-    }
-
-    .btn-post:hover {
-        background: var(--error-color);
-        transform: translateY(-1px);
-    }
-
-    /* Icon buttons (chuông, chat, giỏ) */
-    .nav-icon-btn {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 38px;
+    /* Fix thanh tìm kiếm Mobile */
+    .search-form-mobile {
         height: 38px;
-        border-radius: 9px;
-        color: rgba(255,255,255,0.85) !important;
-        text-decoration: none;
-        font-size: 18px;
-        transition: background 0.2s, color 0.2s, transform 0.15s;
+        max-width: 480px;
+        transition: all 0.2s ease;
     }
-
-    .nav-icon-btn:hover {
-        background: rgba(255,255,255,0.12);
-        color: #fff !important;
-        transform: translateY(-1px);
-    }
-
-    /* Badge số lượng */
-    .nav-badge {
-        position: absolute;
-        top: 3px;
-        right: 3px;
-        background: #FF3B30;
-        color: #fff;
-        font-size: 10px;
-        font-weight: 700;
-        min-width: 17px;
-        height: 17px;
-        border-radius: 999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 4px;
-        line-height: 1;
-        border: 1.5px solid var(--nav-color);
-        pointer-events: none;
-    }
-
-    /* ========================================================
-    AVATAR BUTTON (trigger dropdown)
-    ======================================================== */
-    .nav-avatar-btn {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255,255,255,0.1);
-        border: 1.5px solid rgba(255,255,255,0.2);
-        border-radius: 9px;
-        color: #fff;
-        cursor: pointer;
-        padding: 0 12px;
-        height: 38px;
-        font-size: 13.5px;
-        font-weight: 500;
-        transition: background 0.2s, border-color 0.2s;
-        white-space: nowrap;
-    }
-
-    .nav-avatar-btn:hover,
-    .nav-dropdown:hover .nav-avatar-btn,
-    .nav-dropdown.open .nav-avatar-btn {
-        background: rgba(255,255,255,0.18);
-        border-color: rgba(255,255,255,0.4);
-    }
-
-    .nav-avatar-btn .bi-person-circle {
-        font-size: 17px;
-    }
-
-    .nav-chevron {
-        font-size: 11px;
-        opacity: 0.7;
-        transition: transform 0.2s;
-    }
-
-    .nav-dropdown:hover .nav-chevron,
-    .nav-dropdown.open .nav-chevron {
-        transform: rotate(180deg);
-    }
-
-    /* --- Tinh chỉnh Header & Thanh tìm kiếm --- */
-    .navbar-2life { background-color: var(--nav-color); }
-    .logo { font-size: 26px; font-weight: 800; color: var(--btn-primary) !important; }
-    .nav-icon-hover { transition: color 0.2s; }
-    .nav-icon-hover:hover { color: var(--btn-hover) !important; }
-
-    /* Thanh tìm kiếm gọn gàng, tinh tế hơn */
-    .search-form {
-        height: 40px; /* Ép chiều cao cố định để không bị phình to */
-        border: 1.5px solid transparent;
-        transition: 0.3s;
-    }
-    .search-form:focus-within {
-        border-color: var(--btn-primary);
+    .search-form-mobile:focus-within {
+        border-color: var(--btn-primary) !important;
         box-shadow: 0 0 0 3px rgba(255, 122, 61, 0.15);
     }
+@media (max-width: 768px) {
+        .navbar-2life {
+            height: auto !important; /* Mở khóa chiều cao cho phép Header tự giãn */
+            padding-bottom: 12px !important; /* Thêm đệm mông cho Header nhìn thoáng hơn */
+        }
+        .search-form-mobile {
+            max-width: 100% !important; /* Ép thanh search bung full chiều ngang */
+        }
+    }
 
-    /* --- HỆ THỐNG DROPDOWN TÀI KHOẢN (CHUẨN BOOTSTRAP 5) --- */
-
-/* 1. Ẩn mũi tên tam giác mặc định chướng mắt của Bootstrap */
-.dropdown-toggle::after {
-    display: none !important;
+    /* Khung kết quả tìm kiếm xịn xò */
+#search-results {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15); /* Đổ bóng chuyên nghiệp */
+    overflow: hidden;
+    margin-top: 5px;
 }
 
-/* 2. Giữ lại phần làm đẹp cho các dòng lựa chọn bên trong Menu */
-.nav-dropdown-item {
+.suggestion-item {
+    padding: 10px 15px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 18px;
+    transition: background 0.2s;
+    text-decoration: none;
+    color: #333;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa; /* Hiệu ứng hover nhẹ nhàng */
+}
+
+.suggestion-item img {
+    width: 45px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 12px;
+}
+
+.suggestion-info div:first-child {
     font-size: 14px;
     font-weight: 500;
-    color: var(--text-primary) !important;
-    text-decoration: none;
-    transition: all 0.2s ease;
+    margin-bottom: 2px;
+}
+.suggestion-info div:last-child {
+    font-size: 13px;
+    color: #FF7A3D;
+    font-weight: 600;
 }
 
-.nav-dropdown-item:hover {
-    background-color: var(--bg-main);
-    color: var(--btn-primary) !important;
-}
+    /* Ẩn mũi tên mặc định của dropdown */
+    .dropdown-toggle::after { display: none !important; }
 
-.nav-dropdown-item i {
-    font-size: 16px;
-    color: var(--btn-secondary); /* Màu xanh mặc định của các icon */
-}
-
-/* 3. Riêng Icon Đăng xuất thì ép sang màu đỏ nổi bật */
-.nav-dropdown-item i.icon-logout {
-    color: var(--error-color) !important; 
-}
-
-/* --- NÂNG CẤP UI/UX TRANG CHỦ --- */
-
-/* Hiệu ứng cho Card Sản Phẩm */
-.card-product {
-    border-radius: 16px !important; /* Bo góc to hơn, hiện đại hơn */
-    border: 1px solid rgba(0,0,0,0.05) !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    background: #ffffff;
-}
-
-.card-product:hover {
-    transform: translateY(-8px); /* Nổi lên cao hơn */
-    box-shadow: 0 15px 30px rgba(255, 122, 61, 0.15) !important; /* Bóng đổ màu cam thương hiệu 2Life */
-}
-
-/* Hiệu ứng ảnh sản phẩm zoom nhẹ khi hover */
-.card-product .card-img-top {
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    transition: transform 0.5s ease;
-}
-
-.card-product:hover .card-img-top {
-    transform: scale(1.05); /* Ảnh to ra một xíu */
-}
-
-/* Bọc ảnh để không bị tràn khi zoom */
-.card-product .position-relative {
-    overflow: hidden;
-}
-
-/* Thanh cuộn danh mục tàng hình */
-.category-scroll::-webkit-scrollbar {
-    display: none; /* Ẩn thanh cuộn ngang đi cho UX giống app điện thoại */
-}
-
-    /* ========================================================
-    AUTH BUTTONS (chưa đăng nhập)
-    ======================================================== */
-    .btn-auth-outline {
+    /* Chuẩn hóa Dropdown Menu */
+    .nav-dropdown-item {
         display: flex;
         align-items: center;
-        height: 34px;
-        padding: 0 14px;
-        border: 1.5px solid rgba(255,255,255,0.5);
-        border-radius: 8px;
-        color: #fff !important;
-        text-decoration: none;
-        font-size: 13px;
+        padding: 10px 18px !important;
+        font-size: 14.5px !important;
         font-weight: 500;
-        transition: background 0.2s, border-color 0.2s;
-        white-space: nowrap;
+        color: var(--text-primary) !important;
+        transition: all 0.2s ease;
+    }
+    .nav-dropdown-item:hover {
+        background-color: var(--bg-main);
+        color: var(--btn-primary) !important;
     }
 
-    .btn-auth-outline:hover {
-        background: rgba(255,255,255,0.12);
-        border-color: #fff;
+    /* Đồng bộ Icon trong Dropdown (Cùng màu xám, thẳng hàng tăm tắp) */
+    .nav-dropdown-item i {
+        color: var(--text-secondary); 
+        font-size: 17px;
+        width: 24px; 
+        text-align: center;
+        margin-right: 12px;
     }
 
-    .btn-auth-fill {
-        display: flex;
-        align-items: center;
-        height: 34px;
-        padding: 0 16px;
-        background: var(--btn-primary);
-        border-radius: 8px;
-        color: #fff !important;
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 700;
-        transition: background 0.2s, transform 0.15s;
-        white-space: nowrap;
+    /* Nút Đăng xuất nhuộm đỏ cảnh báo */
+    .nav-dropdown-item.text-danger, 
+    .nav-dropdown-item.text-danger i {
+        color: var(--error-color) !important;
     }
 
-    .btn-auth-fill:hover {
-        background: var(--error-color);
-        transform: translateY(-1px);
-    }
-/* =========================================
-   GIAO DIỆN CHAT & DEAL GIÁ
-   ========================================= */
-.chat-container { height: 75vh; border: 1px solid #dee2e6; }
-.chat-list-col { border-right: 1px solid #dee2e6; background-color: #f8f9fa; }
-.chat-window-col { background-color: #ffffff; }
-.chat-list-item { transition: background-color 0.2s; cursor: pointer; }
-.chat-list-item:hover, .chat-list-item.active { background-color: #e9ecef; }
-.chat-messages-area { background-color: #f1f4f6; overflow-y: auto; flex-grow: 1; padding: 1rem; }
+    /* =========================================
+       GIAO DIỆN CHAT & DEAL GIÁ
+       ========================================= */
+    .chat-container { height: 75vh; border: 1px solid #dee2e6; }
+    .chat-list-col { border-right: 1px solid #dee2e6; background-color: #f8f9fa; }
+    .chat-window-col { background-color: #ffffff; }
+    .chat-list-item { transition: background-color 0.2s; cursor: pointer; }
+    .chat-list-item:hover, .chat-list-item.active { background-color: #e9ecef; }
+    .chat-messages-area { background-color: #f1f4f6; overflow-y: auto; flex-grow: 1; padding: 1rem; }
 
-/* Bong bóng tin nhắn */
-.msg-bubble { max-width: 75%; padding: 10px 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
-.msg-me { background-color: #FF7A3D; color: white; border-radius: 15px 15px 0 15px; }
-.msg-partner { background-color: #ffffff; color: #212529; border: 1px solid #e9ecef; border-radius: 15px 15px 15px 0; }
+    .msg-bubble { max-width: 75%; padding: 10px 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
+    .msg-me { background-color: #FF7A3D; color: white; border-radius: 15px 15px 0 15px; }
+    .msg-partner { background-color: #ffffff; color: #212529; border: 1px solid #e9ecef; border-radius: 15px 15px 15px 0; }
 
-/* Thẻ Thương lượng giá (Deal Card) hiển thị giữa ô chat */
-.deal-card { border: 1px solid #FF7A3D; border-radius: 12px; width: 100%; max-width: 300px; margin: 0 auto; background: #fff; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.deal-card-header { background-color: #FF7A3D; color: white; padding: 8px 12px; font-weight: bold; font-size: 14px; text-align: center; }
+    .deal-card { border: 1px solid #FF7A3D; border-radius: 12px; width: 100%; max-width: 300px; margin: 0 auto; background: #fff; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .deal-card-header { background-color: #FF7A3D; color: white; padding: 8px 12px; font-weight: bold; font-size: 14px; text-align: center; }
 
     /* ========================================================
-    3. CÁC NÚT BẤM (BUTTONS DÙNG CHUNG - giữ nguyên)
+    3. CÁC NÚT BẤM (BUTTONS DÙNG CHUNG)
     ======================================================== */
     .btn-2life-primary, .btn-primary {
         background-color: var(--btn-primary) !important;
@@ -606,15 +382,3 @@
     .guide-list .border-dashed { border-bottom-style: dashed !important; }
     .guide-link { font-size: 13px; color: var(--btn-secondary); }
     .guide-link:hover { color: var(--btn-hover); text-decoration: underline !important; }
-
-    /* ========================================================
-    7. RESPONSIVE HEADER
-    ======================================================== */
-    @media (max-width: 576px) {
-        .nav-search-form {
-            max-width: 100%;
-        }
-        .nav-inner {
-            gap: 8px;
-        }
-    }
