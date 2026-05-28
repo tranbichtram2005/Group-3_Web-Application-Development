@@ -2,13 +2,18 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - 2Life</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="layout/style.css">
     <style>
         .split-bg {
-            background: linear-gradient(rgba(31, 60, 90, 0.7), rgba(31, 60, 90, 0.7)), url('https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=1000') center/cover;
+            /* Tách rõ thuộc tính để 100% laptop load được ảnh */
+            background-image: linear-gradient(rgba(31, 60, 90, 0.7), rgba(31, 60, 90, 0.7)), url('https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=1000');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
         .form-side { min-height: 100vh; display: flex; align-items: center; }
     </style>
@@ -16,12 +21,12 @@
 <body>
     <div class="container-fluid p-0">
         <div class="row g-0">
-            <div class="col-lg-6 d-none d-lg-flex split-bg text-white align-items-center justify-content-center flex-column p-5">
+            <div class="col-12 col-lg-6 d-none d-lg-flex split-bg text-white align-items-center justify-content-center flex-column p-5">
                 <h1 class="display-4 fw-bold">2Life</h1>
                 <p class="fs-5 text-center mt-3">Chào mừng cậu trở lại! Tiếp tục hành trình trao đổi và tái sử dụng đồ dùng cũ tiện lợi cùng cộng đồng sinh viên.</p>
             </div>
-            <div class="col-lg-6 form-side bg-white px-4 px-md-5">
-                <div class="w-100" style="max-width: 450px; margin: 0 auto;">
+            <div class="col-12 col-lg-6 form-side bg-white px-4 px-md-5 d-flex align-items-center">
+                <div class="w-100 mx-auto" style="max-width: 450px;">
                     
                     <div class="mb-4">
                         <a href="index.php?controller=home" class="text-decoration-none text-secondary fw-medium" style="font-size: 14px;">
@@ -46,8 +51,7 @@
                         <div class="mb-4">
                             <div class="d-flex justify-content-between">
                                 <label class="form-label fw-bold text-secondary" style="font-size:13px;">Mật khẩu</label>
-                                <a href="#" class="text-decoration-none" style="font-size:13px; color: var(--btn-primary);">Quên mật khẩu?</a>
-                            </div>
+                                </div>
                             <input type="password" name="password" class="form-control form-control-lg" placeholder="••••••••" required style="border-radius:10px; font-size:15px;">
                         </div>
                         <button type="submit" name="login" class="btn-2life-primary w-100 py-3 rounded-3 fw-bold">Đăng nhập ngay</button>
