@@ -1,31 +1,5 @@
 <?php require_once __DIR__ . '/../partials/user-header.php'; ?>
 
-<style>
-/* CSS ĐỊNH HÌNH LAYOUT */
-.chat-layout { height: 80vh; border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; background: #fff; }
-.chat-sidebar { border-right: 1px solid #dee2e6; background: #f8f9fa; display: flex; flex-direction: column; height: 100%; }
-.chat-body { background: #fff; display: flex; flex-direction: column; height: 100%; min-width: 0; }
-
-/* Khu vực Chat & Thanh cuộn */
-.chat-messages { background: #f1f4f6; overflow-y: auto; flex: 1 1 0; padding: 1.5rem; scroll-behavior: smooth; }
-.chat-input-area { background: #fff; border-top: 1px solid #eee; padding: 15px; flex-shrink: 0; }
-.chat-list-item { transition: background-color 0.2s; cursor: pointer; position: relative; }.chat-list-item:hover { background-color: #e9ecef; }
-
-/* Bong bóng tin nhắn */
-.msg-bubble { max-width: 75%; padding: 10px 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
-.msg-me { background-color: #FF7A3D; color: white; border-radius: 15px 15px 0 15px; margin-left: auto; }
-.msg-partner { background-color: #ffffff; color: #212529; border: 1px solid #e9ecef; border-radius: 15px 15px 15px 0; }
-.msg-time { font-size: 10px; opacity: 0.7; margin-top: 4px; display: block; text-align: right; }
-
-/* UI MỚI: THANH DEAL BANNER NGANG (Nằm dưới Header) */
-.deal-banner-zone { background-color: #fffaf0; border-bottom: 1px solid #ffeed2; padding: 10px 20px; flex-shrink: 0; display: none; }
-.deal-banner { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
-.deal-banner-info { display: flex; flex-direction: column; }
-.deal-banner-price { font-size: 18px; font-weight: 800; color: #FF7A3D; margin-bottom: 2px; }
-.deal-banner-desc { font-size: 12px; color: #666; }
-.deal-banner-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
-</style>
-
 <main class="container py-4">
     <div class="row g-0 chat-layout shadow-sm">
         
@@ -92,7 +66,8 @@
 
             <div id="chat-content" class="d-none flex-column h-100 w-100">
                 
-                <div class="p-3 border-bottom shadow-sm z-1 bg-white d-flex justify-content-between align-items-center" style="flex-shrink: 0;">
+                <!-- ĐÃ THÊM CLASS chat-header-zone VÀO ĐÂY ĐỂ CSS BẮT ĐƯỢC -->
+                <div class="p-3 border-bottom shadow-sm z-1 bg-white d-flex justify-content-between align-items-center chat-header-zone" style="flex-shrink: 0;">
                     <div class="d-flex align-items-center gap-3">
                         <div class="fw-bold fs-5" id="chat-partner-name">...</div>
                         <div id="chat-product-info" class="d-none border-start ps-3 ms-2 d-flex align-items-center gap-2">

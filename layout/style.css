@@ -175,22 +175,90 @@
         color: var(--error-color) !important;
     }
 
-    /* =========================================
-       GIAO DIỆN CHAT & DEAL GIÁ
+   /* =========================================
+       7. GIAO DIỆN CHAT & DEAL GIÁ (RESPONSIVE)
        ========================================= */
-    .chat-container { height: 75vh; border: 1px solid #dee2e6; }
-    .chat-list-col { border-right: 1px solid #dee2e6; background-color: #f8f9fa; }
-    .chat-window-col { background-color: #ffffff; }
-    .chat-list-item { transition: background-color 0.2s; cursor: pointer; }
-    .chat-list-item:hover, .chat-list-item.active { background-color: #e9ecef; }
-    .chat-messages-area { background-color: #f1f4f6; overflow-y: auto; flex-grow: 1; padding: 1rem; }
+    /* CSS ĐỊNH HÌNH LAYOUT MẶC ĐỊNH (LAPTOP) */
+    .chat-layout { height: 80vh; border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; background: #fff; }
+    .chat-sidebar { border-right: 1px solid #dee2e6; background: #f8f9fa; display: flex; flex-direction: column; height: 100%; }
+    .chat-body { background: #fff; display: flex; flex-direction: column; height: 100%; min-width: 0; }
 
+    /* Khu vực Chat & Thanh cuộn */
+    .chat-messages { background: #f1f4f6; overflow-y: auto; flex: 1 1 0; padding: 1.5rem; scroll-behavior: smooth; }
+    .chat-input-area { background: #fff; border-top: 1px solid #eee; padding: 15px; flex-shrink: 0; }
+    .chat-list-item { transition: background-color 0.2s; cursor: pointer; position: relative; }
+    .chat-list-item:hover { background-color: #e9ecef; }
+
+    /* Bong bóng tin nhắn */
     .msg-bubble { max-width: 75%; padding: 10px 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
-    .msg-me { background-color: #FF7A3D; color: white; border-radius: 15px 15px 0 15px; }
+    .msg-me { background-color: #FF7A3D; color: white; border-radius: 15px 15px 0 15px; margin-left: auto; }
     .msg-partner { background-color: #ffffff; color: #212529; border: 1px solid #e9ecef; border-radius: 15px 15px 15px 0; }
+    .msg-time { font-size: 10px; opacity: 0.7; margin-top: 4px; display: block; text-align: right; }
 
-    .deal-card { border: 1px solid #FF7A3D; border-radius: 12px; width: 100%; max-width: 300px; margin: 0 auto; background: #fff; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .deal-card-header { background-color: #FF7A3D; color: white; padding: 8px 12px; font-weight: bold; font-size: 14px; text-align: center; }
+    /* UI MỚI: THANH DEAL BANNER NGANG (Nằm dưới Header) */
+    .deal-banner-zone { background-color: #fffaf0; border-bottom: 1px solid #ffeed2; padding: 10px 20px; flex-shrink: 0; display: none; }
+    .deal-banner { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .deal-banner-info { display: flex; flex-direction: column; }
+    .deal-banner-price { font-size: 18px; font-weight: 800; color: #FF7A3D; margin-bottom: 2px; }
+    .deal-banner-desc { font-size: 12px; color: #666; }
+    .deal-banner-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
+
+    /* RESPONSIVE CHO ĐIỆN THOẠI DỌC */
+    @media (max-width: 768px) {
+        /* Đổi hướng layout thành dạng cột dọc */
+        .chat-layout { 
+            height: calc(100vh - 120px); /* Tận dụng tối đa không gian màn hình */
+            display: flex !important; 
+            flex-direction: column !important; 
+            flex-wrap: nowrap !important;
+        }
+        
+        /* Chia đôi màn hình: Trên là list chat (35%), Dưới là khung chat (65%) */
+        .chat-sidebar { 
+            height: 35% !important; 
+            border-right: none !important; 
+            border-bottom: 4px solid #dee2e6 !important; 
+            width: 100% !important;
+        }
+        .chat-body { 
+            height: 65% !important; 
+            width: 100% !important;
+        }
+        
+        /* Header Chat: Ép rớt dòng cho các thành phần khỏi đè nhau */
+        .chat-header-zone {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 12px;
+            padding: 12px 15px !important;
+        }
+        
+        .chat-header-zone > div.d-flex {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        #chat-product-info {
+            border-left: none !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        #btn-deal-price {
+            width: 100%; /* Nút thương lượng bung full width cho dễ bấm */
+            padding: 8px !important;
+            margin-top: 5px;
+        }
+
+        /* Deal Banner: Rớt dòng */
+        .deal-banner { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .deal-banner-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+        .deal-banner-actions button { flex: 1; min-width: 80px; } /* Kéo giãn đều các nút */
+
+        /* Fix kích thước Text */
+        .msg-bubble { max-width: 85%; }
+        #chat-prod-title { max-width: 120px !important; }
+    }
 
     /* ========================================================
     3. CÁC NÚT BẤM (BUTTONS DÙNG CHUNG)
