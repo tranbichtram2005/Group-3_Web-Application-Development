@@ -24,7 +24,7 @@ class ProfileController {
     public function index() {
         $userId = $_SESSION['user_id'];
         $user = $this->userModel->getUserById($userId);
-        
+        $sellerProfile = $this->userModel->getSellerProfile($userId);
         // Nạp View
 require_once __DIR__ . '/../view/partials/profile.php';    }
 
@@ -98,23 +98,18 @@ public function registerSellerAjax() {
         if ($profile) {
             // Nếu is_verified = 0 (Đang chờ duyệt)
             if ($profile['is_verified'] == 0) {
-                echo json_encode([
-                    'status' => 'info', 
-                    'msg' => 'Hồ sơ của cậu đang được xét duyệt rồi. Vui lòng kiên nhẫn đợi Ban quản trị nhé!'
-                ]);
+                echo json_encode(['status' => 'info', 'msg' => 'Hồ sơ của cậu đang được xét duyệt rồi. Vui lòng kiên nhẫn đợi Ban quản trị nhé!']);
                 return;
             }
             // Nếu is_verified = 1 (Đã duyệt)
             if ($profile['is_verified'] == 1) {
-                echo json_encode([
-                    'status' => 'info', 
-                    'msg' => 'Cậu đã là Người bán uy tín rồi, không cần gửi đăng ký thêm nữa đâu!'
-                ]);
+                echo json_encode(['status' => 'info', 'msg' => 'Cậu đã là Người bán uy tín rồi, không cần gửi đăng ký thêm nữa đâu!']);
                 return;
             }
+            // NẾU is_verified = 2 (BỊ TỪ CHỐI): Code sẽ tự động bỏ qua khối IF này và đi tiếp xuống hàm lưu bên dưới!
         }
 
-        // 2. Nếu chưa có hồ sơ thì mới gọi Model để lưu
+        // 2. Gọi Model để lưu (Đã bọc thuật toán xử lý trùng lặp)
         if ($this->userModel->registerSeller($userId, $shopName, $taxCode, $description)) {
             echo json_encode(['status' => 'success', 'msg' => 'Gửi yêu cầu thành công! Chúng tôi sẽ xét duyệt trong 24h.']);
         } else {

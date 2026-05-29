@@ -154,7 +154,7 @@ $adminRole = 'Admin';
                         </a>
                         <ul class="dropdown-menu dropdown-menu-lg-end shadow-sm mt-2 w-100" aria-labelledby="accountDropdown">
                             <li><h6 class="dropdown-header text-dark fw-bold bg-light py-2 d-none d-lg-block border-bottom">Tài khoản</h6></li>
-                            <li><a class="dropdown-item py-2 mt-1" href="index.php?controller=admin_profile&action=index"><i class="bi bi-person me-2 opacity-50"></i>Thông tin</a></li>
+                            <li><a class="dropdown-item py-2 mt-1" href="index.php?controller=profile"><i class="bi bi-person me-2 opacity-50"></i>Thông tin</a></li>
                             <li><a class="dropdown-item py-2" href="index.php?controller=admin_setting&action=index"><i class="bi bi-gear me-2 opacity-50"></i>Cài đặt</a></li>
                             <li><hr class="dropdown-divider d-none d-lg-block"></li>
                             <li><a class="dropdown-item py-2 text-danger fw-medium" href="index.php?controller=auth&action=logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>

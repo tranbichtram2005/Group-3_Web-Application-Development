@@ -1,3 +1,12 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2) {
+    require_once __DIR__ . '/admin-footer.php';
+    return; 
+}
+?>
+
 <footer class="text-center py-4 text-white mt-auto" style="background-color: var(--nav-color); border-top: 3px solid var(--btn-primary);">
     <div class="container">
         <h5 class="fw-bold mb-1" style="color: var(--btn-primary); letter-spacing: -0.5px; font-size: 20px;">2Life MARKETPLACE</h5>

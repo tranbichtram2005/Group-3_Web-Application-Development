@@ -146,16 +146,26 @@ class User {
     }
 
     // 4. Gửi yêu cầu đăng ký bán hàng
-   public function registerSeller($userId, $shopName, $taxCode, $description) {
-    $query = "INSERT INTO seller_profiles (user_id, shop_name, tax_code, description) VALUES (:user_id, :shop_name, :tax_code, :description)";
-    $stmt = $this->conn->prepare($query);
-    return $stmt->execute([
-        ':user_id' => $userId,
-        ':shop_name' => $shopName,
-        ':tax_code' => $taxCode, // Lưu vào DB
-        ':description' => $description
-    ]);
-}
+// 4. Gửi yêu cầu đăng ký bán hàng
+    public function registerSeller($userId, $shopName, $taxCode, $description) {
+        // FIX MÂU THUẪN: Dùng thuật toán tự động cập nhật nếu đã từng bị từ chối
+        $query = "INSERT INTO seller_profiles (user_id, shop_name, tax_code, description, is_verified) 
+                  VALUES (:user_id, :shop_name, :tax_code, :description, 0)
+                  ON DUPLICATE KEY UPDATE 
+                  shop_name = VALUES(shop_name), 
+                  tax_code = VALUES(tax_code), 
+                  description = VALUES(description), 
+                  is_verified = 0,
+                  verified_at = NULL";
+                  
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':user_id' => $userId,
+            ':shop_name' => $shopName,
+            ':tax_code' => $taxCode,
+            ':description' => $description
+        ]);
+    }
 
 // Hàm kiểm tra xem user đã gửi form đăng ký bán hàng chưa
     public function getSellerProfile($userId) {

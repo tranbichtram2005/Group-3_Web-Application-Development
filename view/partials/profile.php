@@ -88,18 +88,47 @@ $avatarDisplay = !empty($user['avatar_url']) ? $user['avatar_url'] : "https://ui
 
                 <div class="tab-pane fade" id="tab-seller">
                     <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom"><h4 class="fw-bold mb-0 text-dark">Đăng ký mở gian hàng</h4></div>
-                    <div class="alert alert-warning border-0 rounded-3 small d-flex align-items-center gap-2 mb-4"><i class="bi bi-info-circle-fill fs-5"></i><span>Sau khi gửi yêu cầu, Ban quản trị sẽ duyệt trong 24h.</span></div>
-                    <form id="form-seller">
-                        <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Tên Shop của bạn <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="shopName" required style="font-size: 15px;"></div>
-                        <div class="mb-3">
-    <label class="form-label fw-bold text-secondary small text-uppercase">Mã số thuế <span class="text-danger">*</span></label>
-    <input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="taxCode" required placeholder="Nhập mã số thuế cá nhân hoặc doanh nghiệp">
-</div>
-                        <div class="mb-4"><label class="form-label fw-bold text-secondary small text-uppercase">Mô tả định hướng kinh doanh</label><textarea class="form-control border-2 shadow-none rounded-3 py-2" id="shopDesc" rows="4" style="font-size: 15px; resize: none;"></textarea></div>
-                        <button type="button" class="btn btn-2life-primary px-4 py-2.5 rounded-3 fw-bold shadow-sm" onclick="registerSeller()"><i class="bi bi-send me-1"></i> Gửi yêu cầu duyệt</button>
-                    </form>
-                </div>
+                    
+                    <?php if(isset($sellerProfile) && $sellerProfile['is_verified'] == 0): ?>
+                        <!-- GIAO DIỆN KHÓA: ĐANG CHỜ DUYỆT -->
+                        <div class="alert alert-info border-0 rounded-3 d-flex align-items-center gap-2 mb-4">
+                            <i class="bi bi-hourglass-split fs-2 text-info"></i>
+                            <div>
+                                <strong>Hồ sơ đang được xét duyệt!</strong><br>
+                                <span class="small">Vui lòng kiên nhẫn chờ Ban quản trị kiểm tra thông tin nhé.</span>
+                            </div>
+                        </div>
+                        <form id="form-seller">
+                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Tên Shop của bạn <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3 bg-light" value="<?= htmlspecialchars((string)$sellerProfile['shop_name']) ?>" disabled style="font-size: 15px;"></div>
+                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Mã số thuế <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3 bg-light" value="<?= htmlspecialchars((string)$sellerProfile['tax_code']) ?>" disabled></div>
+                            <div class="mb-4"><label class="form-label fw-bold text-secondary small text-uppercase">Mô tả định hướng kinh doanh</label><textarea class="form-control border-2 shadow-none rounded-3 py-2 bg-light" rows="4" disabled style="font-size: 15px; resize: none;"><?= htmlspecialchars((string)$sellerProfile['description']) ?></textarea></div>
+                            <button type="button" class="btn btn-secondary px-4 py-2.5 rounded-3 fw-bold shadow-sm" disabled><i class="bi bi-lock-fill me-1"></i> Đang chờ duyệt...</button>
+                        </form>
+                    <?php else: ?>
+                        <!-- GIAO DIỆN MỞ: CHƯA ĐĂNG KÝ HOẶC BỊ TỪ CHỐI -->
+                        <?php if(isset($sellerProfile) && $sellerProfile['is_verified'] == 2): ?>
+                            <div class="alert alert-danger border-0 rounded-3 d-flex align-items-center gap-2 mb-4">
+                                <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
+                                <div>
+                                    <strong class="text-danger">Yêu cầu bị từ chối!</strong><br>
+                                    <span class="small text-danger">Hồ sơ trước đó chưa đạt yêu cầu. Hãy cập nhật lại thông tin và gửi lại nhé!</span>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-warning border-0 rounded-3 small d-flex align-items-center gap-2 mb-4"><i class="bi bi-info-circle-fill fs-5"></i><span>Sau khi gửi yêu cầu, Ban quản trị sẽ duyệt trong 24h.</span></div>
+                        <?php endif; ?>
 
+                        <form id="form-seller">
+                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Tên Shop của bạn <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="shopName" value="<?= isset($sellerProfile) ? htmlspecialchars((string)$sellerProfile['shop_name']) : '' ?>" required style="font-size: 15px;"></div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Mã số thuế <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="taxCode" value="<?= isset($sellerProfile) ? htmlspecialchars((string)$sellerProfile['tax_code']) : '' ?>" required placeholder="Nhập mã số thuế cá nhân hoặc doanh nghiệp">
+                            </div>
+                            <div class="mb-4"><label class="form-label fw-bold text-secondary small text-uppercase">Mô tả định hướng kinh doanh</label><textarea class="form-control border-2 shadow-none rounded-3 py-2" id="shopDesc" rows="4" style="font-size: 15px; resize: none;"><?= isset($sellerProfile) ? htmlspecialchars((string)$sellerProfile['description']) : '' ?></textarea></div>
+                            <button type="button" class="btn btn-2life-primary px-4 py-2.5 rounded-3 fw-bold shadow-sm" onclick="registerSeller()"><i class="bi bi-send me-1"></i> <?= isset($sellerProfile) && $sellerProfile['is_verified'] == 2 ? 'Gửi lại yêu cầu' : 'Gửi yêu cầu duyệt' ?></button>
+                        </form>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -187,8 +216,8 @@ async function registerSeller() {
     }).then((resAlert) => {
         // Nếu thành công thì reset form cho sạch sẽ
         if (result.status === 'success') {
-            document.getElementById('form-seller').reset();
-         Optional: window.location.reload(); 
+           window.location.href = window.location.pathname + window.location.search + '#tab-seller';
+            window.location.reload(); // Reload để cập nhật trạng thái hồ sơ mới nhất (đang chờ duyệt hoặc bị từ chối) sau khi gửi đi
         }
     });
 }
@@ -199,6 +228,18 @@ function previewImage(event) {
     reader.onload = function() { document.getElementById('previewAvatar').src = reader.result; }
     reader.readAsDataURL(event.target.files[0]);
 }
+
+// Tự động mở đúng Tab nếu trên URL có chứa dấu #
+document.addEventListener("DOMContentLoaded", function() {
+    let hash = window.location.hash; // Lấy đuôi #tab-seller từ URL
+    if (hash) {
+        let targetTab = document.querySelector('button[data-bs-target="' + hash + '"]');
+        if (targetTab) {
+            let tab = new bootstrap.Tab(targetTab);
+            tab.show(); // Lệnh của Bootstrap để kích hoạt tab
+        }
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/user-footer.php'; ?>

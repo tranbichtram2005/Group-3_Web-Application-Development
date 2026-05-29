@@ -95,8 +95,8 @@ class ApproveSellerModel
                 ':body' => $bodyText
             ]);
 
-            // 2. GIỮ LẠI BẢN GHI, đổi is_verified = 0 để hiển thị ở tab "Từ chối"
-            $sqlUpdate = "UPDATE seller_profiles SET is_verified = 0 WHERE id = :profile_id";
+            // 2. GIỮ LẠI BẢN GHI, đổi is_verified = 2  để hiển thị ở tab "Từ chối"
+            $sqlUpdate = "UPDATE seller_profiles SET is_verified = 2 WHERE id = :profile_id";
             $stmtUpdate = $this->conn->prepare($sqlUpdate);
             $stmtUpdate->execute([':profile_id' => $profileId]);
 

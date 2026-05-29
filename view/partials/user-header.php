@@ -3,6 +3,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $isLoggedIn = isset($_SESSION['user_id']);
+// PHÉP THUẬT Ở ĐÂY: Nếu là Admin, tự động tráo thành Header Admin và DỪNG load Header User
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2) {
+    require_once __DIR__ . '/admin-header.php'; // Đổi lại tên file cho đúng nếu cần
+    return; // Lệnh return này cực kỳ quyền lực, nó sẽ cắt đứt không cho code của user-header chạy tiếp!
+}
 
 // Hứng dữ liệu từ index.php truyền sang thông qua biến toàn cục GLOBALS
 $cartCount = $GLOBALS['cartCount'] ?? 0;
