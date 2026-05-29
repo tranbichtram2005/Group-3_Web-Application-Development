@@ -23,7 +23,8 @@ $avatarDisplay = !empty($user['avatar_url']) ? $user['avatar_url'] : "https://ui
                 <p class="text-secondary small mb-3">@<?= htmlspecialchars((string)($user['username'] ?? 'username')) ?></p>
                 <span class="badge bg-light text-success border border-success-subtle px-3 py-1.5 rounded-pill fw-semibold" style="font-size: 11px;">
                     <i class="bi bi-patch-check-fill me-1"></i>
-<?= (isset($user['role_id']) && $user['role_id'] == 2) ? 'Quản trị viên' : ((isset($user['is_verified_seller']) && $user['is_verified_seller'] == 1) ? 'Người bán uy tín' : 'Thành viên 2Life') ?>                </span>
+                    <?= (isset($user['role_id']) && $user['role_id'] == 2) ? 'Quản trị viên' : ((isset($user['is_verified_seller']) && $user['is_verified_seller'] == 1) ? 'Người bán uy tín' : 'Thành viên 2Life') ?>
+                </span>
             </div>
 
             <div class="nav flex-column nav-pills shadow-sm p-2 bg-white rounded-4 border" role="tablist">
@@ -89,8 +90,7 @@ $avatarDisplay = !empty($user['avatar_url']) ? $user['avatar_url'] : "https://ui
                 <div class="tab-pane fade" id="tab-seller">
                     <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom"><h4 class="fw-bold mb-0 text-dark">Đăng ký mở gian hàng</h4></div>
                     
-                    <?php if(isset($sellerProfile) && $sellerProfile['is_verified'] == 0): ?>
-                        <!-- GIAO DIỆN KHÓA: ĐANG CHỜ DUYỆT -->
+                    <?php if(!empty($sellerProfile) && isset($sellerProfile['is_verified']) && $sellerProfile['is_verified'] == 0): ?>
                         <div class="alert alert-info border-0 rounded-3 d-flex align-items-center gap-2 mb-4">
                             <i class="bi bi-hourglass-split fs-2 text-info"></i>
                             <div>
@@ -99,14 +99,13 @@ $avatarDisplay = !empty($user['avatar_url']) ? $user['avatar_url'] : "https://ui
                             </div>
                         </div>
                         <form id="form-seller">
-                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Tên Shop của bạn <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3 bg-light" value="<?= htmlspecialchars((string)$sellerProfile['shop_name']) ?>" disabled style="font-size: 15px;"></div>
-                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Mã số thuế <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3 bg-light" value="<?= htmlspecialchars((string)$sellerProfile['tax_code']) ?>" disabled></div>
-                            <div class="mb-4"><label class="form-label fw-bold text-secondary small text-uppercase">Mô tả định hướng kinh doanh</label><textarea class="form-control border-2 shadow-none rounded-3 py-2 bg-light" rows="4" disabled style="font-size: 15px; resize: none;"><?= htmlspecialchars((string)$sellerProfile['description']) ?></textarea></div>
+                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Tên Shop của bạn <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3 bg-light" value="<?= htmlspecialchars((string)($sellerProfile['shop_name'] ?? '')) ?>" disabled style="font-size: 15px;"></div>
+                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Mã số thuế <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3 bg-light" value="<?= htmlspecialchars((string)($sellerProfile['tax_code'] ?? '')) ?>" disabled></div>
+                            <div class="mb-4"><label class="form-label fw-bold text-secondary small text-uppercase">Mô tả định hướng kinh doanh</label><textarea class="form-control border-2 shadow-none rounded-3 py-2 bg-light" rows="4" disabled style="font-size: 15px; resize: none;"><?= htmlspecialchars((string)($sellerProfile['description'] ?? '')) ?></textarea></div>
                             <button type="button" class="btn btn-secondary px-4 py-2.5 rounded-3 fw-bold shadow-sm" disabled><i class="bi bi-lock-fill me-1"></i> Đang chờ duyệt...</button>
                         </form>
                     <?php else: ?>
-                        <!-- GIAO DIỆN MỞ: CHƯA ĐĂNG KÝ HOẶC BỊ TỪ CHỐI -->
-                        <?php if(isset($sellerProfile) && $sellerProfile['is_verified'] == 2): ?>
+                        <?php if(!empty($sellerProfile) && isset($sellerProfile['is_verified']) && $sellerProfile['is_verified'] == 2): ?>
                             <div class="alert alert-danger border-0 rounded-3 d-flex align-items-center gap-2 mb-4">
                                 <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
                                 <div>
@@ -119,13 +118,13 @@ $avatarDisplay = !empty($user['avatar_url']) ? $user['avatar_url'] : "https://ui
                         <?php endif; ?>
 
                         <form id="form-seller">
-                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Tên Shop của bạn <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="shopName" value="<?= isset($sellerProfile) ? htmlspecialchars((string)$sellerProfile['shop_name']) : '' ?>" required style="font-size: 15px;"></div>
+                            <div class="mb-3"><label class="form-label fw-bold text-secondary small text-uppercase">Tên Shop của bạn <span class="text-danger">*</span></label><input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="shopName" value="<?= htmlspecialchars((string)($sellerProfile['shop_name'] ?? '')) ?>" required style="font-size: 15px;"></div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold text-secondary small text-uppercase">Mã số thuế <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="taxCode" value="<?= isset($sellerProfile) ? htmlspecialchars((string)$sellerProfile['tax_code']) : '' ?>" required placeholder="Nhập mã số thuế cá nhân hoặc doanh nghiệp">
+                                <input type="text" class="form-control form-control-lg border-2 shadow-none rounded-3" id="taxCode" value="<?= htmlspecialchars((string)($sellerProfile['tax_code'] ?? '')) ?>" required placeholder="Nhập mã số thuế cá nhân hoặc doanh nghiệp">
                             </div>
-                            <div class="mb-4"><label class="form-label fw-bold text-secondary small text-uppercase">Mô tả định hướng kinh doanh</label><textarea class="form-control border-2 shadow-none rounded-3 py-2" id="shopDesc" rows="4" style="font-size: 15px; resize: none;"><?= isset($sellerProfile) ? htmlspecialchars((string)$sellerProfile['description']) : '' ?></textarea></div>
-                            <button type="button" class="btn btn-2life-primary px-4 py-2.5 rounded-3 fw-bold shadow-sm" onclick="registerSeller()"><i class="bi bi-send me-1"></i> <?= isset($sellerProfile) && $sellerProfile['is_verified'] == 2 ? 'Gửi lại yêu cầu' : 'Gửi yêu cầu duyệt' ?></button>
+                            <div class="mb-4"><label class="form-label fw-bold text-secondary small text-uppercase">Mô tả định hướng kinh doanh</label><textarea class="form-control border-2 shadow-none rounded-3 py-2" id="shopDesc" rows="4" style="font-size: 15px; resize: none;"><?= htmlspecialchars((string)($sellerProfile['description'] ?? '')) ?></textarea></div>
+                            <button type="button" class="btn btn-2life-primary px-4 py-2.5 rounded-3 fw-bold shadow-sm" onclick="registerSeller()"><i class="bi bi-send me-1"></i> <?= (!empty($sellerProfile) && isset($sellerProfile['is_verified']) && $sellerProfile['is_verified'] == 2) ? 'Gửi lại yêu cầu' : 'Gửi yêu cầu duyệt' ?></button>
                         </form>
                     <?php endif; ?>
                 </div>
@@ -154,9 +153,8 @@ async function saveProfile() {
         const res = await fetch('index.php?controller=profile&action=updateAjax', { method: 'POST', body: formData });
         const result = await res.json();
         
-        // Gọi bảng thông báo đẹp
         Swal.fire({
-            icon: result.status, // success hoặc error
+            icon: result.status,
             title: result.status === 'success' ? 'Thành công!' : 'Thất bại!',
             text: result.msg,
             confirmButtonColor: '#FF7A3D'
@@ -194,10 +192,9 @@ async function changePassword() {
 // 3. Gửi Form Đăng ký Shop
 async function registerSeller() {
     const shopName = document.getElementById('shopName').value;
-    const taxCode = document.getElementById('taxCode').value; // Lấy giá trị mới
+    const taxCode = document.getElementById('taxCode').value; 
     const shopDesc = document.getElementById('shopDesc').value;
 
-    // Validate bắt buộc
     if(shopName.trim() === '') return showError("Vui lòng nhập tên Shop!");
     if(taxCode.trim() === '') return showError("Vui lòng nhập Mã số thuế!");
 
@@ -207,17 +204,16 @@ async function registerSeller() {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
     });
     const result = await res.json();
-    // Gọi thông báo đẹp đẹp
+    
     Swal.fire({ 
         icon: result.status, 
         title: 'Thông báo', 
         text: result.msg, 
         confirmButtonColor: '#FF7A3D' 
     }).then((resAlert) => {
-        // Nếu thành công thì reset form cho sạch sẽ
         if (result.status === 'success') {
            window.location.href = window.location.pathname + window.location.search + '#tab-seller';
-            window.location.reload(); // Reload để cập nhật trạng thái hồ sơ mới nhất (đang chờ duyệt hoặc bị từ chối) sau khi gửi đi
+            window.location.reload(); 
         }
     });
 }
@@ -231,12 +227,12 @@ function previewImage(event) {
 
 // Tự động mở đúng Tab nếu trên URL có chứa dấu #
 document.addEventListener("DOMContentLoaded", function() {
-    let hash = window.location.hash; // Lấy đuôi #tab-seller từ URL
+    let hash = window.location.hash; 
     if (hash) {
         let targetTab = document.querySelector('button[data-bs-target="' + hash + '"]');
         if (targetTab) {
             let tab = new bootstrap.Tab(targetTab);
-            tab.show(); // Lệnh của Bootstrap để kích hoạt tab
+            tab.show(); 
         }
     }
 });

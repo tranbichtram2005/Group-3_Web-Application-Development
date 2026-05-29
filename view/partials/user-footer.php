@@ -134,6 +134,15 @@ document.addEventListener('click', function(e) {
     }
 });
 </script>
+<?php if (isset($_SESSION['show_unauth_modal']) && $_SESSION['show_unauth_modal'] === true): ?>
+    
+    <?php 
+        // Nạp giao diện Modal vào ngay cuối trang
+        require_once __DIR__ . '/../unauthorized_modal.php'; 
+    ?>
+    
+    <?php unset($_SESSION['show_unauth_modal']); ?>
 
+<?php endif; ?>
 </body>
 </html>
