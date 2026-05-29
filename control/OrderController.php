@@ -19,40 +19,45 @@ class OrderController {
     public function index() {
         $userId = $_SESSION['user_id'];
         
-        // Đếm số lượng đơn hàng theo từng trạng thái (Đủ 6 trạng thái)
-        $countSql = "SELECT status_id, COUNT(id) as total FROM orders WHERE buyer_id = :buyer_id GROUP BY status_id";
+        // 1. Đếm số lượng đơn hàng theo từng trạng thái (Bỏ trạng thái 7 - Trả hàng)
+        $countSql = "SELECT status_id, COUNT(id) as total FROM orders WHERE buyer_id = :buyer_id AND status_id != 7 GROUP BY status_id";
         $countStmt = $this->db->prepare($countSql);
         $countStmt->execute([':buyer_id' => $userId]);
         $rawCounts = $countStmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Khởi tạo mảng đếm cho 6 trạng thái chuẩn
         $orderCounts = [0 => 0, 1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, 6 => 0];
         foreach ($rawCounts as $row) {
-            $orderCounts[$row['status_id']] = (int)$row['total'];
-            $orderCounts[0] += (int)$row['total']; 
+            $sid = (int)$row['status_id'];
+            if (isset($orderCounts[$sid])) {
+                $orderCounts[$sid] = (int)$row['total'];
+                $orderCounts[0] += (int)$row['total']; // Cộng dồn vào "Tất cả"
+            }
         }
 
         $statusFilter = isset($_GET['status']) ? (int)$_GET['status'] : 0;
         
+        // 2. Lấy danh sách đơn hàng (Ẩn trạng thái 7)
         $sql = "SELECT o.*, os.name as status_name 
                 FROM orders o
                 JOIN order_statuses os ON o.status_id = os.id
-                WHERE o.buyer_id = :buyer_id";
+                WHERE o.buyer_id = :buyer_id AND o.status_id != 7";
                 
-        if ($statusFilter > 0) {
+        if ($statusFilter > 0 && $statusFilter <= 6) {
             $sql .= " AND o.status_id = :status_id";
         }
         $sql .= " ORDER BY o.created_at DESC";
 
         $stmt = $this->db->prepare($sql);
         $params = [':buyer_id' => $userId];
-        if ($statusFilter > 0) {
+        if ($statusFilter > 0 && $statusFilter <= 6) {
             $params[':status_id'] = $statusFilter;
         }
         $stmt->execute($params);
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // 3. Lấy chi tiết sản phẩm trong từng đơn
         foreach ($orders as $key => $order) {
-            // ĐÃ THÊM: Câu lệnh SELECT COUNT() để kiểm tra xem đơn hàng này đã được review chưa
             $itemSql = "SELECT oi.*, p.title, img.image_url, 
                                (SELECT COUNT(id) FROM reviews WHERE order_id = oi.order_id AND listing_id = oi.listing_id) as is_reviewed
                         FROM order_items oi
@@ -63,6 +68,8 @@ class OrderController {
             $itemStmt->execute([':order_id' => $order['id']]);
             $orders[$key]['items'] = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
         }
+        
+        // Trỏ về file giao diện (Kiểm tra lại đường dẫn cho đúng với project của cậu nhé)
         require_once __DIR__ . '/../view/app/order_history.php';
     }
 
@@ -72,11 +79,15 @@ class OrderController {
     public function confirmReceived() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $orderId = (int)$_POST['order_id'];
-            $stmt = $this->db->prepare("UPDATE orders SET status_id = 4 WHERE id = :id AND status_id = 3");
+            
+            // FIX CHUẨN: Cập nhật đơn hàng lên trạng thái 5 (Hoàn thành) nếu đơn đang ở trạng thái 4 (Đang giao)
+            $stmt = $this->db->prepare("UPDATE orders SET status_id = 5 WHERE id = :id AND status_id = 4");
             $stmt->execute([':id' => $orderId]);
             
-            $_SESSION['toast_msg'] = 'Tuyệt vời! Đơn hàng đã hoàn thành.';
-            header("Location: index.php?controller=order");
+            $_SESSION['toast_msg'] = 'Tuyệt vời! Đơn hàng đã hoàn thành và sẵn sàng đánh giá.';
+            
+            // Đá sang tab Hoàn thành (status=5) cho người dùng thấy luôn
+            header("Location: index.php?controller=order&status=5");
             exit;
         }
     }

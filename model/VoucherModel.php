@@ -80,6 +80,31 @@ public function getVoucherByCode($code, $orderTotal) {
     return $voucher;
 }
 
+// Lấy danh sách Voucher ĐANG HOẠT ĐỘNG cho người dùng xem
+    // Lấy danh sách Voucher ĐANG HOẠT ĐỘNG cho người dùng xem
+    // Lấy TẤT CẢ Voucher ĐANG HOẠT ĐỘNG (Đã fix lỗi lệch múi giờ)
+    public function getActiveVouchers() {
+        // Lấy giờ hiện tại của Việt Nam từ PHP
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+        $now = date('Y-m-d H:i:s');
+
+        // Truyền thẳng biến $now vào thay cho CURRENT_TIMESTAMP
+        $query = "SELECT * FROM vouchers 
+                  WHERE status_id = 1 
+                  AND used_quantity < total_quantity 
+                  AND starts_at <= :now1 
+                  AND expires_at >= :now2 
+                  ORDER BY discount_value DESC"; 
+                  
+        $stmt = $this->db->prepare($query);
+        // Gắn biến thời gian vào câu lệnh
+        $stmt->execute([
+            ':now1' => $now, 
+            ':now2' => $now
+        ]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 public function isVoucherUsedByUser($code, $userId) {
     $code = strtoupper(trim($code));
     try {
@@ -104,6 +129,14 @@ public function isVoucherUsedByUser($code, $userId) {
         } catch (Exception $e) {
             return false;
         }
+    }
+
+    // HÀM LOGIC: Tăng số lượng đã sử dụng lên 1 khi khách đặt hàng thành công
+    public function incrementUsedQuantity($voucherId) {
+        // Cập nhật: Lấy số lượng đã dùng hiện tại cộng thêm 1
+        $query = "UPDATE vouchers SET used_quantity = used_quantity + 1 WHERE id = :id";
+        $stmt = $this->db->prepare($query);
+        return $stmt->execute([':id' => $voucherId]);
     }
 }
 ?>
