@@ -1,12 +1,16 @@
 <?php
-class ManageOrderSellerModel {
+class ManageOrderSellerModel
+{
     private $conn;
 
-    public function __construct($db) {
+    public function __construct($db)
+    {
         $this->conn = $db;
     }
 
-    public function getOrdersBySeller($sellerId, $statusFilter = 0) {
+    // Lấy danh sách đơn hàng của Seller (có bộ lọc trạng thái)
+    public function getOrdersBySeller($sellerId, $statusFilter = 0)
+    {
         $sql = "SELECT o.*, os.name as status_name, pm.name as payment_method, ps.name as payment_status
                 FROM orders o
                 JOIN order_statuses os ON o.status_id = os.id
@@ -14,7 +18,7 @@ class ManageOrderSellerModel {
                 JOIN payment_methods pm ON p.method_id = pm.id
                 JOIN payment_statuses ps ON p.status_id = ps.id
                 WHERE o.seller_id = :seller_id";
-                
+
         if ($statusFilter > 0) {
             $sql .= " AND o.status_id = :status_id";
         }
@@ -29,7 +33,8 @@ class ManageOrderSellerModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getOrderStatusCounts($sellerId) {
+    public function getOrderStatusCounts($sellerId)
+    {
         $sql = "SELECT status_id, COUNT(id) as total FROM orders WHERE seller_id = :seller_id GROUP BY status_id";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':seller_id' => $sellerId]);
@@ -43,18 +48,28 @@ class ManageOrderSellerModel {
         return $counts;
     }
 
-    public function getOrderById($orderId, $sellerId) {
-        $sql = "SELECT o.*, os.name as status_name, u.full_name as buyer_name, u.phone as buyer_phone
+    // CẬP NHẬT: Lấy thêm thông tin chi tiết về phương thức thanh toán, phí ship, giảm giá
+    public function getOrderById($orderId, $sellerId)
+    {
+        $sql = "SELECT o.*, os.name as status_name, 
+                       u_buyer.full_name as buyer_name, u_buyer.phone as buyer_phone,
+                       p.method_id, p.status_id as payment_status_id, pm.name as payment_method_name,
+                       sp.shop_name, u_seller.phone as shop_phone
                 FROM orders o
                 JOIN order_statuses os ON o.status_id = os.id
-                JOIN users u ON o.buyer_id = u.id
+                JOIN users u_buyer ON o.buyer_id = u_buyer.id
+                JOIN users u_seller ON o.seller_id = u_seller.id
+                JOIN payments p ON o.id = p.order_id
+                JOIN payment_methods pm ON p.method_id = pm.id
+                LEFT JOIN seller_profiles sp ON o.seller_id = sp.user_id
                 WHERE o.id = :order_id AND o.seller_id = :seller_id";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':order_id' => $orderId, ':seller_id' => $sellerId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getOrderItems($orderId) {
+    public function getOrderItems($orderId)
+    {
         $sql = "SELECT oi.*, p.title, img.image_url 
                 FROM order_items oi
                 JOIN product_listings p ON oi.listing_id = p.id
@@ -65,7 +80,8 @@ class ManageOrderSellerModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function updateOrderStatus($orderId, $sellerId, $fromStatus, $toStatus) {
+    public function updateOrderStatus($orderId, $sellerId, $fromStatus, $toStatus)
+    {
         try {
             $sql = "UPDATE orders SET status_id = :to_status 
                     WHERE id = :id AND seller_id = :seller_id AND status_id = :from_status";
@@ -81,7 +97,8 @@ class ManageOrderSellerModel {
         }
     }
 
-    public function cancelOrderBySeller($orderId, $sellerId, $reason) {
+    public function cancelOrderBySeller($orderId, $sellerId, $reason)
+    {
         try {
             $this->conn->beginTransaction();
 
@@ -115,7 +132,7 @@ class ManageOrderSellerModel {
             $sqlCheckPay = "SELECT id FROM payments WHERE order_id = :order_id AND status_id = 2";
             $stmtCheckPay = $this->conn->prepare($sqlCheckPay);
             $stmtCheckPay->execute([':order_id' => $orderId]);
-            
+
             if ($stmtCheckPay->rowCount() > 0) {
                 $sqlUpdatePay = "UPDATE payments SET status_id = 4, refunded_at = CURRENT_TIMESTAMP WHERE order_id = :order_id";
                 $this->conn->prepare($sqlUpdatePay)->execute([':order_id' => $orderId]);
@@ -129,4 +146,3 @@ class ManageOrderSellerModel {
         }
     }
 }
-?>

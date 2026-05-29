@@ -12,7 +12,7 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                             <div>
-                                <span class="fw-bold text-secondary">Mã đơn: #ORD<?= str_pad($o['id'], 5, '0', STR_PAD_LEFT) ?></span>
+                                <span class="fw-bold text-secondary">Mã đơn: #2L<?= str_pad($o['id'], STR_PAD_LEFT) ?></span>
                                 <span class="text-muted mx-2">|</span>
                                 <small class="text-muted"><i class="bi bi-clock me-1"></i><?= date('d/m/Y H:i', strtotime($o['created_at'])) ?></small>
                             </div>
@@ -36,7 +36,7 @@
                                 </p>
                                 <p class="mb-0 text-muted small">
                                     <i class="bi bi-credit-card me-2"></i>Hình thức: <span class="text-uppercase fw-bold"><?= $o['payment_method'] ?></span> 
-                                    (<span class="small"><?= $o['payment_status'] == 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán' ?></span>)
+                                    <!-- (<span class="small"><?= $o['payment_status'] == 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán' ?></span>) -->
                                 </p>
                             </div>
                             <div class="col-md-3 text-md-end mt-2 mt-md-0">
