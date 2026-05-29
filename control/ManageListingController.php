@@ -5,6 +5,18 @@ class ManageListingController {
     private $manageModel;
 
     public function __construct() {
+        $roleId = $_SESSION['role_id'] ?? 1;
+        $isSeller = $_SESSION['is_seller'] ?? 0;
+// Nếu KHÔNG PHẢI là Admin (role 2) VÀ CŨNG KHÔNG PHẢI là Người bán (is_seller 1)
+        if ($roleId != 2 && $isSeller != 1) {
+            
+            // Gửi một tín hiệu vào Session để yêu cầu bật Modal
+            $_SESSION['show_unauth_modal'] = true;
+            
+            // Đá người dùng về lại trang chủ an toàn
+            header("Location: index.php?controller=home");
+            exit; 
+        }
         $this->manageModel = new ManageListingModel();
     }
 

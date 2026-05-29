@@ -15,13 +15,15 @@ class ManageOrderSellerController {
         $database = new Database();
         $dbConn = $database->getConnection();
 
-        // Kiểm tra quyền Seller
-        $userId = $_SESSION['user_id'];
-        $checkSeller = $dbConn->prepare("SELECT id FROM seller_profiles WHERE user_id = :user_id");
-        $checkSeller->execute([':user_id' => $userId]);
-
-        if ($checkSeller->rowCount() === 0) {
-            $_SESSION['toast_msg'] = 'Truy cập bị từ chối! Bạn không phải là Người Bán.';
+        $roleId = $_SESSION['role_id'] ?? 1;
+        $isSeller = $_SESSION['is_seller'] ?? 0;
+// Nếu KHÔNG PHẢI là Admin (role 2) VÀ CŨNG KHÔNG PHẢI là Người bán (is_seller 1)
+        if ($roleId != 2 && $isSeller != 1) {
+            
+            // Gửi một tín hiệu vào Session để yêu cầu bật Modal
+            $_SESSION['show_unauth_modal'] = true;
+            
+            // Đá người dùng về lại trang chủ an toàn
             header("Location: index.php?controller=home");
             exit; 
         }
