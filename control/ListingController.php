@@ -105,7 +105,10 @@ class ListingController
     }
 
     public function detail() {
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        require_once __DIR__ . '/../model/VoucherModel.php';
+        $voucherModel = new VoucherModel();
+        $activeVouchers = $voucherModel->getActiveVouchers();
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $product = $this->listingModel->getListingDetail($id);
         if (!$product) {
             die("<h2 style='text-align:center; margin-top:50px; color:gray;'>Sản phẩm không tồn tại hoặc đã bị ẩn!</h2>");

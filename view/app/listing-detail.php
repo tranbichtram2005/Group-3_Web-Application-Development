@@ -5,8 +5,11 @@ $images = $images ?? [];
 $avgRating = $avgRating ?? 0;
 $totalReviews = $totalReviews ?? 0;
 $productReviews = $productReviews ?? [];
+$activeVouchers = $activeVouchers ?? []; // Thêm biến hứng Voucher
 ?>
 <?php require_once __DIR__ . '/../partials/user-header.php'; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <main class="container py-4" style="min-height: 75vh;">
     <nav aria-label="breadcrumb" class="mb-3">
@@ -150,11 +153,54 @@ $productReviews = $productReviews ?? [];
                     <h4 class="fw-bold text-dark mb-2"><?= htmlspecialchars($product['title'] ?? '') ?></h4>
                     <div class="fw-bold display-6 mb-3" style="color: #FF7A3D;"><?= number_format($product['price'] ?? 0, 0, ',', '.') ?>đ</div>
                     
-                    <div class="text-muted small mb-2 d-flex align-items-center gap-1">
+                    <div class="text-muted small mb-3 d-flex align-items-center gap-1">
                         <i class="bi bi-geo-alt-fill text-danger"></i><span>Khu vực: <?= htmlspecialchars($product['ward_name'] ?? 'Toàn quốc') ?></span>
                     </div>
-                    
-                    <div class="d-grid gap-3 mt-4">
+
+                    <?php 
+                        $currentPrice = $product['price'] ?? 0;
+                        $applicableVouchers = [];
+                        if (!empty($activeVouchers)) {
+                            foreach ($activeVouchers as $v) {
+                                if ($v['min_order_value'] <= $currentPrice) {
+                                    $applicableVouchers[] = $v;
+                                }
+                            }
+                        }
+                    ?>
+
+                    <?php if (!empty($applicableVouchers)): ?>
+                    <div class="mb-4 p-3 rounded-3 shadow-sm" style="background-color: #fff9f6; border: 1px dashed #FF7A3D;">
+                        <h6 class="fw-bold text-danger mb-3"><i class="bi bi-star-fill text-warning me-2"></i>Mã giảm giá áp dụng được:</h6>
+                        
+                        <div class="d-flex flex-column gap-2">
+                            <?php foreach (array_slice($applicableVouchers, 0, 3) as $v): // Hiện 3 mã tốt nhất ?>
+                                <?php 
+                                    $discountText = ($v['type_id'] == 1) ? "Giảm {$v['discount_value']}%" : "Giảm " . number_format($v['discount_value'], 0, ',', '.') . "đ"; 
+                                    $remaining = $v['total_quantity'] - $v['used_quantity'];
+                                ?>
+                                <div class="d-flex justify-content-between align-items-center bg-white p-2 rounded border border-warning-subtle shadow-sm">
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge" style="background-color: #FF7A3D;">Mã: <?= htmlspecialchars($v['code']) ?></span>
+                                            <span class="small fw-bold text-dark"><?= $discountText ?></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex flex-column align-items-end gap-1">
+                                        <span class="text-danger fw-medium" style="font-size: 0.7rem;">Còn <?= $remaining ?> lượt</span>
+                                        <?php if (isset($_SESSION['user_id'])): ?>
+                                            <button class="btn btn-sm text-white py-0 px-3 rounded-pill" style="font-size: 0.75rem; background-color: #FF7A3D;" onclick="copyVoucherCode('<?= htmlspecialchars($v['code']) ?>')">Lưu</button>
+                                        <?php else: ?>
+                                            <button class="btn btn-sm text-white py-0 px-3 rounded-pill" style="font-size: 0.75rem; background-color: #FF7A3D;" onclick="requireLoginToCopy()">Lưu</button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    <div class="d-grid gap-3 mt-3">
                         <?php 
                         if(isset($product['stock_quantity']) && $product['stock_quantity'] > 0 && isset($product['status_id']) && $product['status_id'] != 3): 
                         ?>
@@ -169,7 +215,8 @@ $productReviews = $productReviews ?? [];
                             
                             <button type="button" onclick="actionBuyNow(<?= $product['id'] ?? 0 ?>)" class="btn btn-lg text-white fw-bold py-3 rounded-3 shadow-sm btn-hover-zoom" style="background-color: #FF7A3D; border: none; font-size: 16px;">MUA NGAY (Giao dịch an toàn)</button>
 
-<button type="button" class="btn btn-sm btn-light border w-100 py-2 rounded-3 text-secondary fw-semibold small" onclick="actionChat(<?= $product['user_id'] ?? 0 ?>, <?= $product['id'] ?? 0 ?>, true)"><i class="bi bi-tags me-1 text-warning"></i> Bạn muốn trả giá? Yêu cầu thương lượng</button>                        <?php else: ?>
+                            <button type="button" class="btn btn-sm btn-light border w-100 py-2 rounded-3 text-secondary fw-semibold small" onclick="actionChat(<?= $product['user_id'] ?? 0 ?>, <?= $product['id'] ?? 0 ?>, true)"><i class="bi bi-tags me-1 text-warning"></i> Bạn muốn trả giá? Yêu cầu thương lượng</button>                        
+                        <?php else: ?>
                             <button class="btn btn-lg btn-secondary fw-bold py-3 rounded-3 shadow-sm" disabled><i class="bi bi-x-circle me-2"></i> Sản phẩm đã hết hàng</button>
                         <?php endif; ?>
                     </div>
@@ -177,13 +224,18 @@ $productReviews = $productReviews ?? [];
 
                 <div class="bg-white border rounded-4 p-4 shadow-sm">
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <img src="<?= !empty($product['avatar_url']) ? htmlspecialchars($product['avatar_url']) : 'https://ui-avatars.com/api/?name=' . urlencode($product['username'] ?? 'User') . '&background=1F3C5A&color=fff' ?>" class="rounded-circle object-fit-cover border" width="55" height="55">
+                        <img src="<?= !empty($product['avatar_url']) ? htmlspecialchars($product['avatar_url']) : 'https://ui-avatars.com/api/?name=' . urlencode($product['username'] ?? 'User') . '&background=1F3C5A&color=fff' ?>" class="rounded-circle object-fit-cover border shadow-sm" width="55" height="55">
                         <div>
                             <h6 class="fw-bold text-dark mb-0"><?= htmlspecialchars($product['full_name'] ?? '') ?></h6>
-                            <small class="text-muted">@<?= htmlspecialchars($product['username'] ?? '') ?></small>
+                            <div class="d-flex align-items-center gap-1 mt-1">
+                                <small class="text-muted">@<?= htmlspecialchars($product['username'] ?? '') ?></small>
+                                <i class="bi bi-patch-check-fill text-primary" style="font-size: 0.8rem;" title="Người bán đã xác thực"></i>
+                            </div>
                         </div>
                     </div>
-                    <a href="#" class="btn btn-sm btn-light border w-100 py-2 rounded-3 fw-semibold text-secondary small"><i class="bi bi-shop me-1"></i> Xem cửa hàng</a>
+                    <a href="index.php?controller=shop&id=<?= $product['user_id'] ?? 0 ?>" class="btn btn-sm btn-outline-dark w-100 py-2 rounded-3 fw-bold small transition-all" style="border-color: #e2e8f0;">
+                        <i class="bi bi-shop me-2 text-warning"></i> Xem cửa hàng
+                    </a>
                 </div>
             </div>
         </div>
@@ -193,6 +245,27 @@ $productReviews = $productReviews ?? [];
 <?php require_once __DIR__ . '/../partials/user-footer.php'; ?>
 
 <script>
+// Hàm xử lý copy mã Voucher
+function copyVoucherCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'success',
+            title: 'Lưu mã thành công!', text: 'Mã: ' + code,
+            showConfirmButton: false, timer: 2500, timerProgressBar: true, iconColor: '#FF7A3D'
+        });
+    });
+}
+
+function requireLoginToCopy() {
+    Swal.fire({
+        icon: 'info', title: 'Khoan đã!', text: 'Cậu cần đăng nhập để lưu mã giảm giá này nhé!',
+        confirmButtonText: 'Đăng nhập ngay', confirmButtonColor: '#FF7A3D', showCancelButton: true, cancelButtonText: 'Để sau'
+    }).then((result) => {
+        if (result.isConfirmed) { window.location.href = 'index.php?controller=auth&action=login'; }
+    });
+}
+
+// Các hàm xử lý giỏ hàng, mua hàng cũ của cậu
 async function actionAddToCart(listingId) {
     try {
         let res = await fetch(`index.php?controller=cart&action=addAjax&id=${listingId}`, { method: 'POST' });
@@ -239,30 +312,22 @@ function actionBuyNow(listingId) {
 function actionChat(sellerId, listingId, isDeal = false) {
     let currentUserId = '<?= $_SESSION['user_id'] ?? 0 ?>';
     
-    // Yêu cầu đăng nhập trước khi chat
     if (currentUserId == 0 || currentUserId == '') {
         window.location.href = 'index.php?controller=auth&action=login';
         return;
     }
     
-    // Không cho tự chat với chính mình
     if(currentUserId == sellerId) {
         Swal.fire({ icon: 'warning', title: 'Ơ kìa...', text: 'Bạn không thể tự chat với chính mình được nha!' });
         return;
     }
     
-    // Link dẫn sang chức năng Chat mới xây
     let url = `index.php?controller=chat&action=startTrade&listing_id=${listingId}&seller_id=${sellerId}`;
-    
-    // Nếu là bấm nút Thương lượng (isDeal = true) thì nối thêm lệnh deal=1
     if (isDeal) {
         url += '&deal=1';
     }
-    
-    // Chuyển trang
     window.location.href = url;
 }
-
 </script>
 
 <style>
