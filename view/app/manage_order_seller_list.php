@@ -12,7 +12,7 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                             <div>
-                                <span class="fw-bold text-secondary">Mã đơn: #2L<?= str_pad($o['id'], STR_PAD_LEFT) ?></span>
+                                <span class="fw-bold text-secondary">Mã đơn: #ODR<?= str_pad($o['id'],5,"0", STR_PAD_LEFT) ?></span>
                                 <span class="text-muted mx-2">|</span>
                                 <small class="text-muted"><i class="bi bi-clock me-1"></i><?= date('d/m/Y H:i', strtotime($o['created_at'])) ?></small>
                             </div>

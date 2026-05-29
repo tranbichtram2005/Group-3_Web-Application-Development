@@ -239,7 +239,7 @@
         </div>
         <div style="text-align: right;">
             <span style="font-size: 13px; font-weight: bold;">Mã đơn hàng:</span>
-            <div class="barcode-placeholder">#2L<?= str_pad($order['id'], STR_PAD_LEFT) ?></div>
+            <div class="barcode-placeholder">#ODR<?= str_pad($order['id'], 5, "0", STR_PAD_LEFT) ?></div>
             <br><small style="font-size: 11px; color: #666;">Ngày đặt: <?= isset($order['created_at']) ? date('d/m/Y H:i', strtotime($order['created_at'])) : '' ?></small>
         </div>
     </div>
