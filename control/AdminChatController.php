@@ -18,8 +18,7 @@ class AdminChatController {
 
     public function index() {
         $adminId = $_SESSION['user_id'];
-        // Lấy danh sách toàn bộ Ticket
-        $supportConvs = $this->chatModel->getAdminSupportConversations($adminId);
+        $supportConvs = $this->chatModel->getAdminSupportConversations(); // Đã xóa $adminId ở đây
         require_once __DIR__ . '/../view/admin/chat.php';
     }
 

@@ -256,6 +256,33 @@
             if (requestedConvId !== actConv) return; 
             
             if(json.status === 'success') {
+
+                // ========================================================
+                // 🚨 ĐOẠN CODE TỚ THÊM VÀO ĐỂ ĐỔI TÊN ADMIN & KHÓA CHAT NẰM Ở ĐÂY
+                // ========================================================
+                if (actChatType === 'support' && json.admin_name) {
+                    let statusText = (json.status_id == 1) ? ' (Đang chờ tiếp nhận)' : ((json.status_id == 2) ? ' (Đang hỗ trợ)' : ' (Đã đóng)');
+                    document.getElementById('chat-partner-name').innerText = json.admin_name + statusText;
+                    
+                    let inputEl = document.getElementById('chat-input');
+                    let btnEl = document.querySelector('button[type="submit"]');
+                    let fileEl = document.getElementById('file-input');
+                    
+                    if (json.status_id == 3) {
+                        inputEl.disabled = true; 
+                        btnEl.disabled = true; 
+                        fileEl.disabled = true; 
+                        inputEl.placeholder = "🔒 Yêu cầu này đã được đóng lại.";
+                    } else {
+                        inputEl.disabled = false; 
+                        btnEl.disabled = false; 
+                        fileEl.disabled = false; 
+                        inputEl.placeholder = "Nhập tin nhắn...";
+                    }
+                }
+                // ========================================================
+
+
                 if (actChatType === 'trade' && json.offer) {
                     renderDealCard(json.offer);
                 } else {

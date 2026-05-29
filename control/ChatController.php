@@ -108,11 +108,26 @@ class ChatController {
         try {
             $convId = isset($_GET['conv_id']) ? intval($_GET['conv_id']) : 0;
             $lastId = isset($_GET['last_id']) ? intval($_GET['last_id']) : 0;
+            $userId = $_SESSION['user_id'];
             
             if ($convId > 0) {
                 $this->chatModel->markSupportMessagesAsRead($convId);
                 $messages = $this->chatModel->getSupportMessages($convId, $lastId);
-                echo json_encode(['status' => 'success', 'data' => $messages]);
+                
+                // Lấy thông tin Tên Admin
+                require_once __DIR__ . '/../model/Database.php';
+                $db = new Database();
+                $stmt = $db->getConnection()->prepare("SELECT sc.status_id, u.full_name AS admin_name FROM support_conversations sc LEFT JOIN users u ON sc.admin_id = u.id WHERE sc.id = ?");
+                $stmt->execute([$convId]);
+                $convInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                $adminName = ($convInfo['status_id'] == 2 && !empty($convInfo['admin_name'])) ? 'Admin ' . $convInfo['admin_name'] : 'Admin 2Life';
+                
+                $stmtRead = $db->getConnection()->prepare("SELECT MAX(id) as max_id FROM support_messages WHERE support_conversation_id = ? AND sender_id = ? AND is_read = 1");
+                $stmtRead->execute([$convId, $userId]);
+                $readUntilId = $stmtRead->fetchColumn() ?: 0;
+
+                echo json_encode(['status' => 'success', 'data' => $messages, 'admin_name' => $adminName, 'status_id' => $convInfo['status_id'], 'read_until_id' => $readUntilId]);
             }
         } catch (Exception $e) {
             echo json_encode(['status' => 'error', 'msg' => 'Lỗi DB: ' . $e->getMessage()]);
@@ -210,7 +225,8 @@ class ChatController {
     }
 
     public function startSupport() {
-        $convId = $this->chatModel->findOrCreateSupportConv($_SESSION['user_id']);
+        $catId = isset($_GET['cat_id']) ? intval($_GET['cat_id']) : 10;
+        $convId = $this->chatModel->findOrCreateSupportConv($_SESSION['user_id'], $catId);
         header("Location: index.php?controller=chat&active_support=$convId");
         exit;
     }

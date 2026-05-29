@@ -197,9 +197,17 @@ class ChatModel {
         return true;
     }
     public function findOrCreateSupportConv($userId, $categoryId = 10) {
-        $stmtCheck = $this->conn->prepare("SELECT id FROM support_conversations WHERE user_id = ? AND status_id IN (1, 2) ORDER BY last_message_at DESC LIMIT 1");
-        $stmtCheck->execute([$userId]);
-        if ($conv = $stmtCheck->fetch(PDO::FETCH_ASSOC)) return $conv['id'];
+        $stmtCheck = $this->conn->prepare("SELECT id, status_id FROM support_conversations WHERE user_id = ? AND category_id = ? LIMIT 1");
+        $stmtCheck->execute([$userId, $categoryId]);
+        $conv = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+        if ($conv) {
+            // Nếu đã đóng -> Mở lại, gỡ Admin cũ
+            if ($conv['status_id'] == 3) {
+                $this->conn->prepare("UPDATE support_conversations SET status_id = 1, admin_id = NULL, last_message_at = CURRENT_TIMESTAMP WHERE id = ?")->execute([$conv['id']]);
+            }
+            return $conv['id']; 
+        }
         $this->conn->prepare("INSERT INTO support_conversations (user_id, category_id, status_id) VALUES (?, ?, 1)")->execute([$userId, $categoryId]);
         return $this->conn->lastInsertId();
     }
@@ -207,12 +215,13 @@ class ChatModel {
     // ==========================================
     // NHÓM HÀM CHO ADMIN XỬ LÝ HỖ TRỢ (HELPDESK)
     // ==========================================
-    public function getAdminSupportConversations($adminId) {
+    public function getAdminSupportConversations($adminId = null) {
+        // Bỏ chặn WHERE admin_id để TẤT CẢ Admin đều thấy danh sách
         $sql = "SELECT sc.*, cat.name AS category_name, u.full_name AS user_name, u.avatar_url AS user_avatar
                 FROM support_conversations sc JOIN support_categories cat ON sc.category_id = cat.id JOIN users u ON sc.user_id = u.id
-                WHERE (sc.admin_id IS NULL OR sc.admin_id = ?) ORDER BY sc.status_id ASC, sc.last_message_at DESC";
+                ORDER BY sc.status_id ASC, sc.last_message_at DESC";
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$adminId]);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
