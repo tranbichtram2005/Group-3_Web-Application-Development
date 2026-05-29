@@ -138,7 +138,7 @@ document.addEventListener('click', function(e) {
     
     <?php 
         // Nạp giao diện Modal vào ngay cuối trang
-        require_once __DIR__ . '/../unauthorized_modal.php'; 
+        require_once __DIR__ . '/../Auth/unauthorized_modal.php'; 
     ?>
     
     <?php unset($_SESSION['show_unauth_modal']); ?>
