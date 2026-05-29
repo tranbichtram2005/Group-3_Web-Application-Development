@@ -59,18 +59,40 @@ class ManageListingController {
         exit;
     }
 
+// AJAX: Cập nhật trạng thái tin đăng (Ẩn tin)
     public function changeStatus() {
         if (session_status() == PHP_SESSION_NONE) session_start();
         $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 2;
         $listingId = $_GET['id'] ?? null;
         $type = $_GET['type'] ?? '';
 
+        // Báo cho trình duyệt biết dữ liệu trả về là JSON
+        header('Content-Type: application/json');
+
         if ($listingId) {
             $newStatusId = ($type === 'hide' || $type === 'sold') ? 4 : 2;
-            $this->manageModel->updateListingStatus($listingId, $userId, $newStatusId);
-            echo "<script>alert('Cập nhật trạng thái thành công!'); window.location.href='index.php?controller=manage_listing&action=index';</script>";
+            
+            // Thực thi update
+            $result = $this->manageModel->updateListingStatus($listingId, $userId, $newStatusId);
+            
+            // Trả về JSON để AJAX xử lý
+            if ($result !== false) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Đã ẩn tin đăng thành công!',
+                    'status_id' => $newStatusId
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Cập nhật thất bại. Vui lòng thử lại!'
+                ]);
+            }
             exit();
         }
+        
+        echo json_encode(['success' => false, 'message' => 'Dữ liệu không hợp lệ!']);
+        exit();
     }
 }
 ?>

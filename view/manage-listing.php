@@ -69,29 +69,44 @@
                                         <img src="<?= !empty($item['primary_image']) ? htmlspecialchars($item['primary_image']) : 'https://placehold.co/60x60?text=No+Image' ?>" class="rounded border object-cover" style="width: 60px; height: 60px; flex-shrink: 0;">
                                         <div>
                                             <h6 class="fw-bold text-dark mb-1 text-truncate" style="max-width: 250px;"><?= htmlspecialchars($item['title']) ?></h6>
-                                            <span class="badge bg-light text-secondary border fw-normal" style="font-size: 11px;"><?= htmlspecialchars($item['category_name']) ?></span>
+                                            <span class="badge bg-light text-secondary border fw-normal mb-1" style="font-size: 11px;"><?= htmlspecialchars($item['category_name']) ?></span>
+                                            
+                                            <div class="small">
+                                                <?php if (isset($item['stock_quantity']) && $item['stock_quantity'] > 0): ?>
+                                                    <span class="text-muted">Kho: <strong class="text-dark"><?= $item['stock_quantity'] ?></strong></span>
+                                                <?php else: ?>
+                                                    <span class="text-danger fw-bold"><i class="bi bi-exclamation-circle"></i> Đã bán hết</span>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="fw-semibold text-danger"><?= number_format($item['price'], 0, ',', '.') ?>đ</td>
                                 <td class="text-secondary small"><?= date('d/m/Y', strtotime($item['created_at'])) ?></td>
+                                
                                 <td>
-                                    <?php if ($item['status_id'] == 2): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2"><i class="bi bi-check-circle-fill"></i> Đang bán</span>
+                                    <?php if ($item['status_id'] == 4): ?>
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2"><i class="bi bi-eye-slash-fill"></i> Đã ẩn/Đóng</span>
                                     <?php elseif ($item['status_id'] == 1): ?>
                                         <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2"><i class="bi bi-hourglass-split"></i> Chờ duyệt</span>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2"><i class="bi bi-eye-slash-fill"></i> Đã ẩn</span>
+                                        <?php if (isset($item['stock_quantity']) && $item['stock_quantity'] > 0): ?>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2"><i class="bi bi-check-circle-fill"></i> Đang bán</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2"><i class="bi bi-box-seam"></i> Hết hàng</span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
+
                                 <td class="pe-4 text-end">
                                     <button class="btn btn-sm btn-outline-primary me-1 btn-view-modal" data-id="<?= $item['id'] ?>" data-status="<?= $item['status_id'] ?>">
-                                        <i class="bi bi-eye"></i> Xem
+                                        <i class="bi bi-eye"></i> 
                                     </button>
-                                    <?php if ($item['status_id'] == 2): ?>
-                                        <a href="index.php?controller=manage_listing&action=changeStatus&type=hide&id=<?= $item['id'] ?>" class="btn btn-sm btn-outline-secondary" onclick="return confirm('Ẩn tin đăng này?')">
+                                    
+                                    <?php if ($item['status_id'] != 4 && $item['status_id'] != 1): ?>
+                                        <button data-href="index.php?controller=manage_listing&action=changeStatus&type=hide&id=<?= $item['id'] ?>" data-id="<?= $item['id'] ?>" class="btn btn-sm btn-outline-secondary btn-hide-listing">
                                             <i class="bi bi-eye-slash"></i>
-                                        </a>
+                                        </button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -235,6 +250,70 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         })
+    });
+
+    // 3. Khi bấm nút Ẩn tin (AJAX + SweetAlert)
+    document.querySelectorAll('.btn-hide-listing').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('data-href');
+            const listingId = this.getAttribute('data-id');
+
+            Swal.fire({
+                title: 'Xác nhận ẩn tin?',
+                text: "Tin đăng này sẽ bị ẩn khỏi gian hàng và người mua sẽ không nhìn thấy nữa!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Vâng, Ẩn ngay!',
+                cancelButtonText: 'Hủy bỏ'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Đang xử lý...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    fetch(url)
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data.success) {
+                                Swal.fire({
+                                    title: 'Thành công!',
+                                    text: data.message,
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                
+                                // Cập nhật lại giao diện tại dòng đó mà không cần load lại trang
+                                const row = document.getElementById('row-' + listingId);
+                                if (row) {
+                                    // Thay đổi Badge Trạng thái thành Đã ẩn (Cột thứ 4)
+                                    const statusTd = row.querySelector('td:nth-child(4)');
+                                    if (statusTd) {
+                                        statusTd.innerHTML = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2"><i class="bi bi-eye-slash-fill"></i> Đã ẩn/Đóng</span>';
+                                    }
+                                    
+                                    // Ẩn/Xóa luôn nút "Ẩn tin"
+                                    const hideBtn = row.querySelector('.btn-hide-listing');
+                                    if (hideBtn) {
+                                        hideBtn.remove();
+                                    }
+                                }
+                            } else {
+                                Swal.fire('Lỗi!', data.message, 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Lỗi fetch:", err);
+                            Swal.fire('Lỗi!', 'Không thể kết nối máy chủ. Vui lòng kiểm tra lại cấu hình Controller.', 'error');
+                        });
+                }
+            })
+        });
     });
 });
 </script>
