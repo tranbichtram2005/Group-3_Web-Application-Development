@@ -1,6 +1,5 @@
-# Group 3 – Web Application Development
-> ĐỒ ÁN CUỐI KỲ HỌC PHẦN PHÁT TRIỂN ỨNG DỤNG WEB – GVHD. TS ĐẶNG NGỌC HOÀNG THÀNH  
-> XÂY DỰNG WEBSITE QUẢN LÝ SÀN THƯƠNG MẠI ĐIỆN TỬ C2C (2Life)
+# XÂY DỰNG WEBSITE QUẢN LÝ SÀN THƯƠNG MẠI ĐIỆN TỬ C2C (2Life)
+> ĐỒ ÁN CUỐI KỲ HỌC PHẦN PHÁT TRIỂN ỨNG DỤNG WEB – GVHD. TS ĐẶNG NGỌC HOÀNG THÀNH 
 
 ---
 
