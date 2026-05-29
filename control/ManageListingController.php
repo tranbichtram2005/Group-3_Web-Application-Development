@@ -1,25 +1,61 @@
 <?php
 require_once 'model/ManageListingModel.php';
+require_once __DIR__ . '/../model/Database.php'; // thêm dòng này
 
 class ManageListingController {
     private $manageModel;
 
     public function __construct() {
-        $roleId = $_SESSION['role_id'] ?? 1;
-        $isSeller = $_SESSION['is_seller'] ?? 0;
-// Nếu KHÔNG PHẢI là Admin (role 2) VÀ CŨNG KHÔNG PHẢI là Người bán (is_seller 1)
-        if ($roleId != 2 && $isSeller != 1) {
-            
-            // Gửi một tín hiệu vào Session để yêu cầu bật Modal
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
+        $userId = $_SESSION['user_id'] ?? null;
+
+        if (!$userId) {
             $_SESSION['show_unauth_modal'] = true;
-            
-            // Đá người dùng về lại trang chủ an toàn
             header("Location: index.php?controller=home");
-            exit; 
+            exit;
         }
+
+        // Khởi tạo PDO ở đây
+        $database = new Database();
+        $pdo = $database->getConnection();
+
+        if (!$pdo) {
+            $_SESSION['show_unauth_modal'] = true;
+            header("Location: index.php?controller=home");
+            exit;
+        }
+
+        // Query kiểm tra role và seller_profile
+        $stmt = $pdo->prepare("
+            SELECT u.id, r.id AS role_id, sp.id AS seller_profile_id
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+            WHERE u.id = ?
+        ");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            $_SESSION['show_unauth_modal'] = true;
+            header("Location: index.php?controller=home");
+            exit;
+        }
+
+        $isAdmin  = (int)$user['role_id'] === 2;
+        $isSeller = !empty($user['seller_profile_id']);
+
+        if (!$isAdmin && !$isSeller) {
+            $_SESSION['show_unauth_modal'] = true;
+            header("Location: index.php?controller=home");
+            exit;
+        }
+
         $this->manageModel = new ManageListingModel();
     }
 
+    // ... phần còn lại giữ nguyên
     public function index() {
         if (session_status() == PHP_SESSION_NONE) session_start();
         $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 2;

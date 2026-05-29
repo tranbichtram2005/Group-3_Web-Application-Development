@@ -1,5 +1,6 @@
 <?php
 require_once 'model/ListingModel.php';
+require_once __DIR__ . '/../model/Database.php';
 
 class ListingController
 {
@@ -10,28 +11,68 @@ class ListingController
         $this->listingModel = new ListingModel();
     }
 
-    public function create()
+    // ✅ Kiểm tra quyền Seller hoặc Admin — dùng chung cho create, edit, update
+    private function checkSellerOrAdmin()
     {
         if (session_status() == PHP_SESSION_NONE) session_start();
 
-        if (!isset($_SESSION['user_id'])) {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                header('Content-Type: application/json');
-                echo json_encode(['status' => 'error', 'message' => 'Vui lòng đăng nhập để đăng tin!']);
-            } else {
-                echo "<script>alert('Vui lòng đăng nhập để đăng tin!'); window.location.href='index.php?controller=auth&action=login';</script>";
-            }
-            exit();
+        $userId = $_SESSION['user_id'] ?? null;
+
+        if (!$userId) {
+            $_SESSION['show_unauth_modal'] = true;
+            header("Location: index.php?controller=home");
+            exit;
         }
-        
-        $userId = $_SESSION['user_id']; 
+
+        $database = new Database();
+        $pdo = $database->getConnection();
+
+        if (!$pdo) {
+            $_SESSION['show_unauth_modal'] = true;
+            header("Location: index.php?controller=home");
+            exit;
+        }
+
+        $stmt = $pdo->prepare("
+            SELECT u.id, r.id AS role_id, sp.id AS seller_profile_id
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+            WHERE u.id = ?
+        ");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            $_SESSION['show_unauth_modal'] = true;
+            header("Location: index.php?controller=home");
+            exit;
+        }
+
+        $isAdmin  = (int)$user['role_id'] === 2;
+        $isSeller = !empty($user['seller_profile_id']);
+
+        if (!$isAdmin && !$isSeller) {
+            $_SESSION['show_unauth_modal'] = true;
+            header("Location: index.php?controller=home");
+            exit;
+        }
+    }
+
+    public function create()
+    {
+        $this->checkSellerOrAdmin(); // ✅ Phân quyền
+
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
+        $userId = $_SESSION['user_id'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Content-Type: application/json');
-            
+
             $categoryId    = $_POST['category_id'] ?? null;
             $conditionId   = $_POST['condition_id'] ?? null;
-            $statusId      = 1; 
+            $statusId      = 1;
             $wardId        = $_POST['ward_id'] ?? null;
             $title         = isset($_POST['title']) ? trim($_POST['title']) : '';
             $description   = isset($_POST['description']) ? trim($_POST['description']) : '';
@@ -40,7 +81,7 @@ class ListingController
             $stockQuantity = $_POST['stock_quantity'] ?? 1;
 
             $listingId = $this->listingModel->createListing(
-                $userId, $categoryId, $conditionId, $statusId, $wardId, 
+                $userId, $categoryId, $conditionId, $statusId, $wardId,
                 $title, $description, $price, $isNegotiable, $stockQuantity
             );
 
@@ -53,13 +94,12 @@ class ListingController
                 echo json_encode(['status' => 'error', 'message' => 'Có lỗi xảy ra khi lưu tin đăng vào hệ thống.']);
             }
             exit();
-            
+
         } else {
             $categories = $this->listingModel->getAllCategories();
             $conditions = $this->listingModel->getAllConditions();
-            // Lấy danh sách Tỉnh Thành thay vì Phường Xã
-            $provinces  = $this->listingModel->getProvinces(); 
-            
+            $provinces  = $this->listingModel->getProvinces();
+
             include 'view/post-product.php';
         }
     }
@@ -82,8 +122,7 @@ class ListingController
                 $targetFilePath = $uploadDir . $newFileName;
 
                 if (move_uploaded_file($files['tmp_name'][$i], $targetFilePath)) {
-                    // ĐÃ FIX LỖI ẢNH: Xóa dấu / ở đầu
-                    $imageUrl = $targetFilePath; 
+                    $imageUrl = $targetFilePath;
                     $isPrimary = ($i === 0) ? 1 : 0;
                     $this->listingModel->addListingImage($listingId, $imageUrl, $sortOrder, $isPrimary);
                     $sortOrder++;
@@ -92,10 +131,11 @@ class ListingController
         }
     }
 
-    public function search() {
+    public function search()
+    {
         $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
         $categories = $this->listingModel->getAllCategories();
-        $limit = 8; 
+        $limit = 8;
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
         $offset = ($page - 1) * $limit;
         $totalListings = $this->listingModel->getTotalActiveListings($keyword);
@@ -104,34 +144,33 @@ class ListingController
         require_once __DIR__ . '/../view/app/home.php';
     }
 
-    public function detail() {
+    public function detail()
+    {
         require_once __DIR__ . '/../model/VoucherModel.php';
         $voucherModel = new VoucherModel();
         $activeVouchers = $voucherModel->getActiveVouchers();
-    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $product = $this->listingModel->getListingDetail($id);
         if (!$product) {
             die("<h2 style='text-align:center; margin-top:50px; color:gray;'>Sản phẩm không tồn tại hoặc đã bị ẩn!</h2>");
         }
         $images = $this->listingModel->getListingImages($id);
 
-        // --- GỌI MODEL ĐỂ LẤY DỮ LIỆU ĐÁNH GIÁ ---
-        // 1. Thống kê sao
         $stats = $this->listingModel->getProductReviewStats($id);
         $avgRating = $stats['avg_rating'] ? round($stats['avg_rating'], 1) : 0;
         $totalReviews = $stats['total_reviews'] ?? 0;
 
         $filterStar = isset($_GET['star']) ? (int)$_GET['star'] : 0;
-
-        // 2. Danh sách bình luận (có truyền thêm biến $filterStar xuống Model)
         $productReviews = $this->listingModel->getProductReviews($id, $filterStar);
         require_once __DIR__ . '/../view/app/listing-detail.php';
     }
 
-    public function category() {
+    public function category()
+    {
         $categoryId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $categories = $this->listingModel->getAllCategories();
-        $limit = 8; 
+        $limit = 8;
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
         $offset = ($page - 1) * $limit;
         $totalListings = $this->listingModel->getTotalActiveListingsByCategory($categoryId);
@@ -139,25 +178,23 @@ class ListingController
         $listings = $this->listingModel->getPaginatedListingsByCategory($limit, $offset, $categoryId);
 
         $currentCategoryName = "Sản phẩm theo danh mục";
-        foreach($categories as $c) {
-            if($c['id'] == $categoryId) {
+        foreach ($categories as $c) {
+            if ($c['id'] == $categoryId) {
                 $currentCategoryName = $c['name'];
                 break;
             }
         }
-        $_GET['keyword'] = "Danh mục: " . $currentCategoryName; 
+        $_GET['keyword'] = "Danh mục: " . $currentCategoryName;
         require_once __DIR__ . '/../view/app/home.php';
     }
 
-    public function edit() {
-        if (session_status() == PHP_SESSION_NONE) session_start();
-        
-        if (!isset($_SESSION['user_id'])) {
-            echo "<script>alert('Vui lòng đăng nhập!'); window.location.href='index.php?controller=auth&action=login';</script>";
-            return;
-        }
-        $userId = $_SESSION['user_id']; 
+    public function edit()
+    {
+        $this->checkSellerOrAdmin(); // ✅ Phân quyền
 
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
+        $userId = $_SESSION['user_id'];
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $product = $this->listingModel->getListingForEdit($id, $userId);
 
@@ -166,14 +203,11 @@ class ListingController
             return;
         }
 
-        // BỔ SUNG: Lấy toàn bộ ảnh cũ của tin đăng này để truyền qua View
-        $images     = $this->listingModel->getListingImages($id); 
-        
+        $images     = $this->listingModel->getListingImages($id);
         $categories = $this->listingModel->getAllCategories();
         $conditions = $this->listingModel->getAllConditions();
-        $provinces  = $this->listingModel->getProvinces(); 
-        
-        // --- BỔ SUNG: Truy xuất ngược Quận, Phường cũ để đổ ra Edit form ---
+        $provinces  = $this->listingModel->getProvinces();
+
         $districts = [];
         $wards = [];
         if (isset($product['province_id']) && $product['province_id']) {
@@ -186,21 +220,17 @@ class ListingController
         include 'view/post-product.php';
     }
 
-    public function update() {
+    public function update()
+    {
+        $this->checkSellerOrAdmin(); // ✅ Phân quyền
+
         if (session_status() == PHP_SESSION_NONE) session_start();
 
-        if (!isset($_SESSION['user_id'])) {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                header('Content-Type: application/json');
-                echo json_encode(['status' => 'error', 'message' => 'Vui lòng đăng nhập lại!']);
-            }
-            exit();
-        }
         $userId = $_SESSION['user_id'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            header('Content-Type: application/json'); 
-            
+            header('Content-Type: application/json');
+
             $listingId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
             if ($listingId === 0) {
@@ -215,11 +245,10 @@ class ListingController
             $description   = isset($_POST['description']) ? trim($_POST['description']) : '';
             $price         = $_POST['price'] ?? 0;
             $stockQuantity = $_POST['stock_quantity'] ?? 1;
-
-            $statusId = 1; 
+            $statusId      = 1;
 
             $result = $this->listingModel->updateListing(
-                $listingId, $userId, $categoryId, $conditionId, $statusId, 
+                $listingId, $userId, $categoryId, $conditionId, $statusId,
                 $wardId, $title, $description, $price, $stockQuantity
             );
 
@@ -236,10 +265,8 @@ class ListingController
         }
     }
 
-    // =======================================================
-    // CÁC HÀM AJAX API LẤY DROPDOWN ĐỊA CHỈ
-    // =======================================================
-    public function getDistrictsAjax() {
+    public function getDistrictsAjax()
+    {
         header('Content-Type: application/json');
         $provinceId = isset($_GET['province_id']) ? (int)$_GET['province_id'] : 0;
         if ($provinceId > 0) {
@@ -251,7 +278,8 @@ class ListingController
         exit();
     }
 
-    public function getWardsAjax() {
+    public function getWardsAjax()
+    {
         header('Content-Type: application/json');
         $districtId = isset($_GET['district_id']) ? (int)$_GET['district_id'] : 0;
         if ($districtId > 0) {
@@ -263,19 +291,19 @@ class ListingController
         exit();
     }
 
-    public function suggestAjax() {
-    header('Content-Type: application/json; charset=utf-8'); 
-    $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
-    
-    if (strlen($keyword) < 2) { // Nếu gõ dưới 2 ký tự thì trả về rỗng ngay
-        echo json_encode([]);
+    public function suggestAjax()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
+
+        if (strlen($keyword) < 2) {
+            echo json_encode([]);
+            exit;
+        }
+
+        $listings = $this->listingModel->getSearchSuggestions($keyword, 5);
+        echo json_encode($listings);
         exit;
     }
-
-    // Gọi hàm mới tối ưu (siêu nhanh)
-    $listings = $this->listingModel->getSearchSuggestions($keyword, 5);
-    echo json_encode($listings);
-    exit;
-}
 }
 ?>
