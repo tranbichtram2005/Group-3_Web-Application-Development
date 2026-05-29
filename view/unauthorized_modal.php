@@ -3,18 +3,19 @@
  * Component: Hộp thoại cảnh báo chưa phân quyền
  */
 
-// Đã sửa lại toàn bộ biến thành camelCase theo Rule
 $title = $modalTitle ?? "Tính năng này bị hạn chế!";
-$desc = $modalDesc ?? "Bạn không có quyền truy cập vào khu vực này. Vui lòng kiểm tra lại tài khoản hoặc liên hệ quản trị viên.";
-$btnText = $modalBtnText ?? "Quay lại trang chủ";
-$redirectUrl = $modalRedirectUrl ?? "index.php?controller=home";
+$desc = $modalDesc ?? "Tài khoản hiện tại của bạn không có quyền truy cập vào khu vực này. Bạn có muốn đăng nhập bằng tài khoản khác không?";
+$btnHomeText = "Về trang chủ";
+$btnHomeUrl = "index.php?controller=home";
+$btnLoginText = "Đến trang đăng nhập";
+$btnLoginUrl = "index.php?controller=auth&action=login";
 ?>
 
 <div class="modal fade" id="unauthorizedAccessModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
             <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close" onclick="history.back()" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center pt-0 pb-4 px-4">
                 <div class="mb-3">
@@ -27,9 +28,11 @@ $redirectUrl = $modalRedirectUrl ?? "index.php?controller=home";
                 </p>
                 
                 <div class="d-flex gap-2 justify-content-center mt-4">
-                    <button type="button" class="btn btn-light rounded-pill px-4 fw-semibold" onclick="history.back()">Quay lại</button>
-                    <a href="<?php echo $redirectUrl; ?>" class="btn btn-success rounded-pill px-4 fw-semibold" style="background-color: #28a745; border: none;">
-                        <?php echo htmlspecialchars($btnText); ?>
+                    <a href="<?php echo $btnHomeUrl; ?>" class="btn btn-light rounded-pill px-4 fw-semibold text-dark">
+                        <?php echo htmlspecialchars($btnHomeText); ?>
+                    </a>
+                    <a href="<?php echo $btnLoginUrl; ?>" class="btn text-white rounded-pill px-4 fw-semibold shadow-sm" style="background-color: #FF7A3D; border: none;">
+                        <?php echo htmlspecialchars($btnLoginText); ?>
                     </a>
                 </div>
             </div>
