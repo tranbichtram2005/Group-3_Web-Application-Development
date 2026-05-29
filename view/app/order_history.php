@@ -2,6 +2,7 @@
 // Guard tránh lỗi IDE
 $orderCounts = $orderCounts ?? [0 => 0, 1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, 6 => 0];
 $orders = $orders ?? [];
+$currentStatus = isset($_GET['status']) ? (int)$_GET['status'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -10,38 +11,32 @@ $orders = $orders ?? [];
     <title>Lịch sử đơn hàng - 2Life</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <style>
-        .nav-tabs-shopee { display: flex; list-style: none; padding: 0; margin-bottom: 20px; background: #fff; border-radius: 8px; overflow-x: auto; }
-        .nav-tabs-shopee li { flex: 1; text-align: center; }
-        .nav-tabs-shopee a { display: block; padding: 15px 10px; color: #555; text-decoration: none; font-weight: 500; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.3s; }
-        .nav-tabs-shopee a:hover { color: #FF7A3D; }
-        .nav-tabs-shopee a.active { color: #FF7A3D; border-bottom-color: #FF7A3D; }
-        .order-card { background: #fff; border-radius: 8px; margin-bottom: 20px; padding: 20px; transition: transform 0.2s; }
-        .order-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
-        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
-        .status-badge { font-weight: 600; text-transform: uppercase; font-size: 14px; }
-        .product-item { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .product-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
-        /* CSS chia lại bố cục Mobile - Desktop cho phần chân đơn hàng */
-        .order-footer { border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; display: flex; flex-direction: column; gap: 15px; }
-        @media (min-width: 768px) {
-            .order-footer { flex-direction: row; justify-content: space-between; align-items: center; }
-        }
+        body { background-color: #f8f9fa; }
         
-        .action-btns { display: flex; gap: 10px; width: 100%; }
-        .action-btns button, .action-btns form { flex: 1; text-align: center; padding: 8px 0; font-weight: 500; }
-        @media (min-width: 768px) {
-            .action-btns { width: auto; justify-content: flex-end; }
-            .action-btns button { flex: none; padding: 6px 16px; }
-            .action-btns form { flex: none; }
+        /* Card Đơn Hàng */
+        .order-card {
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 20px; transition: 0.2s;
+            border-left: 5px solid transparent; 
         }
+        .order-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
         
-        /* TOAST THÔNG BÁO XANH CAM */
-        .toast-2life { position: fixed; top: 30px; right: 30px; z-index: 10000; background-color: #4CAF50; border-left: 6px solid #FF7A3D; color: #fff; padding: 15px 25px; border-radius: 6px; font-weight: 600; font-size: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease; }
+        .border-status-1 { border-color: #dc3545; }
+        .border-status-2 { border-color: #fd7e14; }
+        .border-status-3 { border-color: #ffc107; }
+        .border-status-4 { border-color: #0d6efd; }
+        .border-status-5 { border-color: #198754; }
+        .border-status-6 { border-color: #6c757d; }
+
+        /* Toast Message */
+        .toast-2life { position: fixed; top: 30px; right: 30px; z-index: 10000; background-color: #4CAF50; border-left: 6px solid #FF7A3D; color: #fff; padding: 15px 25px; border-radius: 6px; font-weight: 600; font-size: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; transform: translateX(120%); transition: transform 0.4s ease; }
         .toast-2life.show-toast { transform: translateX(0); }
     </style>
 </head>
-<body class="bg-light">
+<body>
 <?php include __DIR__ . '/../partials/user-header.php'; ?>
 
 <?php if (isset($_SESSION['toast_msg'])): ?>
@@ -52,146 +47,190 @@ $orders = $orders ?? [];
     <?php unset($_SESSION['toast_msg']); ?>
 <?php endif; ?>
 
-<div class="container py-4">
-    <h3 class="mb-4 fw-bold text-dark">Đơn mua của tôi</h3>
+<div class="container py-4" style="min-height: 70vh; max-width: 1100px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-dark">
+            <i class="bi bi-bag-check-fill text-warning me-2" style="color: #FF7A3D !important;"></i>Đơn mua của tôi
+        </h3>
+        <a href="index.php?controller=home" class="btn btn-outline-secondary btn-sm rounded-pill">
+            <i class="bi bi-shop"></i> Tiếp tục mua sắm
+        </a>
+    </div>
 
-    <?php $currentStatus = isset($_GET['status']) ? (int)$_GET['status'] : 0; ?>
-    <ul class="nav-tabs-shopee shadow-sm">
-        <li><a href="index.php?controller=order" class="<?= $currentStatus === 0 ? 'active' : '' ?>">Tất cả (<?= $orderCounts[0] ?>)</a></li>
-        <li><a href="index.php?controller=order&status=1" class="<?= $currentStatus === 1 ? 'active' : '' ?>">Chờ duyệt (<?= $orderCounts[1] ?>)</a></li>
-        <li><a href="index.php?controller=order&status=2" class="<?= $currentStatus === 2 ? 'active' : '' ?>">Chờ chuẩn bị (<?= $orderCounts[2] ?>)</a></li>
-        <li><a href="index.php?controller=order&status=3" class="<?= $currentStatus === 3 ? 'active' : '' ?>">Đang giao (<?= $orderCounts[3] ?>)</a></li>
-        <li><a href="index.php?controller=order&status=4" class="<?= $currentStatus === 4 ? 'active' : '' ?>">Hoàn thành (<?= $orderCounts[4] ?>)</a></li>
-        <li><a href="index.php?controller=order&status=5" class="<?= $currentStatus === 5 ? 'active' : '' ?>">Trả hàng (<?= $orderCounts[5] ?>)</a></li>
-        <li><a href="index.php?controller=order&status=6" class="<?= $currentStatus === 6 ? 'active' : '' ?>">Đã hủy (<?= $orderCounts[6] ?>)</a></li>
-    </ul>
-
-    <?php if (empty($orders)): ?>
-        <div class="text-center py-5 bg-white rounded shadow-sm border">
-            <i class="bi bi-bag-x text-muted" style="font-size: 4rem;"></i>
-            <p class="mt-3 text-muted fs-5">Chưa có đơn hàng nào!</p>
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-2">
+            <ul class="nav nav-pills nav-fill gap-1" id="orderTabs">
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentStatus === 0 ? 'active fw-bold' : '' ?>" style="<?= $currentStatus === 0 ? 'background-color: #FF7A3D; color: white;' : 'color: #555;' ?>" href="index.php?controller=order">
+                        Tất cả <span class="badge bg-secondary ms-1"><?= $orderCounts[0] ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentStatus === 1 ? 'active fw-bold' : '' ?>" style="<?= $currentStatus === 1 ? 'background-color: #FF7A3D; color: white;' : 'color: #555;' ?>" href="index.php?controller=order&status=1">
+                        Chờ xác nhận <span class="badge bg-danger ms-1"><?= $orderCounts[1] ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentStatus === 2 ? 'active fw-bold' : '' ?>" style="<?= $currentStatus === 2 ? 'background-color: #FF7A3D; color: white;' : 'color: #555;' ?>" href="index.php?controller=order&status=2">
+                        Đã xác nhận <span class="badge bg-info ms-1"><?= $orderCounts[2] ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentStatus === 3 ? 'active fw-bold' : '' ?>" style="<?= $currentStatus === 3 ? 'background-color: #FF7A3D; color: white;' : 'color: #555;' ?>" href="index.php?controller=order&status=3">
+                        Đang chuẩn bị <span class="badge bg-warning text-dark ms-1"><?= $orderCounts[3] ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentStatus === 4 ? 'active fw-bold' : '' ?>" style="<?= $currentStatus === 4 ? 'background-color: #FF7A3D; color: white;' : 'color: #555;' ?>" href="index.php?controller=order&status=4">
+                        Đang giao <span class="badge bg-primary ms-1"><?= $orderCounts[4] ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentStatus === 5 ? 'active fw-bold' : '' ?>" style="<?= $currentStatus === 5 ? 'background-color: #FF7A3D; color: white;' : 'color: #555;' ?>" href="index.php?controller=order&status=5">
+                        Hoàn thành <span class="badge bg-success ms-1"><?= $orderCounts[5] ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentStatus === 6 ? 'active fw-bold' : '' ?>" style="<?= $currentStatus === 6 ? 'background-color: #FF7A3D; color: white;' : 'color: #555;' ?>" href="index.php?controller=order&status=6">
+                        Đã hủy <span class="badge bg-light text-dark border ms-1"><?= $orderCounts[6] ?></span>
+                    </a>
+                </li>
+            </ul>
         </div>
-    <?php else: ?>
-        <?php foreach ($orders as $order): 
-            $statusUI = ['icon' => 'bi-info-circle', 'text' => $order['status_name'], 'color' => '#6c757d'];
-            switch ($order['status_id']) {
-                case 1: $statusUI = ['icon' => 'bi-hourglass-split', 'text' => 'CHỜ PHÊ DUYỆT', 'color' => '#ffc107']; break;
-                case 2: $statusUI = ['icon' => 'bi-box-seam', 'text' => 'CHỜ CHUẨN BỊ', 'color' => '#0dcaf0']; break;
-                case 3: $statusUI = ['icon' => 'bi-truck', 'text' => 'ĐANG GIAO HÀNG', 'color' => '#0d6efd']; break;
-                case 4: $statusUI = ['icon' => 'bi-check-circle-fill', 'text' => 'HOÀN THÀNH', 'color' => '#198754']; break;
-                case 5: $statusUI = ['icon' => 'bi-arrow-return-left', 'text' => 'TRẢ HÀNG / HOÀN TIỀN', 'color' => '#fd7e14']; break;
-                case 6: $statusUI = ['icon' => 'bi-x-circle-fill', 'text' => 'ĐÃ HỦY', 'color' => '#dc3545']; break;
-            }
-        ?>
-            <div class="order-card shadow-sm border">
-                <div class="order-header">
-                    <span class="text-secondary fw-semibold">Mã đơn hàng: #2L<?= $order['id'] ?></span>
-                    <span class="status-badge" style="color: <?= $statusUI['color'] ?>;">
-                        <i class="bi <?= $statusUI['icon'] ?> me-1"></i><?= $statusUI['text'] ?>
-                    </span>
-                </div>
+    </div>
 
-                <?php foreach ($order['items'] as $item): ?>
-                    <div class="product-item">
-                        <img src="<?= htmlspecialchars($item['image_url'] ?? 'https://via.placeholder.com/80') ?>" class="product-img" alt="Product Image">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1 text-dark"><?= htmlspecialchars($item['title']) ?></h6>
-                            <span class="text-muted small">Số lượng: x<?= $item['quantity'] ?></span>
-                        </div>
-                        <div class="text-end">
-                            <span class="text-dark fw-medium"><?= number_format($item['unit_price'], 0, ',', '.') ?>đ</span>
-                            
-                            <?php if ($order['status_id'] == 4): ?>
-                                <br>
-                                <?php if ($item['is_reviewed'] == 0): ?>
-                                    <button class="btn btn-warning btn-sm mt-2" onclick="openReviewModal(<?= $item['listing_id'] ?>, '<?= htmlspecialchars($item['title']) ?>', <?= $order['id'] ?>)">
-                                        <i class="bi bi-star-fill me-1"></i>Đánh giá sản phẩm
-                                    </button>
-                                <?php else: ?>
-                                    <button class="btn btn-secondary btn-sm mt-2" disabled>
-                                        <i class="bi bi-check-all me-1"></i>Đã đánh giá
-                                    </button>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-
-                <div class="order-footer">
-                    <div class="w-100">
-                        <span class="text-muted d-block small mb-1">Địa chỉ giao: <?= htmlspecialchars($order['street_address']) ?></span>
-                        <span class="text-muted d-block small">Thành tiền: <strong class="text-danger fs-5"><?= number_format($order['total_amount'], 0, ',', '.') ?>đ</strong></span>
-                    </div>
-                    
-                    <div class="action-btns">
-                        <?php if (in_array($order['status_id'], [1, 2])): ?>
-                            <?php if ($order['status_id'] == 1): ?>
-                                <button class="btn btn-outline-primary btn-sm" onclick="openUpdateModal(<?= $order['id'] ?>, '<?= htmlspecialchars($order['street_address']) ?>', '<?= htmlspecialchars($order['shipping_note'] ?? '') ?>')">Cập nhật thông tin</button>
-                            <?php endif; ?>
-                            <button class="btn btn-outline-danger btn-sm" onclick="openCancelModal(<?= $order['id'] ?>)">Hủy đơn hàng</button>
-                            
-                        <?php elseif ($order['status_id'] == 3): ?>
-                            <form action="index.php?controller=order&action=confirmReceived" method="POST" class="d-inline w-100">
-                                <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                <button type="submit" class="btn btn-success btn-sm w-100">Đã nhận được hàng</button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
-                </div>
+    <div id="orderListContainer">
+        <?php if (empty($orders)): ?>
+            <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-light mt-4">
+                <i class="bi bi-box-seam text-muted" style="font-size: 4rem; opacity: 0.5;"></i>
+                <h5 class="mt-3 text-dark fw-bold">Trống trơn!</h5>
+                <p class="text-muted">Bạn chưa có đơn hàng nào ở trạng thái này.</p>
             </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
+        <?php else: ?>
+            <?php foreach ($orders as $order): 
+                $badgeBg = 'bg-secondary'; $statusCode = 'UNKNOWN';
+                
+                // GIỮ NGUYÊN CHỮ TIẾNG ANH CHUẨN DB
+                switch ($order['status_id']) {
+                    case 1: $badgeBg = 'bg-danger text-white'; $statusCode = 'PENDING'; break;
+                    case 2: $badgeBg = 'bg-info text-dark'; $statusCode = 'CONFIRMED'; break;
+                    case 3: $badgeBg = 'bg-warning text-dark'; $statusCode = 'PREPARING'; break;
+                    case 4: $badgeBg = 'bg-primary text-white'; $statusCode = 'SHIPPED'; break;
+                    case 5: $badgeBg = 'bg-success text-white'; $statusCode = 'DELIVERED'; break;
+                    case 6: $badgeBg = 'bg-secondary text-white'; $statusCode = 'CANCELLED'; break;
+                }
+            ?>
+                <div class="order-card border-status-<?= $order['status_id'] ?> p-4">
+                    <div class="d-flex justify-content-between border-bottom pb-2 mb-3">
+                        <div>
+                            <span class="text-dark fw-bold" style="font-size: 1.1rem;">#ORD<?= str_pad($order['id'], 5, '0', STR_PAD_LEFT) ?></span>
+                            <span class="text-muted small ms-2"><i class="bi bi-clock"></i> <?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
+                        </div>
+                        <span class="badge <?= $badgeBg ?> px-3 py-2 rounded-pill"><?= $statusCode ?></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 border-end-md pe-md-4 mb-3 mb-md-0">
+                            <div class="mb-3 small text-secondary">
+                                <div class="mb-1"><i class="bi bi-geo-alt me-1"></i> Giao đến: <strong class="text-dark"><?= htmlspecialchars($order['street_address']) ?></strong></div>
+                                <div><i class="bi bi-credit-card me-1"></i> Thanh toán: <strong class="text-dark"><?= ($order['payment_method_id'] ?? 1) == 2 ? 'VNPAY' : 'COD' ?></strong></div>
+                            </div>
+
+                            <div class="border-top pt-3">
+                                <?php foreach ($order['items'] as $item): ?>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <img src="<?= htmlspecialchars($item['image_url'] ?? 'https://via.placeholder.com/50') ?>" class="border rounded object-fit-cover" style="width: 50px; height: 50px;">
+                                        <div class="flex-grow-1">
+                                            <a href="index.php?controller=listing&action=detail&id=<?= $item['listing_id'] ?>" class="text-dark text-decoration-none fw-semibold">
+                                                <?= htmlspecialchars($item['title']) ?>
+                                            </a>
+                                            <div class="text-muted small">SL: <?= $item['quantity'] ?> x <?= number_format($item['unit_price'], 0, ',', '.') ?>đ</div>
+                                        </div>
+                                        
+                                        <?php if ($order['status_id'] == 5): ?>
+                                            <?php if ($item['is_reviewed'] == 0): ?>
+                                                <button class="btn btn-outline-warning btn-sm py-1 px-2 text-dark fw-bold" style="font-size: 0.75rem;" onclick="openReviewModal(<?= $item['listing_id'] ?>, '<?= htmlspecialchars($item['title']) ?>', <?= $order['id'] ?>)">Đánh giá</button>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-success border"><i class="bi bi-check-all"></i> Đã Đánh Giá</span>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                       <div class="col-md-4 ps-md-4 text-md-end d-flex flex-column justify-content-center">
+                            <div class="text-muted small">Thành tiền:</div>
+                            <div class="fw-bold mb-3" style="font-size: 1.5rem; color: #FF7A3D;">
+                                <?= number_format($order['total_amount'], 0, ',', '.') ?> đ
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <?php if (in_array($order['status_id'], [1, 2])): ?>
+                                    <?php if ($order['status_id'] == 1): ?>
+                                        <button class="btn btn-outline-primary btn-sm rounded-3 px-3" onclick="openUpdateModal(<?= $order['id'] ?>, '<?= htmlspecialchars($order['street_address']) ?>', '<?= htmlspecialchars($order['shipping_note'] ?? '') ?>')">Cập nhật thông tin đơn hàng</button>
+                                    <?php endif; ?>
+                                    <button class="btn btn-outline-danger btn-sm rounded-3 px-3" onclick="openCancelModal(<?= $order['id'] ?>)">Hủy</button>
+                                <?php elseif ($order['status_id'] == 4): ?>
+                                    <form action="index.php?controller=order&action=confirmReceived" method="POST" class="d-inline">
+                                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+                                        <button type="submit" class="btn btn-success btn-sm rounded-3 px-3 fw-bold" onclick="return confirm('Xác nhận đã nhận hàng thành công?');">Đã nhận hàng</button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
 </div>
 
-<!-- MODAL CẬP NHẬT THÔNG TIN NHẬN HÀNG -->
 <div class="modal fade" id="updateAddressModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered"> <!-- Thêm class này để ra chính giữa -->
-        <div class="modal-content">
-            <div class="modal-header" style="background-color: var(--btn-primary, #FF7A3D); color: #fff;">
+    <div class="modal-dialog modal-dialog-centered"> 
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header" style="background-color: #FF7A3D; color: #fff;">
                 <h5 class="modal-title fw-bold">Cập nhật thông tin nhận hàng</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            
             <form action="index.php?controller=order&action=updateShippingInfo" method="POST" id="updateOrderForm">
-                <div class="modal-body">
-                    <!-- Các input ẩn để gửi ID đơn hàng và gửi nguyên 1 chuỗi địa chỉ về Backend -->
+                <div class="modal-body p-4">
                     <input type="hidden" name="order_id" id="updateOrderId" value="">
                     <input type="hidden" name="street_address" id="fullAddressInput">
 
                     <div class="row g-3 mb-3">
                         <div class="col-12">
-                            <label class="form-label fw-semibold" style="font-size:13px;">Tỉnh / Thành phố *</label>
-                            <select id="updProvince" class="form-select form-select-sm" onchange="loadUpdDistricts()" required>
+                            <label class="form-label fw-semibold small">Tỉnh / Thành phố *</label>
+                            <select id="updProvince" class="form-select" onchange="loadUpdDistricts()" required>
                                 <option value="">-- Chọn Tỉnh/Thành phố --</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold" style="font-size:13px;">Quận / Huyện *</label>
-                            <select id="updDistrict" class="form-select form-select-sm" onchange="loadUpdWards()" disabled required>
+                            <label class="form-label fw-semibold small">Quận / Huyện *</label>
+                            <select id="updDistrict" class="form-select" onchange="loadUpdWards()" disabled required>
                                 <option value="">-- Chọn Quận/Huyện --</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold" style="font-size:13px;">Phường / Xã *</label>
-                            <select id="updWard" class="form-select form-select-sm" disabled required>
+                            <label class="form-label fw-semibold small">Phường / Xã *</label>
+                            <select id="updWard" class="form-select" disabled required>
                                 <option value="">-- Chọn Phường/Xã --</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold" style="font-size:13px;">Số nhà, tên đường *</label>
-                            <input type="text" id="updStreet" class="form-control form-control-sm" placeholder="Ví dụ: 730 Sư Vạn Hạnh" required>
+                            <label class="form-label fw-semibold small">Số nhà, tên đường *</label>
+                            <input type="text" id="updStreet" class="form-control" placeholder="Ví dụ: 730 Sư Vạn Hạnh" required>
                         </div>
                     </div>
-                    
-                    <div class="mb-2">
-                        <label class="form-label fw-semibold" style="font-size:13px;">Ghi chú giao hàng</label>
-                        <textarea name="shipping_note" id="updateOrderNote" class="form-control" rows="3" placeholder="Lời nhắn cho người bán..."></textarea>
+                    <div>
+                        <label class="form-label fw-semibold small">Ghi chú giao hàng</label>
+                        <textarea name="shipping_note" id="updateOrderNote" class="form-control" rows="2" placeholder="Lời nhắn cho người bán..."></textarea>
                     </div>
                 </div>
-                
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-sm text-white fw-bold" style="background-color: var(--btn-primary, #FF7A3D); border: none;">Lưu thay đổi</button>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-sm text-white fw-bold rounded-pill px-4" style="background-color: #FF7A3D;">Lưu thay đổi</button>
                 </div>
             </form>
         </div>
@@ -199,17 +238,17 @@ $orders = $orders ?? [];
 </div>
 
 <div class="modal fade" id="cancelModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
             <form action="index.php?controller=order&action=cancelOrder" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Xác nhận hủy đơn hàng</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">Xác nhận hủy đơn hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <input type="hidden" name="order_id" id="cancelOrderId">
                     <div class="mb-3">
-                        <label class="form-label">Lý do hủy đơn</label>
+                        <label class="form-label fw-semibold">Lý do hủy đơn</label>
                         <select name="cancel_reason" class="form-select" required>
                             <option value="Muốn thay đổi địa chỉ giao hàng">Muốn thay đổi địa chỉ giao hàng</option>
                             <option value="Tìm thấy giá rẻ hơn chỗ khác">Tìm thấy giá rẻ hơn chỗ khác</option>
@@ -217,11 +256,11 @@ $orders = $orders ?? [];
                             <option value="Lý do khác">Lý do khác...</option>
                         </select>
                     </div>
-                    <p class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i> Lưu ý: Hành động này không thể hoàn tác.</p>
+                    <p class="text-danger small mb-0"><i class="bi bi-exclamation-triangle-fill me-1"></i> Lưu ý: Hành động này không thể hoàn tác.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Không</button>
-                    <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Không</button>
+                    <button type="submit" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Xác nhận hủy</button>
                 </div>
             </form>
         </div>
@@ -229,31 +268,31 @@ $orders = $orders ?? [];
 </div>
 
 <div class="modal fade" id="reviewModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
             <form action="index.php?controller=order&action=submitReview" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Đánh giá sản phẩm</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header" style="background-color: #FF7A3D; color: white;">
+                    <h5 class="modal-title fw-bold">Đánh giá sản phẩm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <p id="reviewProdTitle" class="fw-bold text-success mb-3"></p>
+                <div class="modal-body p-4">
+                    <p id="reviewProdTitle" class="fw-bold text-dark mb-3 border-bottom pb-2"></p>
                     
                     <input type="hidden" name="listing_id" id="reviewListingId">
                     <input type="hidden" name="order_id" id="reviewOrderId"> 
                     
-                    <div class="mb-3">
-                        <label class="form-label">Chất lượng (1-5 sao)</label>
-                        <input type="number" name="rating" class="form-control" min="1" max="5" value="5" required>
+                    <div class="mb-3 text-center">
+                        <label class="form-label fw-semibold d-block">Chất lượng (1-5 sao)</label>
+                        <input type="number" name="rating" class="form-control text-center mx-auto fs-4 fw-bold text-warning" style="max-width: 100px;" min="1" max="5" value="5" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nhận xét của bạn</label>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Nhận xét của bạn</label>
                         <textarea name="comment" class="form-control" rows="3" placeholder="Sản phẩm dùng tốt không cậu?" required></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-warning">Gửi đánh giá</button>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-warning btn-sm rounded-pill px-4 fw-bold text-dark">Gửi đánh giá</button>
                 </div>
             </form>
         </div>
@@ -266,22 +305,18 @@ $orders = $orders ?? [];
 <script>
     let uModal, cModal, rModal;
     document.addEventListener('DOMContentLoaded', () => {
-        // Sửa ID cho khớp với form mới updateAddressModal
         uModal = new bootstrap.Modal(document.getElementById('updateAddressModal'));
         cModal = new bootstrap.Modal(document.getElementById('cancelModal'));
         rModal = new bootstrap.Modal(document.getElementById('reviewModal'));
     });
 
-    // 1. Hàm mở Modal và Tự động gọi API tải Tỉnh/Thành phố
     async function openUpdateModal(id, addr, note) {
         document.getElementById('updateOrderId').value = id;
-        document.getElementById('updateOrderNote').value = note; // Gán ghi chú
-        
-        uModal.show(); // Hiển thị Modal ra chính giữa
+        document.getElementById('updateOrderNote').value = note; 
+        uModal.show(); 
 
-        // Gọi API load tỉnh thành ngay khi mở modal
         let provSelect = document.getElementById('updProvince');
-        if (provSelect.options.length <= 1) { // Chỉ load 1 lần để tránh lag
+        if (provSelect.options.length <= 1) { 
             try {
                 let res = await fetch('index.php?controller=checkout&action=getProvinces');
                 let data = await res.json();
@@ -292,7 +327,6 @@ $orders = $orders ?? [];
         }
     }
 
-    // 2. Tải Quận/Huyện khi chọn Tỉnh
     async function loadUpdDistricts() {
         let provId = document.getElementById('updProvince').value;
         let distSelect = document.getElementById('updDistrict');
@@ -311,11 +345,9 @@ $orders = $orders ?? [];
         let data = await res.json();
         let html = '<option value="">-- Chọn Quận/Huyện --</option>';
         data.forEach(d => html += `<option value="${d.id}" data-name="${d.name}">${d.name}</option>`);
-        distSelect.innerHTML = html; 
-        distSelect.disabled = false;
+        distSelect.innerHTML = html; distSelect.disabled = false;
     }
 
-    // 3. Tải Phường/Xã khi chọn Quận
     async function loadUpdWards() {
         let distId = document.getElementById('updDistrict').value;
         let wardSelect = document.getElementById('updWard');
@@ -330,57 +362,36 @@ $orders = $orders ?? [];
         let data = await res.json();
         let html = '<option value="">-- Chọn Phường/Xã --</option>';
         data.forEach(w => html += `<option value="${w.id}" data-name="${w.name}">${w.name}</option>`);
-        wardSelect.innerHTML = html; 
-        wardSelect.disabled = false;
+        wardSelect.innerHTML = html; wardSelect.disabled = false;
     }
 
-    // 4. Gộp toàn bộ địa chỉ thành 1 chuỗi text trước khi gửi lên PHP
     document.getElementById('updateOrderForm').addEventListener('submit', function(e) {
         let provSel = document.getElementById('updProvince');
         let distSel = document.getElementById('updDistrict');
         let wardSel = document.getElementById('updWard');
         let street  = document.getElementById('updStreet').value.trim();
 
-        // Rào lỗi nếu chọn thiếu
         if (provSel.selectedIndex <= 0 || distSel.selectedIndex <= 0 || wardSel.selectedIndex <= 0 || !street) {
-            e.preventDefault();
-            alert("Vui lòng chọn đầy đủ thông tin địa chỉ!");
-            return false;
+            e.preventDefault(); alert("Vui lòng chọn đầy đủ thông tin địa chỉ!"); return false;
         }
 
-        // Bóc tách tên địa danh ra
-        let provinceName = provSel.options[provSel.selectedIndex].dataset.name;
-        let districtName = distSel.options[distSel.selectedIndex].dataset.name;
-        let wardName     = wardSel.options[wardSel.selectedIndex].dataset.name;
-        
-        // Gộp chuỗi giống format cũ
-        let fullAddr = street + ', ' + wardName + ', ' + districtName + ', ' + provinceName;
-        
-        // Nạp chuỗi đó vào ô input ẩn để gửi lên Controller
+        let fullAddr = street + ', ' + wardSel.options[wardSel.selectedIndex].dataset.name + ', ' + distSel.options[distSel.selectedIndex].dataset.name + ', ' + provSel.options[provSel.selectedIndex].dataset.name;
         document.getElementById('fullAddressInput').value = fullAddr;
     });
 
-    // CÁC HÀM CŨ GIỮ NGUYÊN
-    function openCancelModal(id) {
-        document.getElementById('cancelOrderId').value = id;
-        cModal.show();
-    }
+    function openCancelModal(id) { document.getElementById('cancelOrderId').value = id; cModal.show(); }
 
     function openReviewModal(listingId, prodTitle, orderId) {
         document.getElementById('reviewListingId').value = listingId;
         document.getElementById('reviewOrderId').value = orderId; 
-        document.getElementById('reviewProdTitle').textContent = 'Đánh giá: ' + prodTitle;
+        document.getElementById('reviewProdTitle').textContent = prodTitle;
         rModal.show();
     }
 
-    // Xử lý Hộp thoại thông báo nổi (Toast)
     const toastEl = document.getElementById('toastMessage');
     if (toastEl) {
         setTimeout(() => toastEl.classList.add('show-toast'), 100);
-        setTimeout(() => {
-            toastEl.style.opacity = '0';
-            setTimeout(() => toastEl.remove(), 400); 
-        }, 2500);
+        setTimeout(() => { toastEl.style.opacity = '0'; setTimeout(() => toastEl.remove(), 400); }, 2500);
     }
 </script>
 </body>
