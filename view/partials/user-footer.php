@@ -14,9 +14,9 @@ if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2) {
         
         <div class="d-flex justify-content-center gap-4 mb-3" style="font-size: 13.5px;">
             <a href="index.php?controller=home" class="text-white-50 text-decoration-none nav-icon-hover">Trang chủ</a>
-            <a href="#" class="text-white-50 text-decoration-none nav-icon-hover">Quy chế hoạt động</a>
-            <a href="#" class="text-white-50 text-decoration-none nav-icon-hover">Chính sách bảo mật</a>
-            <a href="#" class="text-white-50 text-decoration-none nav-icon-hover">Liên hệ hỗ trợ</a>
+            <a href="index.php?controller=info&action=index&tab=rules" class="text-white-50 text-decoration-none nav-icon-hover">Quy chế hoạt động</a>
+            <a href="index.php?controller=info&action=index&tab=privacy" class="text-white-50 text-decoration-none nav-icon-hover">Chính sách bảo mật</a>
+            <a href="index.php?controller=info&action=index&tab=contact" class="text-white-50 text-decoration-none nav-icon-hover">Liên hệ hỗ trợ</a>
         </div>
 
         <div class="border-top border-secondary my-3 opacity-25"></div>
@@ -27,20 +27,42 @@ if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2) {
     </div>
 </footer>
 
-<a href="index.php?controller=chat&action=startSupport" 
-   class="btn shadow-lg d-flex align-items-center justify-content-center text-white" 
-   style="position: fixed; bottom: 30px; right: 30px; width: 55px; height: 55px; background-color: #FF7A3D; border-radius: 50%; z-index: 9999; transition: transform 0.2s; text-decoration: none;" 
+<button onclick="openSupportModal()" 
+   class="btn shadow-lg d-flex align-items-center justify-content-center text-white border-0" 
+   style="position: fixed; bottom: 30px; right: 30px; width: 55px; height: 55px; background-color: #FF7A3D; border-radius: 50%; z-index: 9999; transition: transform 0.2s;" 
    onmouseover="this.style.transform='scale(1.1)'" 
    onmouseout="this.style.transform='scale(1)'" 
-   title="Chat hỗ trợ với Admin">
+   title="Chat hỗ trợ">
     <i class="bi bi-headset fs-4"></i>
-</a>
+</button>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="layout/script.js"></script>
 
 <script>
+
+function openSupportModal() {
+    Swal.fire({
+        title: '<h5 class="fw-bold">Bạn đang gặp vấn đề gì?</h5>',
+        html: `<select id="support-category" class="form-select mt-3 py-2">
+                <option value="1">📦 Vấn đề Đơn hàng</option>
+                <option value="2">💳 Thanh toán & Hoàn tiền</option>
+                <option value="3">⚠️ Tố cáo vi phạm</option>
+                <option value="10">💬 Khác</option>
+               </select>`,
+        confirmButtonText: 'Bắt đầu Chat <i class="bi bi-send ms-1"></i>',
+        confirmButtonColor: '#FF7A3D',
+        showCancelButton: true,
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let catId = document.getElementById('support-category').value;
+            window.location.href = `index.php?controller=chat&action=startSupport&cat_id=${catId}`;
+        }
+    });
+}
+
 let searchTimeout = null; // Biến lưu thời gian chờ
 
 document.getElementById('searchInput').addEventListener('input', function() {

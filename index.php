@@ -115,7 +115,12 @@ case 'admin_chat':
         $adminChatCtrl = new AdminChatController();
         method_exists($adminChatCtrl, $action) ? $adminChatCtrl->$action() : $adminChatCtrl->index();
         break;
-
+case 'info':
+require_once __DIR__ . '/control/InfoController.php';
+    $controller = new InfoController();
+    $controller->index();
+    break;
+        
 case 'chat':
         require_once 'control/ChatController.php';
         $chatController = new ChatController();
@@ -167,5 +172,7 @@ case 'chat':
                 $controllerObj->index();
             }
             break;
+            
+
 }
 ?>

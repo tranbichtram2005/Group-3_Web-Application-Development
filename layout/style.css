@@ -175,27 +175,24 @@
         color: var(--error-color) !important;
     }
 
-   /* =========================================
-       7. GIAO DIỆN CHAT & DEAL GIÁ (RESPONSIVE)
+  /* =========================================
+       7. GIAO DIỆN CHAT & DEAL GIÁ (DÙNG CHUNG)
        ========================================= */
-    /* CSS ĐỊNH HÌNH LAYOUT MẶC ĐỊNH (LAPTOP) */
     .chat-layout { height: 80vh; border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; background: #fff; }
     .chat-sidebar { border-right: 1px solid #dee2e6; background: #f8f9fa; display: flex; flex-direction: column; height: 100%; }
     .chat-body { background: #fff; display: flex; flex-direction: column; height: 100%; min-width: 0; }
 
-    /* Khu vực Chat & Thanh cuộn */
     .chat-messages { background: #f1f4f6; overflow-y: auto; flex: 1 1 0; padding: 1.5rem; scroll-behavior: smooth; }
     .chat-input-area { background: #fff; border-top: 1px solid #eee; padding: 15px; flex-shrink: 0; }
+    
     .chat-list-item { transition: background-color 0.2s; cursor: pointer; position: relative; }
-    .chat-list-item:hover { background-color: #e9ecef; }
+    .chat-list-item:hover, .chat-list-item.active { background-color: #e9ecef; border-left: 4px solid #FF7A3D; }
 
-    /* Bong bóng tin nhắn */
     .msg-bubble { max-width: 75%; padding: 10px 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
-    .msg-me { background-color: #FF7A3D; color: white; border-radius: 15px 15px 0 15px; margin-left: auto; }
+    .msg-me { background-color: #FF7A3D !important; color: white !important; border-radius: 15px 15px 0 15px; margin-left: auto; }
     .msg-partner { background-color: #ffffff; color: #212529; border: 1px solid #e9ecef; border-radius: 15px 15px 15px 0; }
     .msg-time { font-size: 10px; opacity: 0.7; margin-top: 4px; display: block; text-align: right; }
 
-    /* UI MỚI: THANH DEAL BANNER NGANG (Nằm dưới Header) */
     .deal-banner-zone { background-color: #fffaf0; border-bottom: 1px solid #ffeed2; padding: 10px 20px; flex-shrink: 0; display: none; }
     .deal-banner { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
     .deal-banner-info { display: flex; flex-direction: column; }
@@ -203,61 +200,55 @@
     .deal-banner-desc { font-size: 12px; color: #666; }
     .deal-banner-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
 
-    /* RESPONSIVE CHO ĐIỆN THOẠI DỌC */
+    /* =========================================
+       8. FIX ĐỘC QUYỀN CHO KHUNG CHAT ADMIN 
+       ========================================= */
+    /* Khung Admin nằm trong .container-fluid nên ta dùng class này làm mỏ neo */
+    .container-fluid .chat-layout { 
+        height: calc(100vh - 120px); /* Kéo dài full màn hình Admin */
+        min-height: 500px; 
+        display: flex; 
+    }
+    .container-fluid .chat-body { 
+        height: 100%; 
+        width: 100%; 
+        overflow: hidden; /* Cực kỳ quan trọng để ko bị tràn khung xuống dưới */
+    }
+    .container-fluid .chat-messages { 
+        flex: 1 1 auto; 
+        height: 0; /* Mẹo Flexbox: Ép thanh cuộn hiển thị bên trong thay vì bung Layout */
+        overflow-y: auto; 
+    }
+
+    /* =========================================
+       9. RESPONSIVE CHO CẢ 2 BÊN TRÊN ĐIỆN THOẠI
+       ========================================= */
     @media (max-width: 768px) {
-        /* Đổi hướng layout thành dạng cột dọc */
         .chat-layout { 
-            height: calc(100vh - 120px); /* Tận dụng tối đa không gian màn hình */
+            height: calc(100vh - 120px) !important; 
             display: flex !important; 
             flex-direction: column !important; 
             flex-wrap: nowrap !important;
         }
+        .chat-sidebar { height: 35% !important; border-right: none !important; border-bottom: 4px solid #dee2e6 !important; width: 100% !important; }
+        .chat-body { height: 65% !important; width: 100% !important; }
         
-        /* Chia đôi màn hình: Trên là list chat (35%), Dưới là khung chat (65%) */
-        .chat-sidebar { 
-            height: 35% !important; 
-            border-right: none !important; 
-            border-bottom: 4px solid #dee2e6 !important; 
-            width: 100% !important;
-        }
-        .chat-body { 
-            height: 65% !important; 
-            width: 100% !important;
-        }
+        .chat-header-zone { flex-direction: column !important; align-items: flex-start !important; gap: 12px; padding: 12px 15px !important; }
+        .chat-header-zone > div.d-flex { width: 100%; justify-content: space-between; }
+        #chat-product-info { border-left: none !important; padding-left: 0 !important; margin-left: 0 !important; }
+        #btn-deal-price { width: 100%; padding: 8px !important; margin-top: 5px; }
         
-        /* Header Chat: Ép rớt dòng cho các thành phần khỏi đè nhau */
-        .chat-header-zone {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 12px;
-            padding: 12px 15px !important;
-        }
-        
-        .chat-header-zone > div.d-flex {
-            width: 100%;
-            justify-content: space-between;
-        }
-
-        #chat-product-info {
-            border-left: none !important;
-            padding-left: 0 !important;
-            margin-left: 0 !important;
-        }
-
-        #btn-deal-price {
-            width: 100%; /* Nút thương lượng bung full width cho dễ bấm */
-            padding: 8px !important;
-            margin-top: 5px;
-        }
-
-        /* Deal Banner: Rớt dòng */
         .deal-banner { flex-direction: column; align-items: flex-start; gap: 10px; }
         .deal-banner-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
-        .deal-banner-actions button { flex: 1; min-width: 80px; } /* Kéo giãn đều các nút */
-
-        /* Fix kích thước Text */
+        .deal-banner-actions button { flex: 1; min-width: 80px; }
+        
         .msg-bubble { max-width: 85%; }
         #chat-prod-title { max-width: 120px !important; }
+
+        /* Ẩn hiện màn hình Admin Chat trên Mobile */
+        .chat-sidebar.mobile-hide { display: none !important; }
+        .chat-body.mobile-hide { display: none !important; }
+        .btn-back-mobile { display: block !important; }
     }
 
     /* ========================================================
