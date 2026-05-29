@@ -4,19 +4,9 @@
     /* =========================================
        CSS BẢO ĐẢM GIAO DIỆN ADMIN CHUẨN 100%
        ========================================= */
-    .chat-layout { 
-        height: calc(100vh - 120px); 
-        min-height: 500px; 
-        border: 1px solid #dee2e6; 
-        border-radius: 12px; 
-        overflow: hidden; 
-        background: #fff; 
-        margin-top: 15px;
-        display: flex; /* Bật Flexbox để layout full height, không bị lùn */
-    }
-    .chat-sidebar { border-right: 1px solid #dee2e6; background: #f8f9fa; display: flex; flex-direction: column; height: 100%; width: 33.333%; }
-    .chat-body { background: #fff; display: flex; flex-direction: column; height: 100%; width: 66.666%; overflow: hidden; }
-    .chat-messages { 
+   .chat-layout { height: calc(100vh - 120px); min-height: 500px; border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden; background: #fff; margin-top: 15px; }
+.chat-sidebar { background: #f8f9fa; display: flex; flex-direction: column; height: 100%; }
+.chat-body { background: #fff; display: flex; flex-direction: column; height: 100%; overflow: hidden; }    .chat-messages { 
         background: #f1f4f6; 
         overflow-y: auto; 
         flex: 1 1 auto; 
@@ -37,9 +27,6 @@
 
     /* RESPONSIVE CHO ĐIỆN THOẠI */
     @media (max-width: 768px) {
-        .chat-layout { flex-direction: column !important; }
-        .chat-sidebar { width: 100% !important; height: 35% !important; border-right: none !important; border-bottom: 4px solid #dee2e6 !important; }
-        .chat-body { width: 100% !important; height: 65% !important; }
         .chat-sidebar.mobile-hide { display: none !important; }
         .chat-body.mobile-hide { display: none !important; }
         .btn-back-mobile { display: block !important; }
@@ -47,15 +34,14 @@
     }
 </style>
 
-<div class="container-fluid px-4 mb-5">
+<div class="container-fluid px-4 mb-0">
     <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
         <h4 class="fw-bold text-dark"><i class="bi bi-headset text-primary"></i> 2Life Helpdesk</h4>
-        <a href="index.php" class="btn btn-outline-secondary btn-sm"><i class="bi bi-house"></i> Quay về Web</a>
     </div>
 
-    <div class="chat-layout shadow">
+    <div class="row g-0 chat-layout shadow">
         
-        <div class="chat-sidebar" id="admin-sidebar">
+        <div class="col-12 col-md-4 chat-sidebar border-end" id="admin-sidebar">
             <div class="p-3 border-bottom bg-light fw-bold text-secondary">DANH SÁCH YÊU CẦU HỖ TRỢ</div>
             <div class="flex-grow-1 overflow-y-auto">
                 <?php if(!empty($supportConvs)): foreach($supportConvs as $conv): 
@@ -83,7 +69,7 @@
             </div>
         </div>
 
-        <div class="chat-body position-relative mobile-hide" id="admin-chatbox">
+        <div class="col-12 col-md-8 chat-body position-relative mobile-hide" id="admin-chatbox">
             <div id="chat-empty" class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
                 <i class="bi bi-inbox display-1 opacity-25 mb-3"></i>
                 <h5 class="fw-bold">Chọn một Ticket để xử lý</h5>
