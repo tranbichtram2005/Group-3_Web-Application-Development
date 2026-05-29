@@ -1,6 +1,5 @@
 <?php
 /** 
- * Khai báo DocBlock để VS Code (Intelephense) không báo lỗi ảo thiếu biến
  * @var array  $checkoutItems 
  * @var string $buyerName 
  * @var string $buyerPhone 
@@ -332,206 +331,17 @@ $totalFinal = $totalMerchandise + $shippingFee;
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="btn btn-sm text-white fw-bold" onclick="submitSessAddr()" style="background:var(--btn-primary);border:none;">Cập nhật</button>
             </div>
+</div>
         </div>
     </div>
-</div>
+
+<script>
+    window.currentShippingFee = <?= (int)($shippingFee ?? 0) ?>;
+    window.currentMerchandise = <?= (int)($totalMerchandise ?? 0) ?>;
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-let currentShippingFee = <?= (int)$shippingFee ?>;
-let currentMerchandise = <?= (int)$totalMerchandise ?>;
-let currentDiscount = 0;
-let addrModal;
+<script src="layout/script.js?v=<?= time() ?>"></script>
 
-document.addEventListener('DOMContentLoaded', () => {
-    addrModal = new bootstrap.Modal(document.getElementById('addrModal'));
-    recalcTotal();
-});
-
-function recalcTotal() {
-    let merch = 0;
-    document.querySelectorAll('[id^="coqty-"]').forEach(inp => {
-        merch += parseInt(inp.value) * parseInt(inp.dataset.price);
-    });
-    currentMerchandise = merch;
-
-    const total = merch + currentShippingFee - currentDiscount;
-    document.getElementById('summaryMerchandise').textContent = merch.toLocaleString('vi-VN') + 'đ';
-    document.getElementById('summaryShipping').textContent    = currentShippingFee.toLocaleString('vi-VN') + 'đ';
-    document.getElementById('summaryTotal').textContent       = Math.max(0, total).toLocaleString('vi-VN') + 'đ';
-    document.getElementById('totalFinalInput').value          = Math.max(0, total);
-
-    const discRow = document.getElementById('summaryDiscountRow');
-    if (currentDiscount > 0) {
-        discRow.style.setProperty('display', 'flex', 'important');
-        document.getElementById('summaryDiscount').textContent = '-' + currentDiscount.toLocaleString('vi-VN') + 'đ';
-    } else {
-        discRow.style.setProperty('display', 'none', 'important');
-    }
-}
-
-async function applyVoucher() {
-    const code = document.getElementById('voucherInput').value.trim();
-    const msgEl = document.getElementById('voucherMsg');
-    if (!code) { msgEl.innerHTML = '<span style="color:red;">Vui lòng nhập mã</span>'; return; }
-
-    try {
-        const res = await fetch('index.php?controller=cart&action=applyVoucherAjax', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code, subtotal: currentMerchandise })
-        });
-        const data = await res.json();
-
-        if (data.status === 'success') {
-            currentDiscount = parseInt(data.discount);
-            document.getElementById('voucherDiscountRow').style.display = 'block';
-            document.getElementById('voucherDiscountLabel').textContent = code.toUpperCase() + ' (Giảm ' + currentDiscount.toLocaleString('vi-VN') + 'đ)';
-            document.getElementById('voucherCodeInput').value = code;
-            document.getElementById('voucherDiscountInput').value = currentDiscount;
-            
-            const btn = document.getElementById('voucherBtn');
-            btn.textContent = 'Bỏ mã';
-            btn.style.color = '#dc3545'; btn.style.borderColor = '#dc3545';
-            btn.onclick = removeVoucher;
-            msgEl.innerHTML = '';
-        } else {
-            msgEl.innerHTML = `<span style="color:red;">${data.msg}</span>`;
-        }
-    } catch(e) { msgEl.innerHTML = '<span style="color:red;">Lỗi kết nối</span>'; }
-    recalcTotal();
-}
-
-function removeVoucher() {
-    currentDiscount = 0;
-    document.getElementById('voucherDiscountRow').style.display = 'none';
-    document.getElementById('voucherCodeInput').value = '';
-    document.getElementById('voucherDiscountInput').value = 0;
-    document.getElementById('voucherInput').value = '';
-    
-    const btn = document.getElementById('voucherBtn');
-    btn.textContent = 'Áp dụng';
-    btn.style.color = 'var(--btn-secondary)'; btn.style.borderColor = 'var(--btn-secondary)';
-    btn.onclick = applyVoucher;
-    recalcTotal();
-}
-
-async function openAddrModal() {
-    addrModal.show();
-    if(document.getElementById('sessProvince').options.length <= 1) {
-        const res = await fetch('index.php?controller=checkout&action=getProvinces');
-        const data = await res.json();
-        let html = '<option value="">-- Chọn Tỉnh/Thành phố --</option>';
-        data.forEach(p => html += `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`);
-        document.getElementById('sessProvince').innerHTML = html;
-    }
-}
-
-async function loadDistricts() {
-    const provId = document.getElementById('sessProvince').value;
-    const distSelect = document.getElementById('sessDistrict');
-    const wardSelect = document.getElementById('sessWard');
-    
-    wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>'; wardSelect.disabled = true;
-    if(!provId) { distSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>'; distSelect.disabled = true; return; }
-    
-    const res = await fetch(`index.php?controller=checkout&action=getDistricts&province_id=${provId}`);
-    const data = await res.json();
-    let html = '<option value="">-- Chọn Quận/Huyện --</option>';
-    data.forEach(d => html += `<option value="${d.id}" data-name="${d.name}">${d.name}</option>`);
-    distSelect.innerHTML = html; distSelect.disabled = false;
-}
-
-async function loadWards() {
-    const distId = document.getElementById('sessDistrict').value;
-    const wardSelect = document.getElementById('sessWard');
-    if(!distId) { wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>'; wardSelect.disabled = true; return; }
-    
-    const res = await fetch(`index.php?controller=checkout&action=getWards&district_id=${distId}`);
-    const data = await res.json();
-    let html = '<option value="">-- Chọn Phường/Xã --</option>';
-    data.forEach(w => html += `<option value="${w.id}" data-name="${w.name}">${w.name}</option>`);
-    wardSelect.innerHTML = html; wardSelect.disabled = false;
-}
-
-async function submitSessAddr() {
-    const provSel = document.getElementById('sessProvince');
-    const distSel = document.getElementById('sessDistrict');
-    const wardSel = document.getElementById('sessWard');
-    const street  = document.getElementById('sessStreet').value.trim();
-
-    if (provSel.selectedIndex <= 0 || distSel.selectedIndex <= 0 || wardSel.selectedIndex <= 0 || !street) {
-        document.getElementById('addrMsg').innerHTML = '<span style="color:red;">Vui lòng chọn đầy đủ thông tin.</span>';
-        return;
-    }
-
-    const provinceName = provSel.options[provSel.selectedIndex].dataset.name;
-    const districtName = distSel.options[distSel.selectedIndex].dataset.name;
-    const wardName     = wardSel.options[wardSel.selectedIndex].dataset.name;
-    const fullAddr     = street + ', ' + wardName + ', ' + districtName + ', ' + provinceName;
-
-    try {
-        const res = await fetch('index.php?controller=checkout&action=saveAddressSessionAjax', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ streetAddress: fullAddr, province: provinceName, district: districtName, ward: wardName, street: street })
-        });
-        const data = await res.json();
-        if (data.status === 'success') window.location.reload();
-    } catch(e) { }
-}
-
-function changeCoQty(listingId, delta) {
-    const inp = document.getElementById('coqty-' + listingId);
-    let qty = parseInt(inp.value) + delta;
-    validateAndApplyQty(listingId, inp, qty);
-}
-
-function manualChangeQty(listingId, event) {
-    const inp = event.target;
-    let qty = parseInt(inp.value);
-    validateAndApplyQty(listingId, inp, qty);
-}
-
-function validateAndApplyQty(listingId, inp, qty) {
-    const stock = parseInt(inp.dataset.stock || 99);
-    
-    if (isNaN(qty) || qty < 1) {
-        qty = 1; 
-    } else if (qty > stock) { 
-        qty = stock; 
-        Swal.fire({ 
-            icon: 'warning', 
-            title: 'Hết hàng!', 
-            text: 'Kho chỉ còn tối đa ' + stock + ' sản phẩm.', 
-            confirmButtonColor: '#FF7A3D' 
-        });
-    }
-    
-    inp.value = qty;
-    document.getElementById('cosubtotal-' + listingId).textContent = (qty * parseInt(inp.dataset.price)).toLocaleString('vi-VN') + 'đ';
-    recalcTotal();
-}
-
-function confirmLeave(event) {
-    event.preventDefault(); 
-    const targetUrl = event.currentTarget.href; 
-
-    Swal.fire({
-        title: 'Xác nhận rời đi?',
-        text: "Bạn đang trong quá trình thanh toán. Thông tin đơn hàng sẽ không được lưu lại nếu bạn rời trang.",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Rời trang',
-        cancelButtonText: 'Ở lại'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = targetUrl;
-        }
-    });
-}
-</script>
 </body>
 </html>

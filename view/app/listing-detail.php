@@ -1,5 +1,4 @@
 <?php 
-// Code phòng thủ chống lỗi
 $product = $product ?? [];
 $images = $images ?? [];
 $avgRating = $avgRating ?? 0;
