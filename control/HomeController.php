@@ -22,7 +22,11 @@ class HomeController {
 
         // 3. Lấy sản phẩm
         $listings = $this->listingModel->getPaginatedListings($limit, $offset);
-
+        
+        // Kéo dữ liệu Voucher cho trang chủ
+        require_once __DIR__ . '/../model/VoucherModel.php';
+        $voucherModel = new VoucherModel();
+        $activeVouchers = $voucherModel->getActiveVouchers();
         // Nạp View
         require_once __DIR__ . '/../view/app/home.php';
     }

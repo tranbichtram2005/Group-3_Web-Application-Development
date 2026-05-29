@@ -13,6 +13,113 @@ $listings = $listings ?? [];
 </section>
 
 <main class="container py-5">
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .voucher-scroller { display: flex; gap: 0.8rem; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
+        .voucher-scroller::-webkit-scrollbar { height: 4px; }
+        .voucher-scroller::-webkit-scrollbar-thumb { background: #FF7A3D; border-radius: 10px; }
+        
+        .voucher-ticket { 
+            min-width: 240px; height: 110px; scroll-snap-align: start; 
+            background: linear-gradient(135deg, #fff3ee, #ffe6db); 
+            border: 1px solid #ffccb8; border-radius: 10px; 
+            display: flex; position: relative; overflow: hidden; 
+        }
+        .voucher-left { 
+            background: #FF7A3D; color: #fff; padding: 10px; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            border-right: 2px dashed #fff; width: 30%; 
+        }
+        .voucher-right { 
+            padding: 10px 12px; width: 70%; 
+            display: flex; flex-direction: column; justify-content: center; 
+        }
+        .copy-btn { 
+            background: #FF7A3D; color: white; border: none; 
+            padding: 3px 10px; border-radius: 12px; 
+            font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.2s; 
+        }
+        .copy-btn:hover { background: #e66a35; }
+    </style>
+
+    <?php if (!empty($activeVouchers)): ?>
+    <div class="mb-5 mt-4">
+        <h5 class="fw-bold mb-3" style="color: var(--nav-color);"><i class="bi bi-ticket-perforated text-danger me-2"></i>Mã Giảm Giá Dành Cho Bạn</h5>
+        <div class="voucher-scroller">
+            <?php foreach ($activeVouchers as $v): 
+                $discountText = ($v['type_id'] == 1) ? "Giảm {$v['discount_value']}%" : "Giảm " . number_format($v['discount_value'], 0, ',', '.') . "đ";
+                $remaining = $v['total_quantity'] - $v['used_quantity'];
+            ?>
+                <div class="voucher-ticket shadow-sm">
+                    <div class="voucher-left">
+                        <span class="fs-5 fw-bold">2LIFE</span>
+                        <small style="font-size: 0.65rem;">Voucher</small>
+                    </div>
+                    <div class="voucher-right">
+                        <h6 class="fw-bold text-danger mb-1" style="font-size: 0.9rem;"><?= $discountText ?></h6>
+                        <p class="text-muted mb-1" style="font-size: 0.75rem;">Đơn từ <?= number_format($v['min_order_value'], 0, ',', '.') ?>đ</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <div class="fw-semibold text-dark" style="font-size: 0.75rem;">
+                                Mã: <span class="font-monospace user-select-all"><?= htmlspecialchars($v['code']) ?></span>
+                            </div>
+                            
+                            <?php if (isset($_SESSION['user_id'])): ?>
+                                <button class="copy-btn" onclick="copyVoucherCode('<?= htmlspecialchars($v['code']) ?>')">Lưu</button>
+                            <?php else: ?>
+                                <button class="copy-btn" onclick="requireLoginToCopy()">Lưu</button>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="progress mt-2" style="height: 3px;">
+                            <?php $percent = ($v['total_quantity'] > 0) ? ($v['used_quantity'] / $v['total_quantity']) * 100 : 0; ?>
+                            <div class="progress-bar bg-danger" style="width: <?= $percent ?>%"></div>
+                        </div>
+                        <small class="text-danger mt-1" style="font-size: 0.65rem;">Chỉ còn <?= $remaining ?> lượt</small>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <script>
+    function copyVoucherCode(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Lưu mã thành công!',
+                text: 'Mã: ' + code,
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true,
+                iconColor: '#FF7A3D'
+            });
+        }).catch(err => {
+            console.error('Lỗi khi copy: ', err);
+        });
+    }
+
+    function requireLoginToCopy() {
+        Swal.fire({
+            icon: 'info',
+            title: 'Khoan đã!',
+            text: 'Cậu cần đăng nhập để lưu mã giảm giá này nhé!',
+            confirmButtonText: 'Đăng nhập ngay',
+            confirmButtonColor: '#FF7A3D',
+            showCancelButton: true,
+            cancelButtonText: 'Để sau'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'index.php?controller=auth&action=login';
+            }
+        });
+    }
+    </script>
     
     <div class="mb-5">
         <h4 class="fw-bold mb-4" style="color: var(--nav-color);">Danh Mục Nổi Bật</h4>
