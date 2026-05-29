@@ -171,7 +171,7 @@ class CheckoutController {
         $totalShops = count($groupedItems);
         $shippingFee = $totalShops * $shippingFeePerShop; // Tiền ship nhân lên theo số Shop
 
-        require_once __DIR__ . '/../view/checkout.php';
+        require_once __DIR__ . '/../view/app/checkout.php';
     }
 
     public function getProvinces() {
