@@ -1514,3 +1514,96 @@ window.adminConfirmDelete = function(url) {
         if(confirm('Bạn có chắc chắn muốn xóa voucher này không?')) window.location.href = url;
     }
 };
+
+/**
+ * ========================================================================
+ * 7. CÁC HÀM XỬ LÝ TRANG CHI TIẾT SẢN PHẨM (LISTING DETAIL)
+ * ========================================================================
+ */
+window.detailCopyVoucherCode = function(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        if(typeof Swal !== 'undefined') {
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'success',
+                title: 'Lưu mã thành công!', text: 'Mã: ' + code,
+                showConfirmButton: false, timer: 2500, timerProgressBar: true, iconColor: '#FF7A3D'
+            });
+        }
+    });
+};
+
+window.detailRequireLoginToCopy = function() {
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info', title: 'Khoan đã!', text: 'Cậu cần đăng nhập để lưu mã giảm giá này nhé!',
+            confirmButtonText: 'Đăng nhập ngay', confirmButtonColor: '#FF7A3D', showCancelButton: true, cancelButtonText: 'Để sau'
+        }).then((result) => {
+            if (result.isConfirmed) { window.location.href = 'index.php?controller=auth&action=login'; }
+        });
+    }
+};
+
+window.detailAddToCart = async function(listingId) {
+    try {
+        let res = await fetch(`index.php?controller=cart&action=addAjax&id=${listingId}`, { method: 'POST' });
+        let data = await res.json(); 
+        
+        if(data.status === 'success') {
+            if(data.newCartCount !== undefined) {
+                let cartIcon = document.querySelector('a[title="Giỏ hàng"]');
+                if(cartIcon) {
+                    let badge = cartIcon.querySelector('.badge');
+                    if(badge) {
+                        badge.innerText = data.newCartCount; 
+                    } else {
+                        cartIcon.innerHTML += `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;">${data.newCartCount}</span>`;
+                    }
+                    cartIcon.style.transform = 'scale(1.2)';
+                    setTimeout(() => cartIcon.style.transform = 'scale(1)', 200);
+                }
+            }
+            
+            if(typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success', title: 'Đã thêm vào giỏ hàng!', text: 'Bạn có muốn chuyển đến giỏ hàng không?',
+                    showCancelButton: true, confirmButtonColor: '#FF7A3D', cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Đến giỏ hàng', cancelButtonText: 'Ở lại đây'
+                }).then((result) => {
+                    if (result.isConfirmed) window.location.href = 'index.php?controller=cart';
+                });
+            }
+        } else {
+            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'warning', title: 'Chú ý', text: data.msg });
+        }
+    } catch (e) {
+        console.error("Lỗi giỏ hàng:", e);
+        if(typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Lỗi Backend', text: 'Chức năng giỏ hàng đang bảo trì!', confirmButtonColor: '#d33' });
+    }
+};
+
+window.detailBuyNow = function(listingId) {
+    let qtyInput = document.getElementById('quantity');
+    let qty = qtyInput ? qtyInput.value : 1;
+    window.location.href = `index.php?controller=checkout&action=index&listing_id=${listingId}&quantity=${qty}`;
+};
+
+window.detailActionChat = function(sellerId, listingId, isDeal = false) {
+    // Lấy ID người dùng từ biến môi trường Window do PHP đẩy ra
+    let currentUserId = window.currentUserId || 0;
+    
+    if (currentUserId == 0 || currentUserId == '') {
+        window.location.href = 'index.php?controller=auth&action=login';
+        return;
+    }
+    
+    if(currentUserId == sellerId) {
+        if(typeof Swal !== 'undefined') Swal.fire({ icon: 'warning', title: 'Ơ kìa...', text: 'Bạn không thể tự chat với chính mình được nha!' });
+        return;
+    }
+    
+    let url = `index.php?controller=chat&action=startTrade&listing_id=${listingId}&seller_id=${sellerId}`;
+    if (isDeal) {
+        url += '&deal=1';
+    }
+    window.location.href = url;
+};

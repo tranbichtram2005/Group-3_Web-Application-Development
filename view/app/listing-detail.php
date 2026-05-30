@@ -8,6 +8,11 @@ $activeVouchers = $activeVouchers ?? []; // Thêm biến hứng Voucher
 ?>
 <?php require_once __DIR__ . '/../partials/user-header.php'; ?>
 
+<style>
+.btn-hover-zoom { transition: transform 0.2s, background-color 0.2s; }
+.btn-hover-zoom:hover { transform: scale(1.02); background-color: #e66932 !important; }
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <main class="container py-4" style="min-height: 75vh;">
@@ -173,7 +178,7 @@ $activeVouchers = $activeVouchers ?? []; // Thêm biến hứng Voucher
                         <h6 class="fw-bold text-danger mb-3"><i class="bi bi-star-fill text-warning me-2"></i>Mã giảm giá áp dụng được:</h6>
                         
                         <div class="d-flex flex-column gap-2">
-                            <?php foreach (array_slice($applicableVouchers, 0, 3) as $v): // Hiện 3 mã tốt nhất ?>
+                            <?php foreach (array_slice($applicableVouchers, 0, 3) as $v): ?>
                                 <?php 
                                     $discountText = ($v['type_id'] == 1) ? "Giảm {$v['discount_value']}%" : "Giảm " . number_format($v['discount_value'], 0, ',', '.') . "đ"; 
                                     $remaining = $v['total_quantity'] - $v['used_quantity'];
@@ -189,9 +194,9 @@ $activeVouchers = $activeVouchers ?? []; // Thêm biến hứng Voucher
                                     <div class="d-flex flex-column align-items-end gap-1">
                                         <span class="text-danger fw-medium" style="font-size: 0.7rem;">Còn <?= $remaining ?> lượt</span>
                                         <?php if (isset($_SESSION['user_id'])): ?>
-                                            <button class="btn btn-sm text-white py-0 px-3 rounded-pill" style="font-size: 0.75rem; background-color: #FF7A3D;" onclick="copyVoucherCode('<?= htmlspecialchars($v['code']) ?>')">Lưu</button>
+                                            <button class="btn btn-sm text-white py-0 px-3 rounded-pill" style="font-size: 0.75rem; background-color: #FF7A3D;" onclick="window.detailCopyVoucherCode('<?= htmlspecialchars($v['code']) ?>')">Lưu</button>
                                         <?php else: ?>
-                                            <button class="btn btn-sm text-white py-0 px-3 rounded-pill" style="font-size: 0.75rem; background-color: #FF7A3D;" onclick="requireLoginToCopy()">Lưu</button>
+                                            <button class="btn btn-sm text-white py-0 px-3 rounded-pill" style="font-size: 0.75rem; background-color: #FF7A3D;" onclick="window.detailRequireLoginToCopy()">Lưu</button>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -199,22 +204,23 @@ $activeVouchers = $activeVouchers ?? []; // Thêm biến hứng Voucher
                         </div>
                     </div>
                     <?php endif; ?>
+
                     <div class="d-grid gap-3 mt-3">
                         <?php 
                         if(isset($product['stock_quantity']) && $product['stock_quantity'] > 0 && isset($product['status_id']) && $product['status_id'] != 3): 
                         ?>
                             <div class="row g-2">
                                 <div class="col-4">
-                                    <button type="button" onclick="actionChat(<?= $product['user_id'] ?? 0 ?>, <?= $product['id'] ?? 0 ?>)" class="btn btn-outline-dark w-100 py-2.5 rounded-3 fw-semibold small" style="border-color: #1F3C5A; color: #1F3C5A;"><i class="bi bi-chat-text d-block fs-5 mb-0.5"></i> Chat</button>
+                                    <button type="button" onclick="window.detailActionChat(<?= $product['user_id'] ?? 0 ?>, <?= $product['id'] ?? 0 ?>)" class="btn btn-outline-dark w-100 py-2.5 rounded-3 fw-semibold small" style="border-color: #1F3C5A; color: #1F3C5A;"><i class="bi bi-chat-text d-block fs-5 mb-0.5"></i> Chat</button>
                                 </div>
                                 <div class="col-8">
-                                    <button type="button" onclick="actionAddToCart(<?= $product['id'] ?? 0 ?>)" class="btn btn-outline-warning w-100 h-100 py-2.5 rounded-3 fw-bold" style="border-color: #FF7A3D; color: #FF7A3D;"><i class="bi bi-cart-plus fs-5 me-1"></i> Thêm vào giỏ</button>
+                                    <button type="button" onclick="window.detailAddToCart(<?= $product['id'] ?? 0 ?>)" class="btn btn-outline-warning w-100 h-100 py-2.5 rounded-3 fw-bold" style="border-color: #FF7A3D; color: #FF7A3D;"><i class="bi bi-cart-plus fs-5 me-1"></i> Thêm vào giỏ</button>
                                 </div>
                             </div>
                             
-                            <button type="button" onclick="actionBuyNow(<?= $product['id'] ?? 0 ?>)" class="btn btn-lg text-white fw-bold py-3 rounded-3 shadow-sm btn-hover-zoom" style="background-color: #FF7A3D; border: none; font-size: 16px;">MUA NGAY (Giao dịch an toàn)</button>
+                            <button type="button" onclick="window.detailBuyNow(<?= $product['id'] ?? 0 ?>)" class="btn btn-lg text-white fw-bold py-3 rounded-3 shadow-sm btn-hover-zoom" style="background-color: #FF7A3D; border: none; font-size: 16px;">MUA NGAY (Giao dịch an toàn)</button>
 
-                            <button type="button" class="btn btn-sm btn-light border w-100 py-2 rounded-3 text-secondary fw-semibold small" onclick="actionChat(<?= $product['user_id'] ?? 0 ?>, <?= $product['id'] ?? 0 ?>, true)"><i class="bi bi-tags me-1 text-warning"></i> Bạn muốn trả giá? Yêu cầu thương lượng</button>                        
+                            <button type="button" class="btn btn-sm btn-light border w-100 py-2 rounded-3 text-secondary fw-semibold small" onclick="window.detailActionChat(<?= $product['user_id'] ?? 0 ?>, <?= $product['id'] ?? 0 ?>, true)"><i class="bi bi-tags me-1 text-warning"></i> Bạn muốn trả giá? Yêu cầu thương lượng</button>                        
                         <?php else: ?>
                             <button class="btn btn-lg btn-secondary fw-bold py-3 rounded-3 shadow-sm" disabled><i class="bi bi-x-circle me-2"></i> Sản phẩm đã hết hàng</button>
                         <?php endif; ?>
@@ -241,95 +247,8 @@ $activeVouchers = $activeVouchers ?? []; // Thêm biến hứng Voucher
     </div>
 </main>
 
-<?php require_once __DIR__ . '/../partials/user-footer.php'; ?>
-
 <script>
-// Hàm xử lý copy mã Voucher
-function copyVoucherCode(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        Swal.fire({
-            toast: true, position: 'top-end', icon: 'success',
-            title: 'Lưu mã thành công!', text: 'Mã: ' + code,
-            showConfirmButton: false, timer: 2500, timerProgressBar: true, iconColor: '#FF7A3D'
-        });
-    });
-}
-
-function requireLoginToCopy() {
-    Swal.fire({
-        icon: 'info', title: 'Khoan đã!', text: 'Cậu cần đăng nhập để lưu mã giảm giá này nhé!',
-        confirmButtonText: 'Đăng nhập ngay', confirmButtonColor: '#FF7A3D', showCancelButton: true, cancelButtonText: 'Để sau'
-    }).then((result) => {
-        if (result.isConfirmed) { window.location.href = 'index.php?controller=auth&action=login'; }
-    });
-}
-
-// Các hàm xử lý giỏ hàng, mua hàng cũ của cậu
-async function actionAddToCart(listingId) {
-    try {
-        let res = await fetch(`index.php?controller=cart&action=addAjax&id=${listingId}`, { method: 'POST' });
-        let data = await res.json(); 
-        
-        if(data.status === 'success') {
-            if(data.newCartCount !== undefined) {
-                let cartIcon = document.querySelector('a[title="Giỏ hàng"]');
-                if(cartIcon) {
-                    let badge = cartIcon.querySelector('.badge');
-                    if(badge) {
-                        badge.innerText = data.newCartCount; 
-                    } else {
-                        cartIcon.innerHTML += `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 2px 4px;">${data.newCartCount}</span>`;
-                    }
-                    cartIcon.style.transform = 'scale(1.2)';
-                    setTimeout(() => cartIcon.style.transform = 'scale(1)', 200);
-                }
-            }
-            
-            Swal.fire({
-                icon: 'success', title: 'Đã thêm vào giỏ hàng!', text: 'Bạn có muốn chuyển đến giỏ hàng không?',
-                showCancelButton: true, confirmButtonColor: '#FF7A3D', cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Đến giỏ hàng', cancelButtonText: 'Ở lại đây'
-            }).then((result) => {
-                if (result.isConfirmed) window.location.href = 'index.php?controller=cart';
-            });
-
-        } else {
-            Swal.fire({ icon: 'warning', title: 'Chú ý', text: data.msg });
-        }
-    } catch (e) {
-        console.error("Lỗi giỏ hàng:", e);
-        Swal.fire({ icon: 'error', title: 'Lỗi Backend', text: 'Chức năng giỏ hàng đang bảo trì!', confirmButtonColor: '#d33' });
-    }
-}
-
-function actionBuyNow(listingId) {
-    let qtyInput = document.getElementById('quantity');
-    let qty = qtyInput ? qtyInput.value : 1;
-    window.location.href = `index.php?controller=checkout&action=index&listing_id=${listingId}&quantity=${qty}`;
-}
-
-function actionChat(sellerId, listingId, isDeal = false) {
-    let currentUserId = '<?= $_SESSION['user_id'] ?? 0 ?>';
-    
-    if (currentUserId == 0 || currentUserId == '') {
-        window.location.href = 'index.php?controller=auth&action=login';
-        return;
-    }
-    
-    if(currentUserId == sellerId) {
-        Swal.fire({ icon: 'warning', title: 'Ơ kìa...', text: 'Bạn không thể tự chat với chính mình được nha!' });
-        return;
-    }
-    
-    let url = `index.php?controller=chat&action=startTrade&listing_id=${listingId}&seller_id=${sellerId}`;
-    if (isDeal) {
-        url += '&deal=1';
-    }
-    window.location.href = url;
-}
+    window.currentUserId = <?= $_SESSION['user_id'] ?? 0 ?>;
 </script>
 
-<style>
-.btn-hover-zoom { transition: transform 0.2s, background-color 0.2s; }
-.btn-hover-zoom:hover { transform: scale(1.02); background-color: #e66932 !important; }
-</style>
+<?php require_once __DIR__ . '/../partials/user-footer.php'; ?>
