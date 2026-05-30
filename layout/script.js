@@ -1344,3 +1344,92 @@ function manageOrderSellerList_switchTab(event, clickedTab) {
         container.innerHTML = '<div class="text-center py-5 text-danger">Lỗi tải dữ liệu. Vui lòng thử lại.</div>';
     });
 }
+// ==========================================
+// KHU VỰC: KÊNH NGƯỜI BÁN - THỐNG KÊ (SELLER DASHBOARD)
+// ==========================================
+document.addEventListener("DOMContentLoaded", function () {
+    const ctxRev = document.getElementById('revenueChart');
+    const ctxStatus = document.getElementById('statusChart');
+    const ctxTop = document.getElementById('topProductsChart');
+
+    // Chỉ khởi tạo biểu đồ nếu đang ở trang Dashboard và có dữ liệu
+    if (ctxRev && ctxStatus && ctxTop && window.sellerDashboardData) {
+        const data = window.sellerDashboardData;
+
+        // 1. Biểu đồ Doanh Thu (Line Chart)
+        new Chart(ctxRev.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: data.revDates,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: data.revData,
+                    borderColor: '#FF7A3D',
+                    backgroundColor: 'rgba(255, 122, 61, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#FF7A3D',
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: value => value.toLocaleString('vi-VN') + ' đ' }
+                    }
+                }
+            }
+        });
+
+        // 2. Biểu đồ Trạng thái (Doughnut Chart)
+        new Chart(ctxStatus.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: data.statusLabels,
+                datasets: [{
+                    data: data.statusCounts,
+                    backgroundColor: ['#198754', '#ffc107', '#0dcaf0', '#dc3545', '#fd7e14', '#6c757d'],
+                    borderWidth: 1,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: { position: 'right' }
+                }
+            }
+        });
+
+        // 3. Biểu đồ Top Sản phẩm (Horizontal Bar Chart)
+        new Chart(ctxTop.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: data.prodLabels,
+                datasets: [{
+                    label: 'Số lượng bán ra',
+                    data: data.prodSold,
+                    backgroundColor: '#0dcaf0',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y', // Quay ngang thanh cột
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { beginAtZero: true, ticks: { stepSize: 1 } } 
+                }
+            }
+        });
+    }
+});

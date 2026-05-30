@@ -1,10 +1,8 @@
 <?php
-// Code phòng thủ (Guard) để tránh lỗi Undefined variable
 $stats = $stats ?? ['revenue' => 0, 'orders' => 0, 'pending' => 0];
 $startDate = $startDate ?? date('Y-m-d', strtotime('-30 days'));
 $endDate = $endDate ?? date('Y-m-d');
 
-// Khởi tạo mảng rỗng nếu chưa có dữ liệu để tránh lỗi JS
 $chartDates = $chartDates ?? [];
 $chartRevenues = $chartRevenues ?? [];
 $statusLabels = $statusLabels ?? [];
@@ -141,92 +139,15 @@ $productSold = $productSold ?? [];
 </div>
 
 <script>
-    // Ép kiểu dữ liệu từ PHP xuống JS an toàn
-    const revDates = <?= json_encode($chartDates) ?>;
-    const revData = <?= json_encode($chartRevenues) ?>;
-    const statusLabels = <?= json_encode($statusLabels) ?>;
-    const statusCounts = <?= json_encode($statusCounts) ?>;
-    const prodLabels = <?= json_encode($productLabels) ?>;
-    const prodSold = <?= json_encode($productSold) ?>;
-
-    // 1. Biểu đồ Doanh Thu (Line Chart)
-    const ctxRev = document.getElementById('revenueChart').getContext('2d');
-    new Chart(ctxRev, {
-        type: 'line',
-        data: {
-            labels: revDates,
-            datasets: [{
-                label: 'Doanh thu (VNĐ)',
-                data: revData,
-                borderColor: '#FF7A3D',
-                backgroundColor: 'rgba(255, 122, 61, 0.1)',
-                borderWidth: 3,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#FF7A3D',
-                pointRadius: 4,
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { callback: value => value.toLocaleString('vi-VN') + ' đ' }
-                }
-            }
-        }
-    });
-
-    // 2. Biểu đồ Trạng thái (Doughnut Chart)
-    const ctxStatus = document.getElementById('statusChart').getContext('2d');
-    new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-            labels: statusLabels,
-            datasets: [{
-                data: statusCounts,
-                backgroundColor: ['#198754', '#ffc107', '#0dcaf0', '#dc3545', '#fd7e14', '#6c757d'],
-                borderWidth: 1,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: { position: 'right' }
-            }
-        }
-    });
-
-    // 3. Biểu đồ Top Sản phẩm (Horizontal Bar Chart)
-    const ctxTop = document.getElementById('topProductsChart').getContext('2d');
-    new Chart(ctxTop, {
-        type: 'bar',
-        data: {
-            labels: prodLabels,
-            datasets: [{
-                label: 'Số lượng bán ra',
-                data: prodSold,
-                backgroundColor: '#0dcaf0',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            indexAxis: 'y', // Quay ngang thanh cột
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { 
-                x: { beginAtZero: true, ticks: { stepSize: 1 } } 
-            }
-        }
-    });
+    window.sellerDashboardData = {
+        revDates: <?= json_encode($chartDates) ?>,
+        revData: <?= json_encode($chartRevenues) ?>,
+        statusLabels: <?= json_encode($statusLabels) ?>,
+        statusCounts: <?= json_encode($statusCounts) ?>,
+        prodLabels: <?= json_encode($productLabels) ?>,
+        prodSold: <?= json_encode($productSold) ?>
+    };
 </script>
+
 </body>
 </html>
