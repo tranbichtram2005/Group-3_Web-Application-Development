@@ -898,3 +898,173 @@ function postProduct_handleSubmit(event, formElement) {
         submitBtn.disabled = false;
     });
 }
+
+// ==========================================
+// KHU VỰC: CHI TIẾT DUYỆT TIN ĐĂNG (APPROVE LISTING DETAIL)
+// ==========================================
+
+// Xử lý sự kiện bấm nút Duyệt/Từ chối/Ẩn
+function approveListingDetail_handleAction(e, btn) {
+    e.preventDefault(); // Chặn hành động chuyển trang mặc định
+
+    // Kiểm tra SweetAlert2
+    if (typeof Swal === 'undefined') {
+        alert('Lỗi: Thư viện SweetAlert2 chưa được tải về! Vui lòng kiểm tra lại kết nối mạng hoặc thẻ CDN.');
+        return;
+    }
+
+    const url = btn.getAttribute('data-href');
+    const confirmText = btn.getAttribute('data-text');
+    const type = btn.getAttribute('data-type');
+
+    let confirmButtonColor = '#198754';
+    if (type === 'reject') confirmButtonColor = '#dc3545';
+    if (type === 'hide') confirmButtonColor = '#ffc107';
+
+    // Hiển thị Pop-up xác nhận
+    Swal.fire({
+        title: 'Xác nhận hành động?',
+        text: confirmText,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: confirmButtonColor,
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Đồng ý',
+        cancelButtonText: 'Hủy bỏ'
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            // Hiển thị loading trong lúc gọi Ajax
+            Swal.fire({
+                title: 'Đang xử lý...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // Gọi Ajax
+            fetch(url)
+                .then(async response => {
+                    const rawText = await response.text();
+                    try {
+                        return JSON.parse(rawText);
+                    } catch (err) {
+                        console.error("Lỗi định dạng JSON trả về:", rawText);
+                        throw new Error("Dữ liệu trả về từ Controller không hợp lệ (không phải JSON). Hãy ấn F12 xem Console để biết chi tiết.");
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Thành công!',
+                            text: data.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        const listingId = url.split('&id=')[1];
+                        approveListingDetail_updateUI(data.status_id, listingId);
+                    } else {
+                        Swal.fire('Thất bại', data.message || 'Lỗi xử lý.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error FETCH:', error);
+                    Swal.fire('Lỗi hệ thống', error.message, 'error');
+                });
+        }
+    });
+}
+
+// Hàm cập nhật giao diện sau khi gọi Ajax thành công
+function approveListingDetail_updateUI(statusId, listingId) {
+    const badgeContainer = document.getElementById('status-badge-container');
+    const buttonsContainer = document.getElementById('action-buttons-container');
+    
+    if (!badgeContainer || !buttonsContainer) return;
+
+    let badgeHTML = 'Trạng thái hiện tại: ';
+    if (statusId == 1) badgeHTML += '<span class="badge bg-warning text-dark fs-6 ms-2">Chờ duyệt</span>';
+    else if (statusId == 2) badgeHTML += '<span class="badge bg-success fs-6 ms-2">Đang hiển thị</span>';
+    else if (statusId == 3) badgeHTML += '<span class="badge bg-danger fs-6 ms-2">Đã từ chối</span>';
+    else badgeHTML += '<span class="badge bg-secondary fs-6 ms-2">Đã ẩn/Gỡ</span>';
+
+    badgeContainer.innerHTML = badgeHTML;
+
+    // Cập nhật lại các nút bấm (Nhớ phải chèn thêm onclick="approveListingDetail_handleAction(event, this)")
+    if (statusId == 1) {
+        buttonsContainer.innerHTML = `
+            <div class="d-flex flex-column gap-2">
+                <button data-href="index.php?controller=approvelisting&action=changeStatus&type=approve&id=${listingId}" class="btn btn-success fw-bold py-2" data-type="approve" data-text="Bạn chắc chắn muốn duyệt tin đăng này lên sàn?" onclick="approveListingDetail_handleAction(event, this)">
+                    <i class="bi bi-check-circle-fill me-1"></i> Phê duyệt hiển thị
+                </button>
+                <button data-href="index.php?controller=approvelisting&action=changeStatus&type=reject&id=${listingId}" class="btn btn-danger fw-bold py-2" data-type="reject" data-text="Bạn chắc chắn muốn từ chối tin đăng này?" onclick="approveListingDetail_handleAction(event, this)">
+                    <i class="bi bi-x-circle-fill me-1"></i> Từ chối tin đăng
+                </button>
+            </div>
+        `;
+    } else if (statusId == 2) {
+        buttonsContainer.innerHTML = `
+            <div class="d-flex flex-column gap-2">
+                <button data-href="index.php?controller=approvelisting&action=changeStatus&type=hide&id=${listingId}" class="btn btn-warning text-dark fw-bold py-2" data-type="hide" data-text="Gỡ tin đăng này khỏi hệ thống ngay lập tức?" onclick="approveListingDetail_handleAction(event, this)">
+                    <i class="bi bi-eye-slash-fill me-1"></i> Buộc gỡ / Ẩn tin
+                </button>
+            </div>
+        `;
+    } else {
+        buttonsContainer.innerHTML = `
+            <div class="alert alert-secondary mb-0 text-center">
+                Tin đăng này đã được xử lý xong.
+            </div>
+        `;
+    }
+}
+
+// ==========================================
+// KHU VỰC: DANH SÁCH DUYỆT TIN ĐĂNG BÁN (APPROVE LISTING LIST)
+// ==========================================
+
+// Xử lý hiệu ứng Loading khi Admin chuyển Tab hoặc chuyển Trang (Pagination)
+function approveListingList_navigate(event, targetUrl) {
+    // Nếu link đang active hoặc bị disabled thì không làm gì cả
+    const parentLi = event.currentTarget.parentElement;
+    if (parentLi && (parentLi.classList.contains('active') || parentLi.classList.contains('disabled'))) {
+        event.preventDefault();
+        return;
+    }
+
+    event.preventDefault(); // Tạm dừng chuyển trang
+
+    // Gọi SweetAlert2 hiển thị Loading
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Đang tải dữ liệu...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    // Chuyển hướng URL sau khi Pop-up đã bật
+    window.location.href = targetUrl;
+}
+
+// Xử lý hiệu ứng Loading khi Admin bấm nút "Xem chi tiết"
+function approveListingList_goToDetail(event, targetUrl) {
+    event.preventDefault(); 
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Đang lấy thông tin sản phẩm...',
+            text: 'Vui lòng chờ trong giây lát',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    // Thực hiện chuyển trang
+    window.location.href = targetUrl;
+}

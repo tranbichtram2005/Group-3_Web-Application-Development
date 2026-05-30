@@ -1,5 +1,7 @@
 <?php include 'view/partials/admin-header.php'; ?>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -13,26 +15,26 @@
             <ul class="nav nav-pills gap-2">
                 <li class="nav-item">
                     <a class="nav-link <?= $tab == 'pending' ? 'active bg-primary' : 'bg-light text-dark' ?>"
-                        href="index.php?controller=approvelisting&action=index&tab=pending">
-                        Chờ duyệt (<?= $countPending ?>)
+                        href="index.php?controller=approvelisting&action=index&tab=pending" onclick="approveListingList_navigate(event, this.href)">
+                        Chờ duyệt (<?= $countPending ?? 0 ?>)
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $tab == 'active' ? 'active bg-success' : 'bg-light text-dark' ?>"
-                        href="index.php?controller=approvelisting&action=index&tab=active">
-                        Đang hiển thị (<?= $countActive ?>)
+                        href="index.php?controller=approvelisting&action=index&tab=active" onclick="approveListingList_navigate(event, this.href)">
+                        Đang hiển thị (<?= $countActive ?? 0 ?>)
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $tab == 'rejected' ? 'active bg-danger' : 'bg-light text-dark' ?>"
-                        href="index.php?controller=approvelisting&action=index&tab=rejected">
-                        Đã từ chối (<?= $countRejected ?>)
+                        href="index.php?controller=approvelisting&action=index&tab=rejected" onclick="approveListingList_navigate(event, this.href)">
+                        Đã từ chối (<?= $countRejected ?? 0 ?>)
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $tab == 'hidden' ? 'active bg-secondary' : 'bg-light text-dark' ?>"
-                        href="index.php?controller=approvelisting&action=index&tab=hidden">
-                        Bị ẩn / Gỡ (<?= $countHidden ?>)
+                        href="index.php?controller=approvelisting&action=index&tab=hidden" onclick="approveListingList_navigate(event, this.href)">
+                        Bị ẩn / Gỡ (<?= $countHidden ?? 0 ?>)
                     </a>
                 </li>
             </ul>
@@ -44,19 +46,19 @@
             <nav aria-label="Page navigation">
                 <ul class="pagination justify-content-end mb-0">
                     <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                        <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $page - 1 ?>" aria-label="Previous">
+                        <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $page - 1 ?>" aria-label="Previous" onclick="approveListingList_navigate(event, this.href)">
                             <span aria-hidden="true">&laquo; Trước</span>
                         </a>
                     </li>
 
                     <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                         <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                            <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $i ?>"><?= $i ?></a>
+                            <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $i ?>" onclick="approveListingList_navigate(event, this.href)"><?= $i ?></a>
                         </li>
                     <?php endfor; ?>
 
                     <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
-                        <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $page + 1 ?>" aria-label="Next">
+                        <a class="page-link" href="index.php?controller=approvelisting&action=index&tab=<?= $tab ?>&page=<?= $page + 1 ?>" aria-label="Next" onclick="approveListingList_navigate(event, this.href)">
                             <span aria-hidden="true">Sau &raquo;</span>
                         </a>
                     </li>
@@ -92,7 +94,7 @@
                                 <td class="text-danger fw-bold"><?= number_format($item['price'], 0, ',', '.') ?>đ</td>
                                 <td class="text-secondary small"><?= date('d/m/Y H:i', strtotime($item['created_at'])) ?></td>
                                 <td class="pe-4 text-end">
-                                    <a href="index.php?controller=approvelisting&action=detail&id=<?= $item['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                    <a href="index.php?controller=approvelisting&action=detail&id=<?= $item['id'] ?>" class="btn btn-sm btn-outline-primary" onclick="approveListingList_goToDetail(event, this.href)">
                                         <i class="bi bi-eye"></i> Xem chi tiết
                                     </a>
                                 </td>
