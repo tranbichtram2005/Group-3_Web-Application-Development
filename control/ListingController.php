@@ -217,7 +217,7 @@ class ListingController
             $wards = $this->listingModel->getWardsByDistrict($product['district_id']);
         }
 
-        include 'view/post-product.php';
+        include 'view/app/post-product.php';
     }
 
     public function update()

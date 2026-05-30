@@ -589,3 +589,312 @@ window.cartShowToast = function(msg, type = 'info') {
     document.body.appendChild(toast);
     setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
+
+// ==========================================
+// KHU VỰC: QUẢN LÝ TIN ĐĂNG (MANAGE LISTING)
+// ==========================================
+let manageListing_currentId = null;
+let manageListing_modalInstance = null;
+
+// Hàm hỗ trợ khởi tạo Modal an toàn (Chỉ chạy khi Element tồn tại)
+function manageListing_getModal() {
+    if (!manageListing_modalInstance) {
+        const modalElement = document.getElementById('listingDetailModal');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            manageListing_modalInstance = new bootstrap.Modal(modalElement);
+        }
+    }
+    return manageListing_modalInstance;
+}
+
+// Hàm: Mở chi tiết tin đăng
+function manageListing_viewDetail(btnElement) {
+    manageListing_currentId = btnElement.getAttribute('data-id');
+    let statusId = btnElement.getAttribute('data-status');
+    
+    // Cập nhật trạng thái nút Chỉnh sửa
+    let editBtn = document.getElementById('btn-edit-listing');
+    if (editBtn) {
+        if (statusId === '1') {
+            editBtn.classList.remove('disabled', 'btn-secondary');
+            editBtn.classList.add('btn-primary');
+            editBtn.href = `index.php?controller=listing&action=edit&id=${manageListing_currentId}`;
+        } else {
+            editBtn.classList.add('disabled', 'btn-secondary');
+            editBtn.classList.remove('btn-primary');
+            editBtn.href = "#";
+        }
+    }
+
+    // Reset nội dung body và hiển thị Loading
+    const modalBody = document.getElementById('modal-content-body');
+    if (modalBody) {
+        modalBody.innerHTML = '<div class="text-center"><div class="spinner-border text-primary"></div></div>';
+    }
+    
+    const modal = manageListing_getModal();
+    if (modal) modal.show();
+
+    // Lấy dữ liệu qua AJAX
+    fetch(`index.php?controller=manage_listing&action=ajaxGetDetail&id=${manageListing_currentId}`)
+        .then(res => res.json())
+        .then(response => {
+            if(response.status === 'success' && modalBody) {
+                let data = response.data;
+                modalBody.innerHTML = `
+                    <h6 class="fw-bold mb-2">${data.title}</h6>
+                    <p class="text-danger fw-bold fs-5 mb-2">${new Intl.NumberFormat('vi-VN').format(data.price)} VNĐ</p>
+                    <ul class="list-group list-group-flush small mb-3">
+                        <li class="list-group-item px-0"><b>Danh mục:</b> ${data.category_name}</li>
+                        <li class="list-group-item px-0"><b>Tình trạng:</b> ${data.condition_name}</li>
+                        <li class="list-group-item px-0"><b>Tồn kho:</b> ${data.stock_quantity}</li>
+                    </ul>
+                    <div class="bg-light p-2 rounded border" style="max-height:100px; overflow-y:auto; font-size:13px">
+                        ${data.description.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+            }
+        });
+}
+
+// Hàm: Xóa tin đăng
+function manageListing_deleteListing() {
+    if(!manageListing_currentId) return;
+
+    Swal.fire({
+        title: 'Bạn có chắc chắn?',
+        text: "Tin đăng này sẽ bị xóa vĩnh viễn khỏi hệ thống!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Vâng, Xóa nó!',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let formData = new FormData();
+            formData.append('id', manageListing_currentId);
+
+            fetch('index.php?controller=manage_listing&action=ajaxDelete', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    const modal = manageListing_getModal();
+                    if (modal) modal.hide();
+                    
+                    Swal.fire('Đã xóa!', data.message, 'success');
+                    
+                    const row = document.getElementById('row-' + manageListing_currentId);
+                    if (row) row.remove();
+                } else {
+                    Swal.fire('Lỗi!', data.message, 'error');
+                }
+            });
+        }
+    });
+}
+
+// Hàm: Ẩn tin đăng
+function manageListing_hideListing(event, btnElement) {
+    event.preventDefault();
+    const url = btnElement.getAttribute('data-href');
+    const listingId = btnElement.getAttribute('data-id');
+
+    Swal.fire({
+        title: 'Xác nhận ẩn tin?',
+        text: "Tin đăng này sẽ bị ẩn khỏi gian hàng và người mua sẽ không nhìn thấy nữa!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Vâng, Ẩn ngay!',
+        cancelButtonText: 'Hủy bỏ'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Đang xử lý...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        Swal.fire({
+                            title: 'Thành công!',
+                            text: data.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        
+                        const row = document.getElementById('row-' + listingId);
+                        if (row) {
+                            const statusTd = row.querySelector('td:nth-child(4)');
+                            if (statusTd) {
+                                statusTd.innerHTML = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2"><i class="bi bi-eye-slash-fill"></i> Đã ẩn/Đóng</span>';
+                            }
+                            btnElement.remove();
+                        }
+                    } else {
+                        Swal.fire('Lỗi!', data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error("Lỗi fetch:", err);
+                    Swal.fire('Lỗi!', 'Không thể kết nối máy chủ.', 'error');
+                });
+        }
+    });
+}
+
+// ==========================================
+// KHU VỰC: ĐĂNG / SỬA TIN BÁN (POST PRODUCT)
+// ==========================================
+
+// Kích hoạt input file ảnh ẩn
+function postProduct_triggerImageSelect() {
+    const fileInput = document.getElementById('imageUpload');
+    if (fileInput) fileInput.click();
+}
+
+// Kích hoạt input file video ẩn
+function postProduct_triggerVideoSelect() {
+    const fileInput = document.getElementById('videoUpload');
+    if (fileInput) fileInput.click();
+}
+
+// Xử lý xem trước hình ảnh khi upload
+function postProduct_handleImageChange(event) {
+    const files = event.target.files;
+    const uploadBoxUI = document.getElementById('uploadBoxUI');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const carouselInnerImages = document.getElementById('carouselInnerImages');
+
+    // Chỉ thực thi nếu người dùng có chọn file và các DOM element thực sự tồn tại
+    if (files.length > 0 && uploadBoxUI && imagePreviewContainer && carouselInnerImages) {
+        uploadBoxUI.setAttribute('style', 'display: none !important;');
+        imagePreviewContainer.style.display = 'block';
+        carouselInnerImages.innerHTML = ''; 
+
+        Array.from(files).forEach((file, index) => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const activeClass = index === 0 ? 'active' : '';
+                    const imgHtml = `
+                        <div class="carousel-item ${activeClass} h-100 w-100">
+                            <img src="${e.target.result}" class="d-block w-100 h-100" style="object-fit: contain;" alt="Preview Image ${index + 1}">
+                        </div>
+                    `;
+                    carouselInnerImages.insertAdjacentHTML('beforeend', imgHtml);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+}
+
+// Xử lý thông báo đã chọn Video
+function postProduct_handleVideoChange(event) {
+    const videoText = document.getElementById('videoText');
+    if (videoText) {
+        videoText.innerHTML = event.target.files.length > 0 
+            ? `Đã chọn <strong class="text-primary">1 video</strong>` 
+            : 'Kéo thả hoặc <strong>Chọn video</strong>';
+    }
+}
+
+// Load Quận/Huyện dựa trên ID Tỉnh/Thành
+function postProduct_loadDistricts(provinceId) {
+    const districtSelect = document.getElementById('districtSelect');
+    const wardSelect = document.getElementById('wardSelect');
+
+    if (!districtSelect || !wardSelect) return;
+
+    // Reset Phường/Xã
+    wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+    wardSelect.disabled = true;
+
+    if (provinceId) {
+        districtSelect.innerHTML = '<option value="">Đang tải...</option>';
+        districtSelect.disabled = true;
+
+        fetch(`index.php?controller=listing&action=getDistrictsAjax&province_id=${provinceId}`)
+            .then(res => res.json())
+            .then(data => {
+                districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+                data.forEach(item => {
+                    districtSelect.innerHTML += `<option value="${item.id}">${item.name}</option>`;
+                });
+                districtSelect.disabled = false;
+            })
+            .catch(err => {
+                districtSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+            });
+    } else {
+        districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+        districtSelect.disabled = true;
+    }
+}
+
+// Load Phường/Xã dựa trên ID Quận/Huyện
+function postProduct_loadWards(districtId) {
+    const wardSelect = document.getElementById('wardSelect');
+    if (!wardSelect) return;
+
+    if (districtId) {
+        wardSelect.innerHTML = '<option value="">Đang tải...</option>';
+        wardSelect.disabled = true;
+
+        fetch(`index.php?controller=listing&action=getWardsAjax&district_id=${districtId}`)
+            .then(res => res.json())
+            .then(data => {
+                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                data.forEach(item => {
+                    wardSelect.innerHTML += `<option value="${item.id}">${item.name}</option>`;
+                });
+                wardSelect.disabled = false;
+            })
+            .catch(err => {
+                wardSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+            });
+    } else {
+        wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+        wardSelect.disabled = true;
+    }
+}
+
+// Xử lý gửi Form Đăng/Sửa tin qua AJAX
+function postProduct_handleSubmit(event, formElement) {
+    event.preventDefault(); 
+    let submitBtn = formElement.querySelector('button[type="submit"]');
+    let originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Đang xử lý...';
+    submitBtn.disabled = true;
+
+    let formData = new FormData(formElement);
+
+    fetch(formElement.action, { method: 'POST', body: formData })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'Thành công!', text: data.message, showConfirmButton: false, timer: 2000 })
+            .then(() => { window.location.href = 'index.php?controller=manage_listing&action=index'; });
+        } else {
+            Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message });
+            submitBtn.innerHTML = originalText; 
+            submitBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        Swal.fire({ icon: 'error', title: 'Lỗi kết nối', text: 'Không thể gửi dữ liệu lên máy chủ.' });
+        submitBtn.innerHTML = originalText; 
+        submitBtn.disabled = false;
+    });
+}
