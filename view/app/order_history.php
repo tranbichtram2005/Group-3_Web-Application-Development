@@ -111,7 +111,6 @@ $currentStatus = isset($_GET['status']) ? (int)$_GET['status'] : 0;
             <?php foreach ($orders as $order): 
                 $badgeBg = 'bg-secondary'; $statusCode = 'UNKNOWN';
                 
-                // GIỮ NGUYÊN CHỮ TIẾNG ANH CHUẨN DB
                 switch ($order['status_id']) {
                     case 1: $badgeBg = 'bg-danger text-white'; $statusCode = 'PENDING'; break;
                     case 2: $badgeBg = 'bg-info text-dark'; $statusCode = 'CONFIRMED'; break;
@@ -150,7 +149,7 @@ $currentStatus = isset($_GET['status']) ? (int)$_GET['status'] : 0;
                                         
                                         <?php if ($order['status_id'] == 5): ?>
                                             <?php if ($item['is_reviewed'] == 0): ?>
-                                                <button class="btn btn-outline-warning btn-sm py-1 px-2 text-dark fw-bold" style="font-size: 0.75rem;" onclick="openReviewModal(<?= $item['listing_id'] ?>, '<?= htmlspecialchars($item['title']) ?>', <?= $order['id'] ?>)">Đánh giá</button>
+                                                <button class="btn btn-outline-warning btn-sm py-1 px-2 text-dark fw-bold" style="font-size: 0.75rem;" onclick="window.orderHistoryOpenReviewModal(<?= $item['listing_id'] ?>, '<?= htmlspecialchars(addslashes($item['title'])) ?>', <?= $order['id'] ?>)">Đánh giá</button>
                                             <?php else: ?>
                                                 <span class="badge bg-light text-success border"><i class="bi bi-check-all"></i> Đã Đánh Giá</span>
                                             <?php endif; ?>
@@ -169,9 +168,9 @@ $currentStatus = isset($_GET['status']) ? (int)$_GET['status'] : 0;
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                 <?php if (in_array($order['status_id'], [1, 2])): ?>
                                     <?php if ($order['status_id'] == 1): ?>
-                                        <button class="btn btn-outline-primary btn-sm rounded-3 px-3" onclick="openUpdateModal(<?= $order['id'] ?>, '<?= htmlspecialchars($order['street_address']) ?>', '<?= htmlspecialchars($order['shipping_note'] ?? '') ?>')">Cập nhật thông tin đơn hàng</button>
+                                        <button class="btn btn-outline-primary btn-sm rounded-3 px-3" onclick="window.orderHistoryOpenUpdateModal(<?= $order['id'] ?>, '<?= htmlspecialchars(addslashes($order['street_address'])) ?>', '<?= htmlspecialchars(addslashes($order['shipping_note'] ?? '')) ?>')">Cập nhật thông tin đơn hàng</button>
                                     <?php endif; ?>
-                                    <button class="btn btn-outline-danger btn-sm rounded-3 px-3" onclick="openCancelModal(<?= $order['id'] ?>)">Hủy</button>
+                                    <button class="btn btn-outline-danger btn-sm rounded-3 px-3" onclick="window.orderHistoryOpenCancelModal(<?= $order['id'] ?>)">Hủy</button>
                                 <?php elseif ($order['status_id'] == 4): ?>
                                     <form action="index.php?controller=order&action=confirmReceived" method="POST" class="d-inline">
                                         <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
@@ -202,13 +201,13 @@ $currentStatus = isset($_GET['status']) ? (int)$_GET['status'] : 0;
                     <div class="row g-3 mb-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold small">Tỉnh / Thành phố *</label>
-                            <select id="updProvince" class="form-select" onchange="loadUpdDistricts()" required>
+                            <select id="updProvince" class="form-select" onchange="window.orderHistoryLoadUpdDistricts()" required>
                                 <option value="">-- Chọn Tỉnh/Thành phố --</option>
                             </select>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold small">Quận / Huyện *</label>
-                            <select id="updDistrict" class="form-select" onchange="loadUpdWards()" disabled required>
+                            <select id="updDistrict" class="form-select" onchange="window.orderHistoryLoadUpdWards()" disabled required>
                                 <option value="">-- Chọn Quận/Huyện --</option>
                             </select>
                         </div>
@@ -300,99 +299,5 @@ $currentStatus = isset($_GET['status']) ? (int)$_GET['status'] : 0;
 </div>
 
 <?php include __DIR__ . '/../partials/user-footer.php'; ?>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    let uModal, cModal, rModal;
-    document.addEventListener('DOMContentLoaded', () => {
-        uModal = new bootstrap.Modal(document.getElementById('updateAddressModal'));
-        cModal = new bootstrap.Modal(document.getElementById('cancelModal'));
-        rModal = new bootstrap.Modal(document.getElementById('reviewModal'));
-    });
-
-    async function openUpdateModal(id, addr, note) {
-        document.getElementById('updateOrderId').value = id;
-        document.getElementById('updateOrderNote').value = note; 
-        uModal.show(); 
-
-        let provSelect = document.getElementById('updProvince');
-        if (provSelect.options.length <= 1) { 
-            try {
-                let res = await fetch('index.php?controller=checkout&action=getProvinces');
-                let data = await res.json();
-                let html = '<option value="">-- Chọn Tỉnh/Thành phố --</option>';
-                data.forEach(p => html += `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`);
-                provSelect.innerHTML = html;
-            } catch (e) { console.error('Lỗi load tỉnh thành'); }
-        }
-    }
-
-    async function loadUpdDistricts() {
-        let provId = document.getElementById('updProvince').value;
-        let distSelect = document.getElementById('updDistrict');
-        let wardSelect = document.getElementById('updWard');
-        
-        wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>'; 
-        wardSelect.disabled = true;
-        
-        if(!provId) { 
-            distSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>'; 
-            distSelect.disabled = true; 
-            return; 
-        }
-        
-        let res = await fetch(`index.php?controller=checkout&action=getDistricts&province_id=${provId}`);
-        let data = await res.json();
-        let html = '<option value="">-- Chọn Quận/Huyện --</option>';
-        data.forEach(d => html += `<option value="${d.id}" data-name="${d.name}">${d.name}</option>`);
-        distSelect.innerHTML = html; distSelect.disabled = false;
-    }
-
-    async function loadUpdWards() {
-        let distId = document.getElementById('updDistrict').value;
-        let wardSelect = document.getElementById('updWard');
-        
-        if(!distId) { 
-            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>'; 
-            wardSelect.disabled = true; 
-            return; 
-        }
-        
-        let res = await fetch(`index.php?controller=checkout&action=getWards&district_id=${distId}`);
-        let data = await res.json();
-        let html = '<option value="">-- Chọn Phường/Xã --</option>';
-        data.forEach(w => html += `<option value="${w.id}" data-name="${w.name}">${w.name}</option>`);
-        wardSelect.innerHTML = html; wardSelect.disabled = false;
-    }
-
-    document.getElementById('updateOrderForm').addEventListener('submit', function(e) {
-        let provSel = document.getElementById('updProvince');
-        let distSel = document.getElementById('updDistrict');
-        let wardSel = document.getElementById('updWard');
-        let street  = document.getElementById('updStreet').value.trim();
-
-        if (provSel.selectedIndex <= 0 || distSel.selectedIndex <= 0 || wardSel.selectedIndex <= 0 || !street) {
-            e.preventDefault(); alert("Vui lòng chọn đầy đủ thông tin địa chỉ!"); return false;
-        }
-
-        let fullAddr = street + ', ' + wardSel.options[wardSel.selectedIndex].dataset.name + ', ' + distSel.options[distSel.selectedIndex].dataset.name + ', ' + provSel.options[provSel.selectedIndex].dataset.name;
-        document.getElementById('fullAddressInput').value = fullAddr;
-    });
-
-    function openCancelModal(id) { document.getElementById('cancelOrderId').value = id; cModal.show(); }
-
-    function openReviewModal(listingId, prodTitle, orderId) {
-        document.getElementById('reviewListingId').value = listingId;
-        document.getElementById('reviewOrderId').value = orderId; 
-        document.getElementById('reviewProdTitle').textContent = prodTitle;
-        rModal.show();
-    }
-
-    const toastEl = document.getElementById('toastMessage');
-    if (toastEl) {
-        setTimeout(() => toastEl.classList.add('show-toast'), 100);
-        setTimeout(() => { toastEl.style.opacity = '0'; setTimeout(() => toastEl.remove(), 400); }, 2500);
-    }
-</script>
 </body>
 </html>

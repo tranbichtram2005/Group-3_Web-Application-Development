@@ -1607,3 +1607,132 @@ window.detailActionChat = function(sellerId, listingId, isDeal = false) {
     }
     window.location.href = url;
 };
+
+/**
+ * ========================================================================
+ * 8. CÁC HÀM XỬ LÝ TRANG LỊCH SỬ ĐƠN HÀNG (ORDER HISTORY)
+ * ========================================================================
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Khởi tạo Modals nếu người dùng đang ở trang Order History
+    const updModalEl = document.getElementById('updateAddressModal');
+    if(updModalEl) window.orderHistoryUpdateModal = new bootstrap.Modal(updModalEl);
+    
+    const canModalEl = document.getElementById('cancelModal');
+    if(canModalEl) window.orderHistoryCancelModal = new bootstrap.Modal(canModalEl);
+    
+    const revModalEl = document.getElementById('reviewModal');
+    if(revModalEl) window.orderHistoryReviewModal = new bootstrap.Modal(revModalEl);
+
+    // 2. Xử lý Toast Message (Thông báo góc màn hình)
+    const toastEl = document.getElementById('toastMessage');
+    if (toastEl) {
+        setTimeout(() => toastEl.classList.add('show-toast'), 100);
+        setTimeout(() => { 
+            toastEl.style.opacity = '0'; 
+            setTimeout(() => toastEl.remove(), 400); 
+        }, 2500);
+    }
+
+    // 3. Xử lý submit form cập nhật địa chỉ
+    const updateOrderForm = document.getElementById('updateOrderForm');
+    if(updateOrderForm) {
+        updateOrderForm.addEventListener('submit', function(e) {
+            let provSel = document.getElementById('updProvince');
+            let distSel = document.getElementById('updDistrict');
+            let wardSel = document.getElementById('updWard');
+            let street  = document.getElementById('updStreet').value.trim();
+
+            if (provSel.selectedIndex <= 0 || distSel.selectedIndex <= 0 || wardSel.selectedIndex <= 0 || !street) {
+                e.preventDefault(); 
+                if(typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'warning', title: 'Khoan đã!', text: 'Vui lòng chọn đầy đủ thông tin địa chỉ!', confirmButtonColor: '#FF7A3D' });
+                } else {
+                    alert("Vui lòng chọn đầy đủ thông tin địa chỉ!"); 
+                }
+                return false;
+            }
+
+            let fullAddr = street + ', ' + wardSel.options[wardSel.selectedIndex].dataset.name + ', ' + distSel.options[distSel.selectedIndex].dataset.name + ', ' + provSel.options[provSel.selectedIndex].dataset.name;
+            document.getElementById('fullAddressInput').value = fullAddr;
+        });
+    }
+});
+
+// Hàm mở Modal cập nhật địa chỉ
+window.orderHistoryOpenUpdateModal = async function(id, addr, note) {
+    document.getElementById('updateOrderId').value = id;
+    document.getElementById('updateOrderNote').value = note; 
+    if(window.orderHistoryUpdateModal) window.orderHistoryUpdateModal.show(); 
+
+    let provSelect = document.getElementById('updProvince');
+    if (provSelect && provSelect.options.length <= 1) { 
+        try {
+            let res = await fetch('index.php?controller=checkout&action=getProvinces');
+            let data = await res.json();
+            let html = '<option value="">-- Chọn Tỉnh/Thành phố --</option>';
+            data.forEach(p => html += `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`);
+            provSelect.innerHTML = html;
+        } catch (e) { console.error('Lỗi load tỉnh thành'); }
+    }
+};
+
+// Hàm load Quận/Huyện
+window.orderHistoryLoadUpdDistricts = async function() {
+    let provId = document.getElementById('updProvince').value;
+    let distSelect = document.getElementById('updDistrict');
+    let wardSelect = document.getElementById('updWard');
+    
+    wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>'; 
+    wardSelect.disabled = true;
+    
+    if(!provId) { 
+        distSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>'; 
+        distSelect.disabled = true; 
+        return; 
+    }
+    
+    try {
+        let res = await fetch(`index.php?controller=checkout&action=getDistricts&province_id=${provId}`);
+        let data = await res.json();
+        let html = '<option value="">-- Chọn Quận/Huyện --</option>';
+        data.forEach(d => html += `<option value="${d.id}" data-name="${d.name}">${d.name}</option>`);
+        distSelect.innerHTML = html; distSelect.disabled = false;
+    } catch(e) { console.error('Lỗi load quận huyện'); }
+};
+
+// Hàm load Phường/Xã
+window.orderHistoryLoadUpdWards = async function() {
+    let distId = document.getElementById('updDistrict').value;
+    let wardSelect = document.getElementById('updWard');
+    
+    if(!distId) { 
+        wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>'; 
+        wardSelect.disabled = true; 
+        return; 
+    }
+    
+    try {
+        let res = await fetch(`index.php?controller=checkout&action=getWards&district_id=${distId}`);
+        let data = await res.json();
+        let html = '<option value="">-- Chọn Phường/Xã --</option>';
+        data.forEach(w => html += `<option value="${w.id}" data-name="${w.name}">${w.name}</option>`);
+        wardSelect.innerHTML = html; wardSelect.disabled = false;
+    } catch(e) { console.error('Lỗi load phường xã'); }
+};
+
+// Hàm mở Modal Hủy đơn
+window.orderHistoryOpenCancelModal = function(id) { 
+    document.getElementById('cancelOrderId').value = id; 
+    if(window.orderHistoryCancelModal) window.orderHistoryCancelModal.show(); 
+};
+
+// Hàm mở Modal Đánh giá
+window.orderHistoryOpenReviewModal = function(listingId, prodTitle, orderId) {
+    document.getElementById('reviewListingId').value = listingId;
+    document.getElementById('reviewOrderId').value = orderId; 
+    document.getElementById('reviewProdTitle').textContent = prodTitle;
+    if(window.orderHistoryReviewModal) window.orderHistoryReviewModal.show();
+};
+
