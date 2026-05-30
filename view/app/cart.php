@@ -147,6 +147,11 @@
     <?php endif; ?>
 </main>
 
+<script>
+    window.cartAppliedDiscount = 0;
+    window.cartAppliedVoucherId = null;
+</script>
+
 <?php if(isset($expiredDealsCount) && $expiredDealsCount > 0): ?>
 <script>
     document.addEventListener("DOMContentLoaded", function() {

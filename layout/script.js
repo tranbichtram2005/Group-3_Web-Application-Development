@@ -44,9 +44,6 @@ document.addEventListener("DOMContentLoaded", function () {
 let currentDiscount = 0;
 let addrModal = null;
 
-// ========================================================================
-// 2. KHỐI NÀY TỰ ĐỘNG CHẠY KHI VỪA LOAD XONG TRANG
-// ========================================================================
 document.addEventListener("DOMContentLoaded", function () {
     // --- Tính năng Dropdown Menu của cậu ---
     const dropdowns = document.querySelectorAll('.nav-dropdown');
