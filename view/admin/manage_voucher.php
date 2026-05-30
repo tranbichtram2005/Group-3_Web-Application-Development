@@ -52,7 +52,7 @@ $vouchers     = $vouchers     ?? [];
                         <div class="row g-2 mb-3">
                             <div class="col-6">
                                 <label class="form-label fw-semibold text-dark small">Loại giảm <span class="text-danger">*</span></label>
-                                <select class="form-select" name="typeId" id="typeId" onchange="toggleMaxDiscount()">
+                                <select class="form-select" name="typeId" id="typeId" onchange="window.adminToggleMaxDiscount()">
                                     <option value="2">Tiền mặt (VNĐ)</option>
                                     <option value="1">Phần trăm (%)</option>
                                 </select>
@@ -128,9 +128,8 @@ $vouchers     = $vouchers     ?? [];
                                 <?php foreach ($vouchers as $v): 
                                     $isExpired = !empty($v['expires_at']) && strtotime($v['expires_at']) < time();
                                     $isDepleted = $v['used_quantity'] >= $v['total_quantity'];
-                                    $isUsed = $v['used_quantity'] > 0; // Biến kiểm tra voucher đã được dùng chưa
+                                    $isUsed = $v['used_quantity'] > 0;
                                     
-                                    // BỎ DẤU ÂM: Chỉ hiện giá trị dương
                                     $discountStr = '';
                                     if ($v['type_id'] == 1) { 
                                         $discountStr = "{$v['discount_value']}%";
@@ -186,7 +185,7 @@ $vouchers     = $vouchers     ?? [];
                                                 </button>
                                             <?php else: ?>
                                                 <button type="button" class="btn btn-outline-danger btn-sm rounded-3" 
-                                                        onclick="openDeleteModal(<?= (int)$v['id'] ?>, '<?= htmlspecialchars(addslashes($v['code'])) ?>')">
+                                                        onclick="window.adminOpenDeleteModal(<?= (int)$v['id'] ?>, '<?= htmlspecialchars(addslashes($v['code'])) ?>')">
                                                     <i class="bi bi-trash3-fill"></i>
                                                 </button>
                                             <?php endif; ?>
@@ -223,70 +222,6 @@ $vouchers     = $vouchers     ?? [];
     </div>
 </div>
 
-<script>
-    document.getElementById('code').addEventListener('input', function () {
-        const pos = this.selectionStart;
-        this.value = this.value.toUpperCase();
-        this.setSelectionRange(pos, pos);
-    });
-
-    function toggleMaxDiscount() {
-        const type = document.getElementById('typeId').value;
-        const maxWrap = document.getElementById('maxDiscountWrapper');
-        const label = document.getElementById('discountLabel');
-        
-        if (type == '1') {
-            maxWrap.style.display = 'block';
-            label.innerHTML = 'Mức giảm (%) <span class="text-danger">*</span>';
-        } else {
-            maxWrap.style.display = 'none';
-            label.innerHTML = 'Mức giảm (VNĐ) <span class="text-danger">*</span>';
-        }
-    }
-
-    function openDeleteModal(id, code) {
-        document.getElementById('modalVoucherCode').textContent = code;
-        document.getElementById('confirmDeleteBtn').href = 'index.php?controller=voucher&action=deleteVoucher&id=' + id;
-        new bootstrap.Modal(document.getElementById('deleteModal')).show();
-    }
-
-    // Lắng nghe biến msg từ Controller để bắn thông báo SweetAlert2
-    document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const msg = urlParams.get('msg');
-        
-        if (msg === 'create_success') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Thành công!',
-                text: 'Voucher đã được phát hành.',
-                confirmButtonColor: '#FF7A3D',
-                timer: 2000,
-                showConfirmButton: false
-            });
-        } else if (msg === 'delete_success') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Đã xóa!',
-                text: 'Voucher đã được xóa khỏi hệ thống.',
-                confirmButtonColor: '#FF7A3D',
-                timer: 2000,
-                showConfirmButton: false
-            });
-        } else if (msg === 'delete_fail_used') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Không thể xóa!',
-                text: 'Voucher này đã có khách hàng sử dụng.',
-                confirmButtonColor: '#dc3545'
-            });
-        }
-        
-        // Tự động xóa tham số msg khỏi thanh URL để F5 không bị hiện lại popup
-        if (msg) {
-            window.history.replaceState(null, null, window.location.pathname + '?controller=voucher&action=index');
-        }
-    });
-</script>
+<script src="layout/script.js?v=<?= time() ?>"></script>
 
 <?php include __DIR__ . '/../partials/admin-footer.php'; ?>

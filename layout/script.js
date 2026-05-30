@@ -1433,3 +1433,84 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+/**
+ * ========================================================================
+ * 6. CÁC HÀM XỬ LÝ TRANG QUẢN LÝ VOUCHER (ADMIN/SELLER)
+ * ========================================================================
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Xử lý thông báo (Toast/SweetAlert) từ URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const msg = urlParams.get('msg');
+    
+    if (msg === 'create_success') {
+        if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: 'Thành công!', text: 'Voucher đã được phát hành.', confirmButtonColor: '#FF7A3D', timer: 2000, showConfirmButton: false });
+    } else if (msg === 'delete_success') {
+        if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: 'Đã xóa!', text: 'Voucher đã được xóa khỏi hệ thống.', confirmButtonColor: '#FF7A3D', timer: 2000, showConfirmButton: false });
+    } else if (msg === 'delete_fail_used') {
+        if(typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Không thể xóa!', text: 'Voucher này đã có khách hàng sử dụng.', confirmButtonColor: '#dc3545' });
+    }
+    
+    // Tự động xóa tham số msg khỏi thanh URL để F5 không bị hiện lại popup
+    if (msg) {
+        window.history.replaceState(null, null, window.location.pathname + '?controller=voucher&action=index');
+    }
+
+    // 2. Xử lý ẩn/hiện ô "Giảm tối đa" khi đổi loại Voucher (%, đ)
+    const typeSelect = document.getElementById('typeId');
+    const maxDiscountDiv = document.getElementById('maxDiscountDiv');
+    const maxDiscountInput = document.getElementById('maxDiscount');
+    
+    if (typeSelect && maxDiscountDiv && maxDiscountInput) {
+        typeSelect.addEventListener('change', function() {
+            if (this.value == 1) { // 1 là %
+                maxDiscountDiv.style.display = 'block';
+                maxDiscountInput.required = true;
+            } else { // 2 là Số tiền cố định
+                maxDiscountDiv.style.display = 'none';
+                maxDiscountInput.required = false;
+                maxDiscountInput.value = ''; 
+            }
+        });
+    }
+});
+
+// Hàm validate ngày tháng trước khi submit form
+window.adminValidateDates = function() {
+    const start = document.getElementById('startsAt')?.value;
+    const end = document.getElementById('expiresAt')?.value;
+    if (start && end) {
+        if (new Date(end) <= new Date(start)) {
+            if(typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Lỗi chọn ngày', text: 'Ngày kết thúc phải sau ngày bắt đầu!', confirmButtonColor: '#dc3545' });
+            } else {
+                alert("Ngày kết thúc phải sau ngày bắt đầu!");
+            }
+            return false;
+        }
+    }
+    return true;
+};
+
+// Hàm xác nhận xóa voucher
+window.adminConfirmDelete = function(url) {
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Xóa voucher này?',
+            text: "Hành động này không thể hoàn tác!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Đồng ý xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
+    } else {
+        if(confirm('Bạn có chắc chắn muốn xóa voucher này không?')) window.location.href = url;
+    }
+};
