@@ -190,7 +190,7 @@
 
                     <div id="action-wrapper">
                         <?php if (isset($order['status_id']) && $order['status_id'] == 1): ?>
-                            <form id="formAccept" onsubmit="handleAjaxSubmit(event, 'accept', this)" class="mb-2">
+                            <form id="formAccept" onsubmit="manageOrderSellerDetail_handleAjaxSubmit(event, 'accept', this)" class="mb-2">
                                 <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
                                 <button type="submit" class="btn btn-2life w-100 fw-bold p-2 mb-2">
                                     <i class="bi bi-check-circle me-2"></i>Xác nhận & Chuẩn bị hàng
@@ -201,7 +201,7 @@
                             </button>
 
                         <?php elseif (isset($order['status_id']) && $order['status_id'] == 3): ?>
-                            <form id="formShip" onsubmit="handleAjaxSubmit(event, 'ship', this)" class="mb-2">
+                            <form id="formShip" onsubmit="manageOrderSellerDetail_handleAjaxSubmit(event, 'ship', this)" class="mb-2">
                                 <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
                                 <button type="submit" class="btn btn-success w-100 fw-bold rounded-3 p-2 mb-2">
                                     <i class="bi bi-truck me-2"></i>Đã giao cho đơn vị vận chuyển
@@ -309,7 +309,7 @@
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
-            <form onsubmit="handleAjaxSubmit(event, 'cancel', this)">
+            <form onsubmit="manageOrderSellerDetail_handleAjaxSubmit(event, 'cancel', this)">
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title fw-bold text-dark">Lý do hủy đơn hàng</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -335,44 +335,3 @@
 </div>
 
 <?php include __DIR__ . '/../partials/user-footer.php'; ?>
-
-<script>
-function handleAjaxSubmit(event, actionName, formElement) {
-    event.preventDefault();
-    const formData = new FormData(formElement);
-    const wrapper = document.getElementById('action-wrapper');
-    const badge = document.getElementById('ui-badge-status');
-    const orderId = formData.get('order_id');
-
-    Swal.fire({
-        title: 'Đang xử lý...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
-
-    fetch(`index.php?controller=manageorderseller&action=${actionName}`, {
-        method: 'POST',
-        body: formData,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Thành công',
-                text: data.message,
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                window.location.reload();
-            });
-        } else {
-            Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message });
-        }
-    })
-    .catch(err => {
-        Swal.fire('Lỗi', 'Không thể kết nối với máy chủ!', 'error');
-    });
-}
-</script>

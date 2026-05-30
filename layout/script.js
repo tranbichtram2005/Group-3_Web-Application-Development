@@ -1226,3 +1226,121 @@ function approveSeller_switchTab(event, clickedTab) {
             wrapper.innerHTML = '<div class="alert alert-danger rounded-4 m-0">Lỗi không thể nạp danh sách dữ liệu. Vui lòng F5 thử lại.</div>';
         });
 }
+
+// ==========================================
+// KHU VỰC: CHI TIẾT ĐƠN HÀNG BÊN BÁN (MANAGE ORDER SELLER DETAIL)
+// ==========================================
+
+function manageOrderSellerDetail_handleAjaxSubmit(event, actionName, formElement) {
+    event.preventDefault();
+    const formData = new FormData(formElement);
+
+    // Bật hiệu ứng Loading an toàn
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Đang xử lý...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+    }
+
+    fetch(`index.php?controller=manageorderseller&action=${actionName}`, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                alert(data.message);
+                window.location.reload();
+            }
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message });
+            } else {
+                alert(data.message);
+            }
+        }
+    })
+    .catch(err => {
+        console.error("Fetch Error:", err);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire('Lỗi', 'Không thể kết nối với máy chủ!', 'error');
+        } else {
+            alert('Lỗi: Không thể kết nối với máy chủ!');
+        }
+    });
+}
+
+// ==========================================
+// KHU VỰC: DANH SÁCH ĐƠN HÀNG BÊN BÁN (MANAGE ORDER SELLER LIST)
+// ==========================================
+
+function manageOrderSellerList_switchTab(event, clickedTab) {
+    event.preventDefault();
+    const status = clickedTab.getAttribute('data-status');
+    const container = document.getElementById('orderListContainer');
+    const allTabs = document.querySelectorAll('.ajax-tab');
+
+    // Dừng thực thi nếu không tìm thấy DOM (Bảo vệ cho trang khác)
+    if (!container || allTabs.length === 0) return;
+
+    // 1. Đổi style Tab
+    allTabs.forEach(t => {
+        t.classList.remove('active');
+        t.style.backgroundColor = '';
+        t.style.color = '#555';
+    });
+    
+    clickedTab.classList.add('active');
+    clickedTab.style.backgroundColor = '#FF7A3D';
+    clickedTab.style.color = 'white';
+
+    // 2. Loading state chờ phản hồi
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-warning" role="status"></div><p class="mt-2 text-muted">Đang tải...</p></div>';
+
+    // 3. Gọi AJAX lấy data HTML theo Status mới
+    fetch(`index.php?controller=manageorderseller&action=fetchList&status=${status}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            // Update nội dung HTML list
+            container.innerHTML = data.html;
+            
+            // Cập nhật lại số lượng badge trên các tab một cách an toàn
+            const count0 = document.getElementById('count-0');
+            const count1 = document.getElementById('count-1');
+            const count3 = document.getElementById('count-3');
+            const count4 = document.getElementById('count-4');
+            const count5 = document.getElementById('count-5');
+            const count6 = document.getElementById('count-6');
+
+            if(count0 && data.counts[0] !== undefined) count0.innerText = data.counts[0];
+            if(count1 && data.counts[1] !== undefined) count1.innerText = data.counts[1];
+            if(count3 && data.counts[3] !== undefined) count3.innerText = data.counts[3];
+            if(count4 && data.counts[4] !== undefined) count4.innerText = data.counts[4];
+            if(count5 && data.counts[5] !== undefined) count5.innerText = data.counts[5];
+            if(count6 && data.counts[6] !== undefined) count6.innerText = data.counts[6];
+        } else {
+            container.innerHTML = '<div class="text-center py-5 text-danger">Lỗi dữ liệu từ máy chủ. Vui lòng F5 thử lại.</div>';
+        }
+    })
+    .catch(error => {
+        console.error("AJAX Error: ", error);
+        container.innerHTML = '<div class="text-center py-5 text-danger">Lỗi tải dữ liệu. Vui lòng thử lại.</div>';
+    });
+}
