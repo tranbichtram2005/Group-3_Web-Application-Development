@@ -39,13 +39,3 @@ $btnLoginUrl = "index.php?controller=auth&action=login";
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var element = document.getElementById('unauthorizedAccessModal');
-        if (element) {
-            var myModal = new bootstrap.Modal(element);
-            myModal.show();
-        }
-    });
-</script>

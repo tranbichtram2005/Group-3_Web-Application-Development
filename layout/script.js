@@ -1733,3 +1733,15 @@ window.orderHistoryOpenReviewModal = function(listingId, prodTitle, orderId) {
     if(window.orderHistoryReviewModal) window.orderHistoryReviewModal.show();
 };
 
+/**
+ * ========================================================================
+ * 9. HIỂN THỊ MODAL BÁO LỖI PHÂN QUYỀN (UNAUTHORIZED MODAL)
+ * ========================================================================
+ */
+document.addEventListener("DOMContentLoaded", function() {
+    var unauthModalEl = document.getElementById('unauthorizedAccessModal');
+    if (unauthModalEl && typeof bootstrap !== 'undefined') {
+        var unauthModal = new bootstrap.Modal(unauthModalEl);
+        unauthModal.show();
+    }
+});
