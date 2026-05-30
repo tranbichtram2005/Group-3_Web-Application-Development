@@ -72,22 +72,23 @@
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-4">
                                 <label class="form-label fw-bold">Tỉnh / Thành phố <span class="text-danger">*</span></label>
-                                <select name="province_id" class="form-select" required>
-                                    <option value="1">TP. Hồ Chí Minh</option>
+                                <select name="province_id" id="province" class="form-select" required>
+                                    <option value="">-- Chọn Tỉnh/Thành --</option>
+                                    <?php if(isset($provinces)): foreach($provinces as $prov): ?>
+                                        <option value="<?= $prov['id'] ?>"><?= htmlspecialchars($prov['name']) ?></option>
+                                    <?php endforeach; endif; ?>
                                 </select>
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label fw-bold">Quận / Huyện <span class="text-danger">*</span></label>
-                                <select name="district_id" class="form-select" required>
-                                    <option value="2">Quận 10</option>
-                                    <option value="3">Quận Bình Thạnh</option>
+                                <select name="district_id" id="district" class="form-select" required disabled>
+                                    <option value="">-- Chọn Quận/Huyện --</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label fw-bold">Phường / Xã <span class="text-danger">*</span></label>
-                                <select name="ward_id" class="form-select" required>
-                                    <option value="1">Phường 14 (Q10)</option>
-                                    <option value="4">Phường 25 (BT)</option>
+                                <select name="ward_id" id="ward" class="form-select" required disabled>
+                                    <option value="">-- Chọn Phường/Xã --</option>
                                 </select>
                             </div>
                         </div>
@@ -113,5 +114,71 @@
             </div>
         </div>
     </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const provinceSelect = document.getElementById('province');
+    const districtSelect = document.getElementById('district');
+    const wardSelect = document.getElementById('ward');
+
+    // Sự kiện khi thay đổi Tỉnh / Thành phố
+    provinceSelect.addEventListener('change', async function() {
+        const provinceId = this.value;
+        
+        // Reset ô Huyện và Xã
+        districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+        wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+        wardSelect.disabled = true;
+
+        if (provinceId) {
+            districtSelect.disabled = false; // Mở khóa ô Quận/Huyện
+            districtSelect.innerHTML = '<option value="">Đang tải...</option>';
+            
+            try {
+                // Gọi API tới AuthController
+                const response = await fetch(`index.php?controller=auth&action=getDistricts&province_id=${provinceId}`);
+                const districts = await response.json();
+                
+                districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+                districts.forEach(d => {
+                    districtSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+                });
+            } catch (e) {
+                console.error("Lỗi khi lấy dữ liệu Quận/Huyện:", e);
+                districtSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+            }
+        } else {
+            districtSelect.disabled = true;
+        }
+    });
+
+    // Sự kiện khi thay đổi Quận / Huyện
+    districtSelect.addEventListener('change', async function() {
+        const districtId = this.value;
+        wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+
+        if (districtId) {
+            wardSelect.disabled = false; // Mở khóa ô Phường/Xã
+            wardSelect.innerHTML = '<option value="">Đang tải...</option>';
+            
+            try {
+                // Gọi API tới AuthController
+                const response = await fetch(`index.php?controller=auth&action=getWards&district_id=${districtId}`);
+                const wards = await response.json();
+                
+                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                wards.forEach(w => {
+                    wardSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                });
+            } catch (e) {
+                console.error("Lỗi khi lấy dữ liệu Phường/Xã:", e);
+                wardSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+            }
+        } else {
+            wardSelect.disabled = true;
+        }
+    });
+});
+</script>
 </body>
 </html>

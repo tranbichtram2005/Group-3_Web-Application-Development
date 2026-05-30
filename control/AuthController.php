@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../model/Database.php';
 require_once __DIR__ . '/../model/user.php';
+require_once __DIR__ . '/../model/LocationModel.php'; 
 require_once __DIR__ . '/../lib/PHPMailer/Exception.php';
 require_once __DIR__ . '/../lib/PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/../lib/PHPMailer/SMTP.php';
@@ -14,12 +15,14 @@ use PHPMailer\PHPMailer\Exception;
 
 class AuthController {
     private $userModel;
+    private $locationModel;
     private $db;
 
     public function __construct() {
         $database = new Database();
         $this->db = $database->getConnection();
         $this->userModel = new User($this->db);
+        $this->locationModel = new LocationModel($this->db);
     }
 
     // 1. Hàm Đăng nhập (Đã tích hợp phân luồng Admin/User)
@@ -92,6 +95,7 @@ class AuthController {
                 }
             }
         }
+        $provinces = $this->locationModel->getAllProvinces();
         require_once __DIR__ . '/../view/Auth/register.php';
     }
 
@@ -170,6 +174,30 @@ class AuthController {
         } catch (Exception $e) {
             return false;
         }
+    }
+
+    // API Lấy danh sách Quận/Huyện
+    public function getDistricts() {
+        header('Content-Type: application/json');
+        if (isset($_GET['province_id'])) {
+            $districts = $this->locationModel->getDistrictsByProvince($_GET['province_id']);
+            echo json_encode($districts);
+        } else {
+            echo json_encode([]);
+        }
+        exit;
+    }
+
+    // API Lấy danh sách Phường/Xã
+    public function getWards() {
+        header('Content-Type: application/json');
+        if (isset($_GET['district_id'])) {
+            $wards = $this->locationModel->getWardsByDistrict($_GET['district_id']);
+            echo json_encode($wards);
+        } else {
+            echo json_encode([]);
+        }
+        exit;
     }
 }
 ?>
