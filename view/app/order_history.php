@@ -133,7 +133,7 @@ $currentStatus = isset($_GET['status']) ? (int)$_GET['status'] : 0;
                         <div class="col-md-8 border-end-md pe-md-4 mb-3 mb-md-0">
                             <div class="mb-3 small text-secondary">
                                 <div class="mb-1"><i class="bi bi-geo-alt me-1"></i> Giao đến: <strong class="text-dark"><?= htmlspecialchars($order['street_address']) ?></strong></div>
-                                <div><i class="bi bi-credit-card me-1"></i> Thanh toán: <strong class="text-dark"><?= ($order['payment_method_id'] ?? 1) == 2 ? 'VNPAY' : 'COD' ?></strong></div>
+                                <div><i class="bi  me-1"></i>  <strong class="text-dark"><?= ($order['payment_method_id'] ?? 1) == 2 ? '' : '' ?></strong></div>
                             </div>
 
                             <div class="border-top pt-3">
