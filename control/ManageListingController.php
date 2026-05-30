@@ -74,7 +74,7 @@ class ManageListingController {
         $listings = $this->manageModel->getSellerListings($userId, $currentTab, $searchKeyword, $limit, $offset);
         $counts = $this->manageModel->getStatusCounts($userId);
 
-        include 'view/manage-listing.php';
+        include 'view/app/manage-listing.php';
     }
 
     // AJAX: Lấy data cho Modal

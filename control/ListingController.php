@@ -100,7 +100,7 @@ class ListingController
             $conditions = $this->listingModel->getAllConditions();
             $provinces  = $this->listingModel->getProvinces();
 
-            include 'view/post-product.php';
+            include 'view/app/post-product.php';
         }
     }
 

@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/partials/user-header.php'; ?>
+<?php require_once 'view/partials/user-header.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
@@ -318,4 +318,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once __DIR__ . '/partials/user-footer.php'; ?>
+<?php require_once 'view/partials/user-footer.php'; ?>
