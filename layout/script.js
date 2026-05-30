@@ -1068,3 +1068,161 @@ function approveListingList_goToDetail(event, targetUrl) {
     // Thực hiện chuyển trang
     window.location.href = targetUrl;
 }
+
+// ==========================================
+// KHU VỰC: CHI TIẾT PHÊ DUYỆT NGƯỜI BÁN (APPROVE SELLER DETAIL)
+// ==========================================
+
+// Xử lý sự kiện bấm Phê duyệt
+function approveSellerDetail_handleApprove(btnElement) {
+    const profileId = btnElement.getAttribute('data-profile');
+    const userId = btnElement.getAttribute('data-user');
+    approveSellerDetail_sendAjaxRequest('approve', profileId, userId, '');
+}
+
+// Xử lý sự kiện bấm Xác nhận từ chối
+function approveSellerDetail_handleReject(btnElement) {
+    const profileId = btnElement.getAttribute('data-profile');
+    const userId = btnElement.getAttribute('data-user');
+    const reasonInput = document.getElementById('rejectReasonInput');
+    const reason = reasonInput ? reasonInput.value.trim() : '';
+
+    if (!reason) {
+        alert('Admin vui lòng cung cấp lý do từ chối hồ sơ!');
+        return;
+    }
+    approveSellerDetail_sendAjaxRequest('reject', profileId, userId, reason);
+}
+
+// Xử lý gửi AJAX chung
+function approveSellerDetail_sendAjaxRequest(actionName, profileId, userId, reason) {
+    const formData = new FormData();
+    formData.append('profile_id', profileId);
+    formData.append('user_id', userId);
+    
+    if (actionName === 'reject') {
+        formData.append('reject_reason', reason);
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Đang xử lý dữ liệu...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+    }
+
+    fetch(`index.php?controller=approveseller&action=${actionName}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Thành công', data.message, 'success').then(() => approveSellerDetail_updateUI(actionName));
+            } else {
+                alert(data.message);
+                approveSellerDetail_updateUI(actionName);
+            }
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Thất bại', data.message, 'error');
+            } else {
+                alert(data.message);
+            }
+        }
+    })
+    .catch(err => {
+        console.error("Fetch Error:", err);
+        alert('Lỗi đường truyền: Không thể kết nối tới máy chủ!');
+    });
+}
+
+// Cập nhật giao diện sau xử lý
+function approveSellerDetail_updateUI(actionName) {
+    // Dọn dẹp Modal Bootstrap triệt để
+    const modalEl = document.getElementById('rejectModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+    }
+    
+    // Cố ép xóa màn hình đen (backdrop) nếu Bootstrap bị kẹt
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+
+    // Cập nhật DOM hiển thị kết quả
+    const wrapper = document.getElementById('panel-action-wrapper');
+    const statusBadge = document.getElementById('status-badge');
+
+    if (actionName === 'approve') {
+        if (wrapper) wrapper.innerHTML = `<div class="alert alert-success m-0 rounded-3 text-dark small"><i class="bi bi-patch-check-fill me-2 text-success"></i>Hồ sơ này vừa được kích hoạt thành công.</div>`;
+        if (statusBadge) {
+            statusBadge.className = "badge p-2 rounded-3 bg-success-subtle text-success";
+            statusBadge.innerHTML = '<i class="bi bi-check-circle me-1"></i>ĐÃ KÍCH HOẠT';
+        }
+    } else {
+        if (wrapper) wrapper.innerHTML = `<div class="alert alert-secondary m-0 rounded-3 text-dark small"><i class="bi bi-x-octagon-fill me-2 text-danger"></i>Đơn đăng ký đã bị từ chối và xóa khỏi danh sách.</div>`;
+        if (statusBadge) {
+            statusBadge.className = "badge p-2 rounded-3 bg-danger-subtle text-danger";
+            statusBadge.innerHTML = '<i class="bi bi-x-circle me-1"></i>ĐÃ TỪ CHỐI';
+        }
+    }
+}
+
+// ==========================================
+// KHU VỰC: DANH SÁCH PHÊ DUYỆT NGƯỜI BÁN (APPROVE SELLER LIST)
+// ==========================================
+
+function approveSeller_switchTab(event, clickedTab) {
+    event.preventDefault();
+    const status = clickedTab.getAttribute('data-status');
+    const wrapper = document.getElementById('sellerListWrapper');
+    const allTabs = document.querySelectorAll('.tab-action');
+
+    // Nếu không tìm thấy các thành phần này thì ngưng chạy để tránh lỗi
+    if (!wrapper || allTabs.length === 0) return;
+
+    // 1. Cập nhật phong cách hiển thị cho Tab đang click
+    allTabs.forEach(t => {
+        t.classList.remove('active');
+        t.style.backgroundColor = '';
+        t.style.color = '#555';
+    });
+    
+    clickedTab.classList.add('active');
+    clickedTab.style.backgroundColor = '#0d6efd';
+    clickedTab.style.color = 'white';
+
+    // 2. Loading State hiệu ứng chờ
+    wrapper.innerHTML = `
+        <div class="text-center py-5 bg-white rounded-4 border shadow-sm">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted small mb-0">Đang tải danh sách dữ liệu...</p>
+        </div>`;
+
+    // 3. Gọi AJAX nhận HTML render mới
+    fetch(`index.php?controller=approveseller&action=fetchList&status=${status}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                wrapper.innerHTML = data.html;
+                
+                // Cập nhật lại số lượng trên Badge (có kiểm tra tồn tại DOM)
+                const badgePending = document.getElementById('badge-pending');
+                const badgeVerified = document.getElementById('badge-verified');
+                const badgeRejected = document.getElementById('badge-rejected');
+
+                if (badgePending && data.stats[0] !== undefined) badgePending.innerText = data.stats[0];
+                if (badgeVerified && data.stats[1] !== undefined) badgeVerified.innerText = data.stats[1];
+                if (badgeRejected && data.stats[2] !== undefined) badgeRejected.innerText = data.stats[2];
+            }
+        })
+        .catch(err => {
+            console.error("AJAX Error: ", err);
+            wrapper.innerHTML = '<div class="alert alert-danger rounded-4 m-0">Lỗi không thể nạp danh sách dữ liệu. Vui lòng F5 thử lại.</div>';
+        });
+}

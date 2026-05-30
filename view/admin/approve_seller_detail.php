@@ -65,7 +65,7 @@
                 <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Quyết định phê duyệt</h5>
                 <div id="panel-action-wrapper">
                     <?php if ($seller['is_verified'] == 0): ?>
-                        <button type="button" id="btnApprove" data-profile="<?= $seller['id'] ?>" data-user="<?= $seller['user_id'] ?>" class="btn btn-success w-100 fw-bold rounded-3 p-2 mb-2">
+                        <button type="button" id="btnApprove" data-profile="<?= $seller['id'] ?>" data-user="<?= $seller['user_id'] ?>" class="btn btn-success w-100 fw-bold rounded-3 p-2 mb-2" onclick="approveSellerDetail_handleApprove(this)">
                             <i class="bi bi-check-circle me-2"></i>Phê duyệt kích hoạt
                         </button>
                         <button type="button" class="btn btn-outline-danger w-100 fw-medium rounded-3 p-2 btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
@@ -98,121 +98,10 @@
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-light rounded-3 fw-semibold small" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" id="btnConfirmReject" data-profile="<?= $seller['id'] ?>" data-user="<?= $seller['user_id'] ?>" class="btn btn-danger rounded-3 fw-bold small">Xác nhận từ chối</button>
+                <button type="button" id="btnConfirmReject" data-profile="<?= $seller['id'] ?>" data-user="<?= $seller['user_id'] ?>" class="btn btn-danger rounded-3 fw-bold small" onclick="approveSellerDetail_handleReject(this)">Xác nhận từ chối</button>
             </div>
         </div>
     </div>
 </div>
 
 <?php include __DIR__ . '/../partials/admin-footer.php'; ?>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    
-    // 1. Xử lý nút Phê Duyệt
-    const btnApprove = document.getElementById('btnApprove');
-    if (btnApprove) {
-        btnApprove.addEventListener('click', function() {
-            const profileId = this.getAttribute('data-profile');
-            const userId = this.getAttribute('data-user');
-            sendAjaxRequest('approve', profileId, userId, '');
-        });
-    }
-
-    // 2. Xử lý nút Từ chối (Bên trong Modal)
-    const btnConfirmReject = document.getElementById('btnConfirmReject');
-    if (btnConfirmReject) {
-        btnConfirmReject.addEventListener('click', function() {
-            const profileId = this.getAttribute('data-profile');
-            const userId = this.getAttribute('data-user');
-            const reason = document.getElementById('rejectReasonInput').value.trim();
-
-            if (!reason) {
-                // Dùng alert cơ bản để đảm bảo luôn hiển thị kể cả khi lỗi thư viện
-                alert('Admin vui lòng cung cấp lý do từ chối hồ sơ!');
-                return;
-            }
-            sendAjaxRequest('reject', profileId, userId, reason);
-        });
-    }
-
-    // 3. Hàm gửi dữ liệu đi
-    function sendAjaxRequest(actionName, profileId, userId, reason) {
-        const formData = new FormData();
-        formData.append('profile_id', profileId);
-        formData.append('user_id', userId);
-        if (actionName === 'reject') {
-            formData.append('reject_reason', reason);
-        }
-
-        // Bật loading nếu có SweetAlert
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Đang xử lý dữ liệu...',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-        }
-
-        fetch(`index.php?controller=approveseller&action=${actionName}`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire('Thành công', data.message, 'success').then(() => updateUI(actionName));
-                } else {
-                    alert(data.message);
-                    updateUI(actionName);
-                }
-            } else {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire('Thất bại', data.message, 'error');
-                } else {
-                    alert(data.message);
-                }
-            }
-        })
-        .catch(err => {
-            console.error("Fetch Error:", err);
-            alert('Lỗi đường truyền: Không thể kết nối tới máy chủ!');
-        });
-    }
-
-    // 4. Hàm cập nhật giao diện (ẩn Modal dọn dẹp rác)
-    function updateUI(actionName) {
-        // Dọn dẹp Modal Bootstrap triệt để
-        const modalEl = document.getElementById('rejectModal');
-        if (modalEl && typeof bootstrap !== 'undefined') {
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) modalInstance.hide();
-        }
-        
-        // Cố ép xóa màn hình đen (backdrop) nếu Bootstrap bị kẹt
-        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-
-        // Cập nhật DOM hiển thị kết quả
-        const wrapper = document.getElementById('panel-action-wrapper');
-        const statusBadge = document.getElementById('status-badge');
-
-        if (actionName === 'approve') {
-            if(wrapper) wrapper.innerHTML = `<div class="alert alert-success m-0 rounded-3 text-dark small"><i class="bi bi-patch-check-fill me-2 text-success"></i>Hồ sơ này vừa được kích hoạt thành công.</div>`;
-            if(statusBadge) {
-                statusBadge.className = "badge p-2 rounded-3 bg-success-subtle text-success";
-                statusBadge.innerHTML = '<i class="bi bi-check-circle me-1"></i>ĐÃ KÍCH HOẠT';
-            }
-        } else {
-            if(wrapper) wrapper.innerHTML = `<div class="alert alert-secondary m-0 rounded-3 text-dark small"><i class="bi bi-x-octagon-fill me-2 text-danger"></i>Đơn đăng ký đã bị từ chối và xóa khỏi danh sách.</div>`;
-            if(statusBadge) {
-                statusBadge.className = "badge p-2 rounded-3 bg-danger-subtle text-danger";
-                statusBadge.innerHTML = '<i class="bi bi-x-circle me-1"></i>ĐÃ TỪ CHỐI';
-            }
-        }
-    }
-});
-</script>
