@@ -149,26 +149,77 @@ class AuthController {
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
             
-            // ĐIỀN THẲNG THÔNG TIN Ở ĐÂY ĐỂ CẢ TEAM DÙNG CHUNG KHÔNG CẦN .ENV
             $mail->Username = 'vyle.31231022150@st.ueh.edu.vn'; 
-            $mail->Password = 'slxuvfirffypbfcs'; // 16 ký tự mật khẩu ứng dụng Google
+            $mail->Password = 'slxuvfirffypbfcs'; 
             
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
 
-            // Thêm đúng 3 dòng này để máy bạn nào trong nhóm chạy XAMPP cũng không bị chặn SSL
             $mail->SMTPOptions = array(
                 'ssl' => array('verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true)
             );
             
             $mail->setFrom($mail->Username, '2Life Marketplace');
             $mail->addAddress($email);
+            $mail->CharSet = 'UTF-8';
             $mail->isHTML(true);
-            $mail->Subject = '=[2Life] Ma xac thuc OTP dang ky tai khoan=';
+            $mail->Subject = 'Mã xác thực (OTP) đăng ký tài khoản 2Life';
             
-            // Giữ nguyên mẫu hiển thị ngắn gọn, dễ nhìn của cậu
-            $mail->Body    = "<h3>Mã xác thực đăng ký tài khoản của bạn là: <b style='color:#FF7A3D; font-size:24px;'>$otp</b></h3><p>Mã có hiệu lực trong vòng 5 phút.</p>";
+           // Lấy tên người dùng đang đăng ký để gửi mail cho thân thiện
+            $user_name = isset($_SESSION['temp_user']['full_name']) ? $_SESSION['temp_user']['full_name'] : 'bạn';
             
+            // ==========================================
+            // TEMPLATE HTML ĐẸP LUNG LINH CỦA 2LIFE
+            // ==========================================
+            $mail->Body = '
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f4f8fb; font-family: Arial, Helvetica, sans-serif;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding: 30px 15px;">
+                    <tr>
+                        <td align="center">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                
+                                <tr>
+                                    <td align="center" style="background-color: #FF7A3D; padding: 25px;">
+                                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; letter-spacing: -1px;">2Life</h1>
+                                        <p style="color: #ffffff; margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Marketplace</p>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="padding: 40px 30px; color: #333333; line-height: 1.6;">
+                                        <h3 style="color: #1F3C5A; font-size: 20px; margin-top: 0;">Chào '.$user_name.',</h3>
+                                        <p style="font-size: 15px;">Cảm ơn bạn đã tham gia cộng đồng trao đổi đồ cũ 2Life. Để hoàn tất việc đăng ký, vui lòng sử dụng mã xác thực (OTP) bên dưới:</p>
+                                        
+                                        <div style="text-align: center; margin: 35px 0;">
+                                            <span style="display: inline-block; font-size: 32px; font-weight: bold; color: #FF7A3D; letter-spacing: 8px; background-color: #fff3ed; padding: 15px 35px; border-radius: 8px; border: 2px dashed #FF7A3D;">
+                                                '.$otp.'
+                                            </span>
+                                        </div>
+
+                                        <p style="font-size: 15px;">Mã này sẽ hết hạn trong vòng <strong>5 phút</strong>. Tuyệt đối không chia sẻ mã này cho bất kỳ ai để bảo mật tài khoản.</p>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td align="center" style="background-color: #f8f9fa; padding: 20px; border-top: 1px solid #eeeeee;">
+                                        <p style="margin: 0; color: #888888; font-size: 13px;">© 2026 2Life Marketplace.</p>
+                                        <p style="margin: 5px 0 0 0; color: #aaaaaa; font-size: 12px;">Email này được gửi tự động, vui lòng không trả lời.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            ';
+            // ==========================================
+            $mail->AltBody = "Chào bạn,\nMã xác thực (OTP) đăng ký tài khoản 2Life của bạn là: $otp\nMã này sẽ hết hạn trong 5 phút.\nVui lòng không chia sẻ mã này cho bất kỳ ai.";
             $mail->send();
             return true;
         } catch (Exception $e) {
