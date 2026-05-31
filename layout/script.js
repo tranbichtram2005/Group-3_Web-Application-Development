@@ -1745,3 +1745,875 @@ document.addEventListener("DOMContentLoaded", function() {
         unauthModal.show();
     }
 });
+
+/**
+ * ========================================================================
+ * 10. CHAT BÊN GIAO DIỆN KHÁCH HÀNG (USER)
+ * ========================================================================
+ */
+if (document.getElementById('user-chatbox')) {
+    { // Mở Block Scope để khóa biến (tránh conflict Admin/User)
+        window.actChatType = 'trade'; 
+        
+        let currentUserId = window.CHAT_USER_ID || 0;
+        let actConv = 0, actListing = 0, actBuyer = 0;
+        let actOfferId = 0, actOfferPrice = 0, actOfferQty = 1;
+        let lastMsgId = 0;
+        let pollInterval = null;
+        let currentDealAction = 'create';
+        let isFirstLoad = true;
+
+        // 1. LẮNG NGHE RADAR TỪ HEADER
+        window.addEventListener('unreadCountsUpdated', (e) => {
+            let perConv = e.detail;
+            document.querySelectorAll('.chat-list-item').forEach(item => {
+                let cId = item.dataset.convId;
+                let cType = item.dataset.type;
+                let badge = item.querySelector('.unread-badge');
+                if(!badge) return;
+                
+                let jsonKey = cType + '_' + cId;
+                
+                if (cId == actConv && window.actChatType == cType) {
+                    badge.classList.add('d-none'); return;
+                }
+                if (perConv[jsonKey] && perConv[jsonKey] > 0) {
+                    badge.textContent = perConv[jsonKey];
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
+                }
+            });
+        });
+
+        // ===================================================================
+        // 2. KHAI BÁO CÁC HÀM XỬ LÝ (PHẢI ĐỂ LÊN TRÊN ĐỂ TRÁNH LỖI NOT A FUNCTION)
+        // ===================================================================
+        window.fetchMessages = async function() {
+            if(!actConv) return;
+            let requestedConvId = actConv;
+            let actionUrl = window.actChatType === 'trade' ? 'getTradeMessagesAjax' : 'getSupportMessagesAjax';
+            
+            try {
+                let res = await fetch(`index.php?controller=chat&action=${actionUrl}&conv_id=${actConv}&last_id=${lastMsgId}&listing_id=${actListing}&buyer_id=${actBuyer}`);
+                let json = await res.json();
+                
+                if (requestedConvId !== actConv) return;
+                
+                if(json.status === 'success') {
+                    // CẬP NHẬT TÊN ADMIN & KHÓA CHAT
+                    if (window.actChatType === 'support' && json.admin_name) {
+                        let statusText = (json.status_id == 1) ? ' (Đang chờ tiếp nhận)' : ((json.status_id == 2) ? ' (Đang hỗ trợ)' : ' (Đã đóng)');
+                        document.getElementById('chat-partner-name').innerText = json.admin_name + statusText;
+                        
+                        let inputEl = document.getElementById('chat-input'), btnEl = document.querySelector('button[type="submit"]'), fileEl = document.getElementById('file-input');
+                        if (json.status_id == 3) {
+                            inputEl.disabled = true; btnEl.disabled = true; fileEl.disabled = true;
+                            inputEl.placeholder = "🔒 Yêu cầu này đã được đóng lại.";
+                        } else {
+                            inputEl.disabled = false; btnEl.disabled = false; fileEl.disabled = false;
+                            inputEl.placeholder = "Nhập tin nhắn...";
+                        }
+                    }
+
+                    if (window.actChatType === 'trade' && json.offer) {
+                        window.renderDealCard(json.offer);
+                    } else {
+                        document.getElementById('dedicated-deal-zone').style.display = 'none';
+                        if(window.actChatType === 'trade' && document.getElementById('btn-deal-price')) document.getElementById('btn-deal-price').disabled = false;
+                    }
+
+                    if(json.data.length > 0) {
+                        let box = document.getElementById('chat-bubbles');
+                        let scrollArea = document.getElementById('chat-messages');
+                        let isAtBottom = (scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight) < 100;
+
+                        json.data.forEach(msg => {
+                            let msgId = parseInt(msg.id, 10);
+                            if (msgId > lastMsgId) {
+                                lastMsgId = msgId;
+                                let isMe = (window.actChatType === 'trade') ? (msg.sender_id == currentUserId) : (msg.sender_type_id == 1);
+                                let align = isMe ? 'justify-content-end' : 'justify-content-start';
+                                let bubbleClass = isMe ? 'msg-me' : 'msg-partner';
+                                let timeStr = new Date(msg.sent_at.replace(' ', 'T')).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                                
+                                let tickIcon = '';
+                                if (isMe) {
+                                    tickIcon = (msg.is_read == 1)
+                                        ? `<i class="bi bi-check2-all text-primary ms-1 msg-check" data-msg-id="${msgId}"></i>`
+                                        : `<i class="bi bi-check2 text-secondary ms-1 msg-check" data-msg-id="${msgId}"></i>`;
+                                }
+                                
+                                let msgContent = msg.content;
+                                if(msg.attachment_url) {
+                                    let ext = msg.attachment_url.split('.').pop().toLowerCase();
+                                    if(['mp4', 'webm', 'ogg'].includes(ext)) {
+                                        msgContent = `<video controls class="img-fluid rounded mt-1" style="max-height:200px"><source src="${msg.attachment_url}"></video>`;
+                                    } else {
+                                        msgContent = `<img src="${msg.attachment_url}" class="img-fluid rounded mt-1" style="max-height:200px">`;
+                                    }
+                                }
+
+                                box.insertAdjacentHTML('beforeend', `
+                                    <div class="d-flex mb-3 ${align}" id="msg-${msgId}">
+                                        <div class="msg-bubble ${bubbleClass}">
+                                            ${msgContent}
+                                            <div class="msg-time d-flex align-items-center justify-content-end" style="color: ${isMe?'#fff':'#666'}">
+                                                ${timeStr} ${tickIcon}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `);
+                            }
+                        });
+                        
+                        if (json.read_until_id > 0) {
+                            document.querySelectorAll('.msg-check').forEach(el => {
+                                if (parseInt(el.dataset.msgId) <= json.read_until_id) {
+                                    el.classList.remove('bi-check2', 'text-secondary');
+                                    el.classList.add('bi-check2-all', 'text-primary');
+                                }
+                            });
+                        }
+                        
+                        document.getElementById('chat-loading-spinner')?.remove();
+                        if (isFirstLoad || isAtBottom) {
+                            scrollArea.scrollTop = scrollArea.scrollHeight;
+                            isFirstLoad = false;
+                        }
+                    }
+                }
+            } catch(e) { console.error(e); }
+        };
+
+        window.renderDealCard = function(offer) {
+            actOfferId = offer.id;
+            actOfferPrice = offer.proposed_price;
+            actOfferQty = offer.quantity;
+            let isMyProposal = (offer.proposed_by == currentUserId);
+            let formatPrice = new Intl.NumberFormat('vi-VN').format(actOfferPrice) + 'đ';
+            
+            let zone = document.getElementById('dedicated-deal-zone');
+            let btnDeal = document.getElementById('btn-deal-price');
+            let html = '';
+
+            if (offer.status_id == 1 || offer.status_id == 5) {
+                if(btnDeal) btnDeal.disabled = true;
+                let buttonsHtml = isMyProposal ?
+                    `<span class="badge bg-secondary px-3 py-2">Đang chờ đối phương phản hồi...</span>` :
+                    `<button class="btn btn-sm btn-outline-danger fw-bold" onclick="window.submitDealAPI('reject')">Từ chối</button>
+                     <button class="btn btn-sm btn-outline-primary fw-bold" onclick="window.openDealModal('counter')">Trả giá lại</button>
+                     <button class="btn btn-sm btn-success fw-bold" onclick="window.submitDealAPI('accept')">Đồng ý</button>`;
+                
+                html = `<div class="deal-banner"><div class="deal-banner-info"><div class="deal-banner-price">🤝 Trả giá: ${formatPrice}</div><div class="deal-banner-desc">Đề xuất mua <b>${actOfferQty}</b> sản phẩm. (Hủy sau 24h)</div></div><div class="deal-banner-actions">${buttonsHtml}</div></div>`;
+            }
+            else if (offer.status_id == 2) {
+                if(btnDeal) btnDeal.disabled = true;
+                let expireTime = new Date(offer.updated_at).getTime() + (24 * 60 * 60 * 1000);
+                let now = new Date().getTime();
+                
+                let isBuyer = false;
+                if (offer.buyer_id) { isBuyer = (currentUserId == offer.buyer_id); }
+                else if (typeof actBuyer !== 'undefined') { isBuyer = (currentUserId == actBuyer); }
+
+                if (now > expireTime) {
+                    html = `<div class="deal-banner opacity-75"><div class="fw-bold text-secondary">⏰ Deal đã hết hạn (Quá 24h)</div></div>`;
+                    if(btnDeal) btnDeal.disabled = false;
+                } else {
+                    let headerPriceEl = document.getElementById('chat-prod-price');
+                    if (!headerPriceEl.dataset.origPrice) headerPriceEl.dataset.origPrice = headerPriceEl.innerText;
+                    headerPriceEl.innerHTML = `<del class="text-muted small">${headerPriceEl.dataset.origPrice}</del> <strong class="text-danger fs-6">${formatPrice}</strong>`;
+
+                    if (isBuyer) {
+                        html = `<div class="deal-banner"><div class="deal-banner-info"><div class="deal-banner-price text-success">🎉 Thành Công: ${formatPrice}</div><div class="deal-banner-desc">Giá áp dụng cho <b>${actOfferQty}</b> sản phẩm. Hạn: 24h</div></div><div class="deal-banner-actions"><button class="btn btn-sm btn-warning fw-bold text-dark" onclick="window.addDealToCart(${actListing}, ${actOfferId}, ${actOfferQty}, false)"><i class="bi bi-cart-plus"></i> Thêm Giỏ</button><button class="btn btn-sm btn-danger fw-bold text-white" onclick="window.addDealToCart(${actListing}, ${actOfferId}, ${actOfferQty}, true)"><i class="bi bi-bag-check"></i> Mua Ngay</button></div></div>`;
+                    } else {
+                        html = `<div class="deal-banner" style="background-color: #e8f5e9; border-color: #c8e6c9;"><div class="deal-banner-info"><div class="deal-banner-price text-success">🎉 Deal Thành Công: ${formatPrice}</div><div class="deal-banner-desc text-dark">Đang chờ người mua thanh toán cho <b>${actOfferQty}</b> sản phẩm.</div></div></div>`;
+                    }
+                }
+            }
+            zone.innerHTML = html; zone.style.display = 'block';
+        };
+
+        window.openDealModal = function(actionType) {
+            currentDealAction = actionType;
+            let qtyWrapper = document.getElementById('deal-qty-wrapper');
+            if(actionType === 'counter') {
+                document.getElementById('deal-price-input').value = actOfferPrice;
+                qtyWrapper.classList.add('d-none');
+            } else {
+                document.getElementById('deal-price-input').value = '';
+                document.getElementById('deal-qty-input').value = 1;
+                qtyWrapper.classList.remove('d-none');
+            }
+            new bootstrap.Modal(document.getElementById('dealModal')).show();
+        };
+
+        window.submitDealAPI = async function(action) {
+            let price = (action === 'create' || action === 'counter') ? document.getElementById('deal-price-input').value : actOfferPrice;
+            let qty = (action === 'create') ? document.getElementById('deal-qty-input').value : actOfferQty;
+            
+            if ((action === 'create' || action === 'counter') && (!price || price <= 0)) {
+                Swal.fire('Lỗi', 'Vui lòng nhập mức giá hợp lệ!', 'error'); return;
+            }
+
+            let actionButtons = document.querySelectorAll('.deal-banner-actions button, #btn-submit-deal');
+            actionButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+            });
+
+            let fd = new FormData();
+            fd.append('listing_id', actListing); fd.append('buyer_id', actBuyer);
+            fd.append('conv_id', actConv); fd.append('offer_id', actOfferId);
+            fd.append('price', price); fd.append('quantity', qty); fd.append('action', action);
+
+            try {
+                let res = await fetch('index.php?controller=chat&action=dealAjax', { method: 'POST', body: fd });
+                let json = await res.json();
+                if(json.status === 'success') {
+                    let dealModalEl = document.getElementById('dealModal');
+                    if (dealModalEl && dealModalEl.classList.contains('show')) {
+                        bootstrap.Modal.getInstance(dealModalEl)?.hide();
+                    }
+                    if (action === 'reject') {
+                        document.getElementById('dedicated-deal-zone').style.display = 'none';
+                        if(document.getElementById('btn-deal-price')) document.getElementById('btn-deal-price').disabled = false;
+                    }
+                    window.fetchMessages();
+                }
+            } catch(e) {
+                console.error(e);
+            } finally {
+                let btnSubmitModal = document.getElementById('btn-submit-deal');
+                if(btnSubmitModal) {
+                    btnSubmitModal.disabled = false;
+                    btnSubmitModal.innerHTML = 'Gửi Yêu Cầu';
+                }
+            }
+        };
+
+        window.addDealToCart = async function(listingId, offerId, qty, isBuyNow) {
+            let fd = new FormData();
+            fd.append('listing_id', listingId);
+            fd.append('quantity', qty);
+            fd.append('offer_id', offerId);
+
+            try {
+                let res = await fetch('index.php?controller=cart&action=addAjax', { method: 'POST', body: fd });
+                let json = await res.json();
+                
+                if(json.status === 'success') {
+                    if (isBuyNow) {
+                        window.location.href = `index.php?controller=checkout&selected_ids=${listingId}`;
+                    } else {
+                        Swal.fire({
+                            icon: 'success', title: 'Đã thêm vào giỏ!', text: 'Sản phẩm áp dụng giá Deal đã nằm trong giỏ.',
+                            showCancelButton: true, confirmButtonText: 'Đến giỏ hàng', cancelButtonText: 'Ở lại chat',
+                            confirmButtonColor: '#FF7A3D', cancelButtonColor: '#6c757d'
+                        }).then((result) => {
+                            if (result.isConfirmed) { window.location.href = 'index.php?controller=cart'; }
+                        });
+                    }
+                } else {
+                    Swal.fire('Lỗi', json.msg || 'Không thể thêm vào giỏ hàng.', 'error');
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        // ===================================================================
+        // 3. GẮN SỰ KIỆN NÚT CLICK & SUBMIT FORM
+        // ===================================================================
+        document.querySelectorAll('.chat-list-item').forEach(item => {
+            item.addEventListener('click', function() {
+                actConv = this.dataset.convId;
+                window.actChatType = this.dataset.type;
+                let partnerName = this.dataset.partnerName;
+                
+                document.getElementById('chat-empty').classList.add('d-none');
+                document.getElementById('chat-content').classList.remove('d-none');
+                document.getElementById('chat-content').classList.add('d-flex');
+                document.getElementById('chat-partner-name').innerText = partnerName;
+                
+                document.getElementById('chat-bubbles').innerHTML = '<div id="chat-loading-spinner" class="d-flex justify-content-center align-items-center h-100 mt-5"><div class="spinner-border text-primary"></div></div>';
+                document.getElementById('dedicated-deal-zone').style.display = 'none';
+                lastMsgId = 0; isFirstLoad = true;
+                
+                let badgeEl = this.querySelector('.unread-badge');
+                if (badgeEl) badgeEl.classList.add('d-none');
+
+                if (window.actChatType === 'trade') {
+                    actListing = this.dataset.listingId;
+                    actBuyer = this.dataset.buyerId;
+                    let isBuyer = this.dataset.isBuyer === '1';
+                    
+                    document.getElementById('chat-prod-title').innerText = this.dataset.prodTitle;
+                    document.getElementById('chat-prod-price').innerText = this.dataset.prodPrice;
+                    document.getElementById('chat-prod-img').src = this.dataset.prodImg || 'https://ui-avatars.com/api/?name=SP';
+                    
+                    document.getElementById('chat-product-info').classList.remove('d-none');
+                    isBuyer ? document.getElementById('btn-deal-price').classList.remove('d-none') : document.getElementById('btn-deal-price').classList.add('d-none');
+                    
+                    window.history.pushState({}, '', `index.php?controller=chat&active_trade=${actConv}&listing_id=${actListing}&seller_id=${isBuyer ? 0 : actBuyer}`);
+                } else {
+                    document.getElementById('chat-product-info').classList.add('d-none');
+                    document.getElementById('btn-deal-price').classList.add('d-none');
+                    window.history.pushState({}, '', `index.php?controller=chat&active_support=${actConv}`);
+                }
+
+                if (pollInterval) clearInterval(pollInterval);
+                window.fetchMessages(); // Lỗi cũ nằm ở đây, giờ đã có hàm khai báo ở trên!
+                pollInterval = setInterval(window.fetchMessages, 3000);
+            });
+        });
+
+        document.getElementById('btn-submit-deal')?.addEventListener('click', () => window.submitDealAPI(currentDealAction));
+
+        document.getElementById('form-chat')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let input = document.getElementById('chat-input'), fileInput = document.getElementById('file-input');
+            let content = input.value.trim();
+            
+            if(!actConv || (content === '' && (!fileInput || !fileInput.files[0]))) return;
+
+            let formData = new FormData(this);
+            formData.append('conv_id', actConv);
+            formData.append('chat_type', window.actChatType);
+            
+            input.value = '';
+            if(fileInput) fileInput.value = '';
+            input.placeholder = "Đang gửi...";
+            
+            try {
+                let res = await fetch('index.php?controller=chat&action=sendAjax', { method: 'POST', body: formData });
+                let json = await res.json();
+                if(json.status === 'success') {
+                    input.placeholder = "Nhập tin nhắn...";
+                    await window.fetchMessages();
+                    let scrollArea = document.getElementById('chat-messages');
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                }
+            } catch(e) {
+                console.error(e);
+                input.placeholder = "Lỗi khi gửi, thử lại sau!";
+            }
+        });
+
+        // ===================================================================
+        // 4. TỰ ĐỘNG MỞ PHÒNG CHAT TỪ URL (ĐỂ CUỐI CÙNG LÀ CHUẨN XÁC NHẤT)
+        // ===================================================================
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('active_trade')) {
+            let target = document.getElementById('trade-item-' + urlParams.get('active_trade'));
+            if (target) {
+                target.click();
+                if (urlParams.has('deal')) setTimeout(() => window.openDealModal('create'), 500);
+            }
+        }
+        if (urlParams.has('active_support')) {
+            let supportTabBtn = document.querySelector('button[data-bs-target="#support-chat"]');
+            if (supportTabBtn) supportTabBtn.click();
+            let target = document.getElementById('support-item-' + urlParams.get('active_support'));
+            if (target) target.click();
+        }
+    }
+}
+
+/**
+ * ========================================================================
+ * 11. CHAT BÊN GIAO DIỆN QUẢN TRỊ (ADMIN)
+ * ========================================================================
+ */
+if (document.getElementById('admin-chatbox')) {
+    { // Mở Block Scope bảo vệ biến
+        let currentAdminId = window.CHAT_ADMIN_ID || 0;
+        let actConv = 0, lastMsgId = 0, pollInterval = null;
+        let currentTicketStatus = 0, currentTicketAdmin = null;
+
+        window.openChatRoom = function(element) {
+            actConv = element.dataset.convId;
+            document.querySelectorAll('.chat-list-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            if(window.innerWidth <= 768) {
+                document.getElementById('admin-sidebar').classList.add('mobile-hide');
+                document.getElementById('admin-chatbox').classList.remove('mobile-hide');
+            }
+
+            document.getElementById('chat-empty').classList.add('d-none');
+            document.getElementById('chat-content').classList.remove('d-none');
+            document.getElementById('chat-content').classList.add('d-flex');
+            
+            document.getElementById('chat-user-name').innerText = "KH: " + element.dataset.userName;
+            document.getElementById('chat-category').innerText = element.dataset.category;
+            document.getElementById('chat-bubbles').innerHTML = '<div class="text-center mt-5"><div class="spinner-border text-primary"></div></div>';
+            
+            lastMsgId = 0;
+            if (pollInterval) clearInterval(pollInterval);
+            window.fetchAdminMessages();
+            pollInterval = setInterval(window.fetchAdminMessages, 3000);
+        };
+
+        window.fetchAdminMessages = async function() {
+            if(!actConv) return;
+            let requestedConvId = actConv;
+            
+            try {
+                let res = await fetch(`index.php?controller=admin_chat&action=getMessagesAjax&conv_id=${actConv}&last_id=${lastMsgId}`);
+                let json = await res.json();
+                if (requestedConvId !== actConv) return;
+                
+                if(json.status === 'success') {
+                    currentTicketStatus = json.conv_info.status_id;
+                    currentTicketAdmin = json.conv_info.admin_id;
+                    window.updateTicketUI();
+
+                    if(json.data.length > 0) {
+                        let box = document.getElementById('chat-bubbles');
+                        if (lastMsgId === 0) box.innerHTML = '';
+                        let scrollArea = document.getElementById('chat-messages');
+                        let isAtBottom = (scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight) < 100;
+
+                        json.data.forEach(msg => {
+                            let msgId = parseInt(msg.id, 10);
+                            if (msgId > lastMsgId) {
+                                lastMsgId = msgId;
+                                let isMe = (msg.sender_type_id == 2);
+                                let align = isMe ? 'justify-content-end' : 'justify-content-start';
+                                let bubbleClass = isMe ? 'msg-me' : 'msg-partner';
+                                let timeStr = new Date(msg.sent_at.replace(' ', 'T')).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                                
+                                box.insertAdjacentHTML('beforeend', `
+                                    <div class="d-flex mb-3 ${align}">
+                                        <div class="msg-bubble shadow-sm ${bubbleClass}">
+                                            ${msg.content}
+                                            <div class="msg-time" style="color: ${isMe?'#fff':'#666'}">${timeStr}</div>
+                                        </div>
+                                    </div>
+                                `);
+                            }
+                        });
+                        
+                        if (isAtBottom || document.querySelectorAll('.msg-bubble').length <= json.data.length) {
+                            scrollArea.scrollTop = scrollArea.scrollHeight;
+                        }
+                    } else if (lastMsgId === 0) {
+                        document.getElementById('chat-bubbles').innerHTML = '<div class="text-center text-muted mt-4">Chưa có tin nhắn nào.</div>';
+                    }
+                }
+            } catch(e) { console.error(e); }
+        };
+
+        window.updateTicketUI = function() {
+            let zone = document.getElementById('ticket-action-zone'), text = document.getElementById('ticket-status-text'), btn = document.getElementById('btn-ticket-action');
+            let inputEl = document.getElementById('chat-input'), btnSendEl = document.querySelector('#admin-input-area button[type="submit"]');
+
+            zone.style.display = 'flex'; document.getElementById('admin-input-area').classList.remove('d-none');
+
+            if (currentTicketStatus == 1) {
+                text.innerHTML = '⚠️ Khách hàng đang chờ hỗ trợ. Hãy tiếp nhận để chat!';
+                btn.innerHTML = '<i class="bi bi-person-raised-hand"></i> Tiếp Nhận';
+                btn.className = 'btn btn-sm btn-danger fw-bold'; btn.style.display = 'block';
+                inputEl.disabled = true; btnSendEl.disabled = true; inputEl.placeholder = "⚠️ Bấm Tiếp nhận để bắt đầu chat...";
+            } else if (currentTicketStatus == 2) {
+                if (currentTicketAdmin == currentAdminId) {
+                    text.innerHTML = '✅ Bạn đang xử lý Ticket này.';
+                    btn.innerHTML = '<i class="bi bi-lock-fill"></i> Đóng Ticket';
+                    btn.className = 'btn btn-sm btn-success fw-bold'; btn.style.display = 'block';
+                    inputEl.disabled = false; btnSendEl.disabled = false; inputEl.placeholder = "Nhập câu trả lời hỗ trợ...";
+                } else {
+                    text.innerHTML = '🔒 Một Admin khác đang xử lý Ticket này.'; btn.style.display = 'none';
+                    inputEl.disabled = true; btnSendEl.disabled = true; inputEl.placeholder = "🔒 Admin khác đang xử lý...";
+                }
+            } else if (currentTicketStatus == 3) {
+                text.innerHTML = '📁 Ticket này đã được giải quyết và đóng lại.'; btn.style.display = 'none';
+                inputEl.disabled = true; btnSendEl.disabled = true; inputEl.placeholder = "📁 Ticket đã đóng.";
+            }
+        };
+
+        window.handleTicketAction = async function() {
+            let action = (currentTicketStatus == 1) ? 'claimAjax' : 'closeAjax';
+            let confirmText = (action === 'claimAjax') ? "Bạn muốn tiếp nhận xử lý yêu cầu này?" : "Xác nhận đóng Ticket?";
+            
+            let result = await Swal.fire({ title: 'Xác nhận thao tác?', text: confirmText, icon: 'question', showCancelButton: true, confirmButtonText: 'Đồng ý', cancelButtonText: 'Hủy bỏ' });
+            
+            if (result.isConfirmed) {
+                let fd = new FormData(); fd.append('conv_id', actConv);
+                let res = await fetch(`index.php?controller=admin_chat&action=${action}`, { method: 'POST', body: fd });
+                let json = await res.json();
+                
+                if(json.status === 'success') {
+                    // 1. Gọi lại hàm lấy tin nhắn để cập nhật khung chat lập tức
+                    window.fetchAdminMessages();
+                    
+                    // 2. Tự động đổi màu Badge (Nhãn) ở danh sách bên trái cho mượt mà không cần F5
+                    let listItem = document.querySelector(`.chat-list-item[data-conv-id="${actConv}"]`);
+                    if (listItem) {
+                        let titleDiv = listItem.querySelector('.fw-bold');
+                        if (action === 'claimAjax') {
+                            titleDiv.innerHTML = titleDiv.innerHTML.replace('bg-danger">Mới', 'bg-warning text-dark">Đang XL');
+                        } else {
+                            titleDiv.innerHTML = titleDiv.innerHTML.replace('bg-warning text-dark">Đang XL', 'bg-secondary">Đã Đóng');
+                        }
+                    }
+                }
+            }
+        };
+
+        document.getElementById('form-chat')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let input = document.getElementById('chat-input');
+            if(!actConv || input.value.trim() === '') return;
+
+            let fd = new FormData(this); fd.append('conv_id', actConv);
+            input.value = ''; input.placeholder = "Đang gửi...";
+            
+            try {
+                let res = await fetch('index.php?controller=admin_chat&action=sendAjax', { method: 'POST', body: fd });
+                let json = await res.json();
+                if(json.status === 'success') {
+                    input.placeholder = "Nhập câu trả lời hỗ trợ...";
+                    window.fetchAdminMessages();
+                }
+            } catch(e) { console.error(e); }
+        });
+    }
+}
+
+/**
+ * ========================================================================
+ * 12. HÀM CHUNG CHO GIAO DIỆN CHAT (NÚT BACK ĐIỆN THOẠI)
+ * ========================================================================
+ */
+window.backToSidebar = function() {
+    if (document.getElementById('user-sidebar')) {
+        document.getElementById('user-sidebar').classList.remove('mobile-hide');
+        document.getElementById('user-chatbox').classList.add('mobile-hide');
+    }
+    if (document.getElementById('admin-sidebar')) {
+        document.getElementById('admin-sidebar').classList.remove('mobile-hide');
+        document.getElementById('admin-chatbox').classList.add('mobile-hide');
+    }
+};
+
+/**
+ * ========================================================================
+ * 13. TÌM KIẾM SẢN PHẨM TRỰC TIẾP (LIVE SEARCH)
+ * ========================================================================
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    // Dùng đúng ID của thanh search trong user-header.php
+    const searchInput = document.getElementById('search-input'); 
+    const resultBox = document.getElementById('search-results');
+    let searchTimeout = null;
+
+    if (searchInput && resultBox) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            let keyword = this.value.trim();
+            
+            if (keyword.length < 2) {
+                resultBox.classList.add('d-none');
+                resultBox.innerHTML = ''; 
+                return;
+            }
+
+            resultBox.innerHTML = '<div class="p-3 text-center text-muted" style="font-size:13px;"><div class="spinner-border spinner-border-sm text-secondary mb-1"></div><br>Đang tìm kiếm...</div>';
+            resultBox.classList.remove('d-none');
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    let res = await fetch(`index.php?controller=listing&action=suggestAjax&keyword=${encodeURIComponent(keyword)}`);
+                    let data = await res.json();
+                    
+                    // Chống Race Condition (Gõ chữ mới thì bỏ qua kết quả cũ)
+                    if (searchInput.value.trim() !== keyword) return; 
+
+                    if (data && data.length > 0) {
+                        let html = '';
+                        data.forEach(item => {
+                            let priceFormatted = new Intl.NumberFormat('vi-VN').format(item.price) + 'đ';
+                            let isOutOfStock = (item.stock_quantity <= 0 || item.status_id == 3);
+                            let opacityClass = isOutOfStock ? 'opacity-50' : '';
+                            let stockBadge = isOutOfStock ? '<span class="badge bg-secondary ms-2" style="font-size: 10px;">Hết hàng</span>' : '';
+                            let img = item.image_url ? item.image_url : 'https://ui-avatars.com/api/?name=2+Life&background=f1f1f1&color=999';
+                            
+                            html += `
+                            <a href="index.php?controller=listing&action=detail&id=${item.id}" class="d-flex align-items-center gap-3 p-2 text-decoration-none border-bottom text-dark ${opacityClass}" style="transition: background 0.2s;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='#fff'">
+                                <img src="${img}" onerror="this.src='https://ui-avatars.com/api/?name=2+Life&background=f1f1f1&color=999'" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #eee;">
+                                <div class="d-flex flex-column overflow-hidden w-100">
+                                    <div class="text-truncate fw-semibold text-dark" style="font-size: 14px;">${item.title} ${stockBadge}</div>
+                                    <div class="fw-bold" style="font-size: 13px; color: #FF7A3D;">${priceFormatted}</div>
+                                </div>
+                            </a>`;
+                        });
+                        resultBox.innerHTML = html;
+                    } else {
+                        resultBox.innerHTML = `<div class="p-3 text-muted small text-center"><i class="bi bi-search text-secondary opacity-50 mb-1 fs-5 d-block"></i>Không tìm thấy sản phẩm</div>`;
+                    }
+                } catch (e) {
+                    console.error("Lỗi live search:", e);
+                    resultBox.innerHTML = `<div class="p-3 text-danger small text-center">Có lỗi xảy ra, thử lại sau.</div>`;
+                }
+            }, 400); 
+        });
+
+        // Ẩn hộp gợi ý khi click ra ngoài
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !resultBox.contains(e.target)) {
+                resultBox.classList.add('d-none');
+            }
+        });
+    }
+});
+
+/**
+ * ========================================================================
+ * 14. NÚT CHAT HỖ TRỢ BONG BÓNG (SUPPORT MODAL)
+ * ========================================================================
+ */
+window.openSupportModal = function() {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '<h5 class="fw-bold">Bạn đang gặp vấn đề gì?</h5>',
+            html: `<select id="support-category" class="form-select mt-3 py-2">
+                    <option value="1">📦 Vấn đề Đơn hàng</option>
+                    <option value="2">💳 Thanh toán & Hoàn tiền</option>
+                    <option value="3">⚠️ Tố cáo vi phạm</option>
+                    <option value="10">💬 Khác</option>
+                   </select>`,
+            confirmButtonText: 'Bắt đầu Chat <i class="bi bi-send ms-1"></i>',
+            confirmButtonColor: '#FF7A3D',
+            showCancelButton: true,
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let catId = document.getElementById('support-category').value;
+                window.location.href = `index.php?controller=chat&action=startSupport&cat_id=${catId}`;
+            }
+        });
+    }
+};
+
+/**
+ * ========================================================================
+ * 15. RADAR QUÉT TIN NHẮN CHƯA ĐỌC (CHỈ CHẠY KHI ĐÃ ĐĂNG NHẬP)
+ * ========================================================================
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    // Chỉ bật Radar nếu có biến CHAT_USER_ID (nghĩa là đã đăng nhập)
+    if (typeof window.CHAT_USER_ID !== 'undefined' && window.CHAT_USER_ID > 0) {
+        setInterval(async () => {
+            try {
+                let res = await fetch('index.php?controller=chat&action=index&ajax_radar=1');
+                let json = await res.json(); 
+                
+                if(json.status === 'success') {
+                    let badge = document.getElementById('global-msg-badge');
+                    if(badge) {
+                        if(json.total > 0) {
+                            badge.textContent = json.total;
+                            badge.classList.remove('d-none');
+                        } else {
+                            badge.classList.add('d-none');
+                        }
+                    }
+                    // Bắn tín hiệu cho trang Chat (nếu đang mở) để nó chớp chấm đỏ
+                    window.dispatchEvent(new CustomEvent('unreadCountsUpdated', { detail: json.per_conv }));
+                }
+            } catch(e) {}
+        }, 3000);
+    }
+});
+
+/**
+ * ========================================================================
+ * 16. CHỨC NĂNG TRANG QUẢN LÝ TÀI KHOẢN (PROFILE)
+ * ========================================================================
+ */
+// Hàm báo lỗi chung riêng cho trang Profile
+window.profileShowError = function(msg) {
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({ icon: 'error', title: 'Úi, có lỗi nè!', text: msg, confirmButtonColor: '#FF7A3D' });
+    } else {
+        alert(msg);
+    }
+};
+
+// 1. Gửi Form Cập nhật hồ sơ
+window.saveProfile = async function() {
+    const formData = new FormData();
+    formData.append('full_name', document.getElementById('fullName').value);
+    formData.append('phone', document.getElementById('phone').value);
+    formData.append('bio', document.getElementById('bio').value);
+    
+    const avatarFile = document.getElementById('avatarUpload')?.files[0];
+    if (avatarFile) formData.append('avatar', avatarFile);
+
+    try {
+        const res = await fetch('index.php?controller=profile&action=updateAjax', { method: 'POST', body: formData });
+        const result = await res.json();
+        
+        Swal.fire({
+            icon: result.status,
+            title: result.status === 'success' ? 'Thành công!' : 'Thất bại!',
+            text: result.msg,
+            confirmButtonColor: '#FF7A3D'
+        }).then((resAlert) => {
+            if(result.status === 'success' && resAlert.isConfirmed) window.location.reload(); 
+        });
+    } catch (error) {
+        window.profileShowError("Có lỗi kết nối hệ thống!");
+    }
+};
+
+// 2. Gửi Form Đổi mật khẩu
+window.changePassword = async function() {
+    const oldP = document.getElementById('oldPass').value;
+    const newP = document.getElementById('newPass').value;
+    const confP = document.getElementById('confirmPass').value;
+
+    if (newP !== confP) return window.profileShowError("Mật khẩu xác nhận không khớp!");
+    if (newP.length < 6) return window.profileShowError("Mật khẩu phải từ 6 ký tự trở lên!");
+
+    try {
+        const res = await fetch('index.php?controller=profile&action=changePasswordAjax', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ old_password: oldP, new_password: newP, confirm_password: confP })
+        });
+        const result = await res.json();
+        
+        Swal.fire({ icon: result.status, title: 'Thông báo', text: result.msg, confirmButtonColor: '#FF7A3D' });
+        if(result.status === 'success') document.getElementById('form-password').reset();
+    } catch (error) {
+        window.profileShowError("Có lỗi kết nối hệ thống!");
+    }
+};
+
+// 3. Gửi Form Đăng ký Shop
+window.registerSeller = async function() {
+    const shopName = document.getElementById('shopName').value;
+    const taxCode = document.getElementById('taxCode').value; 
+    const shopDesc = document.getElementById('shopDesc').value;
+
+    if(shopName.trim() === '') return window.profileShowError("Vui lòng nhập tên Shop!");
+    if(taxCode.trim() === '') return window.profileShowError("Vui lòng nhập Mã số thuế!");
+
+    const data = { shop_name: shopName, tax_code: taxCode, description: shopDesc };
+    
+    const res = await fetch('index.php?controller=profile&action=registerSellerAjax', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    
+    Swal.fire({ 
+        icon: result.status, 
+        title: 'Thông báo', 
+        text: result.msg, 
+        confirmButtonColor: '#FF7A3D' 
+    }).then((resAlert) => {
+        if (result.status === 'success') {
+           window.location.href = window.location.pathname + window.location.search + '#tab-seller';
+            window.location.reload(); 
+        }
+    });
+};
+
+// 4. Xem trước ảnh Avatar
+window.previewImage = function(event) {
+    const reader = new FileReader();
+    reader.onload = function() { 
+        let imgEl = document.getElementById('previewAvatar');
+        if(imgEl) imgEl.src = reader.result; 
+    }
+    if (event.target.files[0]) {
+        reader.readAsDataURL(event.target.files[0]);
+    }
+};
+
+// 5. Tự động mở đúng Tab dựa vào URL Hash (VD: ...#tab-seller)
+document.addEventListener("DOMContentLoaded", function() {
+    // Tấm khiên: Chỉ chạy khi đang ở trang Profile
+    if (document.getElementById('form-profile')) {
+        let hash = window.location.hash; 
+        if (hash) {
+            let targetTab = document.querySelector('button[data-bs-target="' + hash + '"]');
+            if (targetTab && typeof bootstrap !== 'undefined') {
+                let tab = new bootstrap.Tab(targetTab);
+                tab.show(); 
+            }
+        }
+    }
+});
+
+/**
+ * ========================================================================
+ * 17. XỬ LÝ AJAX CHỌN TỈNH THÀNH (TRANG ĐĂNG KÝ)
+ * ========================================================================
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const provinceSelect = document.getElementById('province');
+    const districtSelect = document.getElementById('district');
+    const wardSelect = document.getElementById('ward');
+
+    // Tấm khiên: Chỉ chạy khi đang ở trang Đăng ký (tìm thấy cả 3 ô select này)
+    if (provinceSelect && districtSelect && wardSelect) {
+        
+        // 1. Sự kiện khi thay đổi Tỉnh / Thành phố
+        provinceSelect.addEventListener('change', async function() {
+            const provinceId = this.value;
+            
+            // Reset ô Huyện và Xã
+            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            wardSelect.disabled = true;
+
+            if (provinceId) {
+                districtSelect.disabled = false; // Mở khóa ô Quận/Huyện
+                districtSelect.innerHTML = '<option value="">Đang tải...</option>';
+                
+                try {
+                    // Gọi API tới AuthController
+                    const response = await fetch(`index.php?controller=auth&action=getDistricts&province_id=${provinceId}`);
+                    const districts = await response.json();
+                    
+                    districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+                    districts.forEach(d => {
+                        districtSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+                    });
+                } catch (e) {
+                    console.error("Lỗi khi lấy dữ liệu Quận/Huyện:", e);
+                    districtSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+                }
+            } else {
+                districtSelect.disabled = true;
+            }
+        });
+
+        // 2. Sự kiện khi thay đổi Quận / Huyện
+        districtSelect.addEventListener('change', async function() {
+            const districtId = this.value;
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+
+            if (districtId) {
+                wardSelect.disabled = false; // Mở khóa ô Phường/Xã
+                wardSelect.innerHTML = '<option value="">Đang tải...</option>';
+                
+                try {
+                    // Gọi API tới AuthController
+                    const response = await fetch(`index.php?controller=auth&action=getWards&district_id=${districtId}`);
+                    const wards = await response.json();
+                    
+                    wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                    wards.forEach(w => {
+                        wardSelect.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                    });
+                } catch (e) {
+                    console.error("Lỗi khi lấy dữ liệu Phường/Xã:", e);
+                    wardSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+                }
+            } else {
+                wardSelect.disabled = true;
+            }
+        });
+    }
+});

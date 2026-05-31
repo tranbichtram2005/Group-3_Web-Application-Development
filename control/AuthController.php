@@ -223,7 +223,7 @@ class AuthController {
             $mail->send();
             return true;
         } catch (Exception $e) {
-            return false;
+            return false;   
         }
     }
 
