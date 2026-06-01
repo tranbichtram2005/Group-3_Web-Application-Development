@@ -1,15 +1,15 @@
 # XÂY DỰNG WEBSITE QUẢN LÝ SÀN THƯƠNG MẠI ĐIỆN TỬ C2C (2Life)
-> ĐỒ ÁN CUỐI KỲ HỌC PHẦN PHÁT TRIỂN ỨNG DỤNG WEB – GVHD. TS ĐẶNG NGỌC HOÀNG THÀNH 
+> ĐỒ ÁN CUỐI KỲ HỌC PHẦN PHÁT TRIỂN ỨNG DỤNG WEB – GVHD. TS ĐẶNG NGỌC HOÀNG THÀNH
 
 ---
 
 ## 👥 Thành viên nhóm 3
 
-| Họ và tên | Vai trò | GitHub Profile |
-| :--- | :--- | :--- |
-| **Trần Bích Trâm** | Leader | [tranbichtram2005](https://github.com/tranbichtram2005) |
-| **Huỳnh Nguyễn Nhật Nam** | Thành viên | [namhuynhgithub1403](https://github.com/namhuynhgithub1403) |
-| **Lê Thành Vy** | Thành viên | [Vyle31231022150](https://github.com/Vyle31231022150) |
+| Họ và tên | Vai trò | GitHub Profile | Email |
+| :--- | :--- | :--- | :--- |
+| **Trần Bích Trâm** | Leader | [tranbichtram2005](https://github.com/tranbichtram2005) | tranbichtram.work@gmail.com |
+| **Huỳnh Nguyễn Nhật Nam** | Thành viên | [namhuynhgithub1403](https://github.com/namhuynhgithub1403) | namhuynh703@gmail.com |
+| **Lê Thành Vy** | Thành viên | [Vyle31231022150](https://github.com/Vyle31231022150) | vyv877561@gmail.com |
 
 ---
 
@@ -43,7 +43,7 @@
 - Xem chi tiết sản phẩm
 - Thêm sản phẩm vào giỏ hàng
 - Đặt hàng
-- Thanh toán (COD/VNPay)
+- Thanh toán (COD / VNPay)
 
 ### Quản lý đơn hàng mua
 - Cập nhật thông tin đơn hàng
@@ -97,7 +97,7 @@
 | :--- | :--- |
 | Ngôn ngữ backend | PHP |
 | Kiến trúc | MVC (Model – View – Controller) |
-| Cơ sở dữ liệu | HeidiSQL trên **Aiven Cloud** |
+| Cơ sở dữ liệu | MySQL trên **Aiven Cloud** (quản lý qua HeidiSQL) |
 | Frontend | HTML, CSS, JavaScript |
 | Gửi email | PHPMailer |
 | Thanh toán | VNPay (Sandbox) |
@@ -119,7 +119,6 @@ Group-3_Web-Application-Development/
 ├── lib/
 │   └── PHPMailer/  # Thư viện gửi email OTP
 ├── index.php       # Front controller (router chính)
-├── test_db.php     # Kiểm tra kết nối database (chỉ dùng khi dev)
 └── .gitignore
 ```
 
@@ -131,23 +130,69 @@ Group-3_Web-Application-Development/
 - **XAMPP**, **WAMP** hoặc bất kỳ local server nào hỗ trợ **PHP 7.4+**
 - Trình duyệt web (Chrome, Edge, Firefox...)
 
-### Bước 1 – Tải source code
+---
 
-Clone repository về máy hoặc tải file ZIP và giải nén vào thư mục `htdocs` (XAMPP) hoặc `www` (WAMP):
+### Bước 1 – Cài đặt môi trường máy chủ ảo (XAMPP)
+
+1. Truy cập trang chủ [apachefriends.org](https://www.apachefriends.org) và tải bản cài đặt phù hợp với hệ điều hành của bạn.
+2. Chạy file cài đặt và làm theo các bước hướng dẫn mặc định.
+
+---
+
+### Bước 2 – Tải và thiết lập mã nguồn dự án
+
+**Cách 1 – Tải ZIP (khuyến nghị cho người dùng thông thường):**
+
+1. Truy cập repo: [https://github.com/tranbichtram2005/Group-3_Web-Application-Development](https://github.com/tranbichtram2005/Group-3_Web-Application-Development)
+2. Nhấn nút **Code** → chọn **Download ZIP**.
+3. Giải nén file vào đường dẫn:
+   ```
+   C:\xampp\htdocs\Group-3_Web-Application-Development
+   ```
+
+**Cách 2 – Clone bằng Git:**
 
 ```bash
 git clone https://github.com/tranbichtram2005/Group-3_Web-Application-Development.git
 ```
 
-### Bước 2 – Cấu hình cơ sở dữ liệu
+Sau đó chuyển thư mục vừa clone vào `C:\xampp\htdocs\`.
 
-Loading...
+---
 
-### Bước 3 – Xác nhận chứng chỉ SSL
+### Bước 3 – Cấu hình cơ sở dữ liệu (.env)
 
-Loading...
+1. Mở thư mục `model/` bên trong dự án.
+2. Tạo một file mới tên là `.env` (không có phần mở rộng).
+3. Dán nội dung sau vào file và lưu lại:
 
-### Bước 4 – Cấu hình VNPay
+```env
+DB_PASS="AVNS_R0EBY7inWWQN3_SM53Y"
+```
+
+> **Lưu ý:** File `.env` đã được thêm vào `.gitignore` và không được commit lên Git. Bạn phải tạo thủ công mỗi khi clone về máy mới.
+
+---
+
+### Bước 4 – Xác nhận chứng chỉ SSL
+
+File `ca.pem` (chứng chỉ SSL kết nối Aiven Cloud) đã được tích hợp sẵn trong thư mục `model/`. Không cần thao tác thêm.
+
+---
+
+### Bước 5 – Khởi chạy dự án
+
+1. Mở **XAMPP Control Panel**.
+2. Nhấn **Start** tại dòng **Apache**.
+3. Mở trình duyệt và truy cập:
+
+```
+http://localhost/Group-3_Web-Application-Development/
+```
+
+---
+
+### Bước 6 – Cấu hình thanh toán VNPay (tuỳ chọn)
 
 Hệ thống tích hợp cổng thanh toán **VNPay** (môi trường Sandbox để kiểm thử).
 
@@ -155,10 +200,13 @@ Hệ thống tích hợp cổng thanh toán **VNPay** (môi trường Sandbox đ
 | :--- | :--- |
 | URL thanh toán (Sandbox) | `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html` |
 | Tài liệu tích hợp | https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html |
+| Merchant Admin | https://sandbox.vnpayment.vn/merchantv2/ |
+| Tên đăng nhập | `tramtran.31231024970@st.ueh.edu.vn` |
+| Mật khẩu | `Web@123456` |
 
-Thông tin `vnp_TmnCode` và `vnp_HashSecret` được lưu trong file `.env` (không public). Liên hệ trưởng nhóm để lấy thông tin kết nối.
+> Thông tin `vnp_TmnCode` và `vnp_HashSecret` được lưu trong file `.env`. Liên hệ trưởng nhóm để lấy thông tin.
 
-**Thẻ test (Sandbox):**
+**Thẻ test (Sandbox NCB):**
 
 | Thông tin | Giá trị |
 | :--- | :--- |
@@ -168,20 +216,35 @@ Thông tin `vnp_TmnCode` và `vnp_HashSecret` được lưu trong file `.env` (k
 | Ngày phát hành | `07/15` |
 | Mật khẩu OTP | `123456` |
 
-### Bước 5 – Khởi chạy dự án
+---
 
-1. Mở **XAMPP Control Panel**, khởi động module **Apache**.
-2. Mở trình duyệt và truy cập:
+## Kết nối Cơ sở dữ liệu đám mây (Dành cho Quản trị viên)
 
-```
-http://localhost/Group-3_Web-Application-Development/
-```
+Nếu muốn truy cập và quản lý cơ sở dữ liệu trực tiếp bằng **HeidiSQL**, thực hiện theo cấu hình sau:
+
+**Thông tin kết nối:**
+
+| Thông số | Giá trị |
+| :--- | :--- |
+| Tên máy chủ / IP | `c2c-web-c2c-web.i.aivencloud.com` |
+| Người dùng | `avnadmin` |
+| Mật khẩu | `AVNS_R0EBY7inWWQN3_SM53Y` |
+| Cổng (Port) | `19707` |
+
+**Cấu hình SSL:**
+
+1. Mở HeidiSQL → Tạo phiên kết nối mới → Điền thông tin ở trên.
+2. Chuyển sang tab **SSL** → Tích chọn **Sử dụng SSL**.
+3. Tại mục **Chứng chỉ xác thực SSL**, nhấn biểu tượng thư mục và trỏ tới file `ca.pem` trong thư mục `model/`.
+4. Nhấn **Mở (Open)** để hoàn tất kết nối.
 
 ---
 
-## Ghi chú
+## ⚠️ Lưu ý quan trọng
 
-- File `.env` và `ca.pem` chứa thông tin nhạy cảm — **tuyệt đối không commit** lên repository.
-- Thư mục `uploads/` đã được thêm vào `.gitignore`, không commit lên Git.
-- Thông tin VNPay trên là môi trường **Sandbox** — chỉ dùng để kiểm thử, không dùng để giao dịch thật.
-- File `test_db.php` chỉ dùng trong quá trình phát triển, không dùng trên môi trường production.
+- Thông tin VNPay là môi trường **Sandbox** — chỉ dùng để kiểm thử, không dùng cho giao dịch thật.
+- **Lưu ý về máy chủ:** Do dự án sử dụng cơ sở dữ liệu đám mây trên Aiven.io, máy chủ sẽ tự động chuyển sang chế độ ngủ nếu lâu không hoạt động. Nếu web báo lỗi **"Không thể kết nối cơ sở dữ liệu"**, vui lòng liên hệ nhóm phát triển để mở lại server:
+  - Huỳnh Nguyễn Nhật Nam: namhuynh703@gmail.com
+  - Lê Thành Vy: vyv877561@gmail.com
+  - Trần Bích Trâm: tranbichtram.work@gmail.com
+Đang hiển thị 2aOboQaL5Jbjz1MsQcNYsbcXTUVzdG9NqqFBT0TI.
