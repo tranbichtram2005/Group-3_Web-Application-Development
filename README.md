@@ -23,44 +23,63 @@
 
 ### Giao diện chính
 - Trang chủ dành cho người dùng (User)
+<img width="1902" height="911" alt="image" src="https://github.com/user-attachments/assets/53062c99-1ad8-4298-8f58-e96558451c8d" />
+
 - Trang chủ dành cho quản trị viên (Admin)
+<img width="1900" height="911" alt="image" src="https://github.com/user-attachments/assets/55f099ff-7e34-4492-bb83-c37873222f5b" />
+
 
 ### Xác thực
 - Đăng ký tài khoản (Email)
 - Đăng nhập / Đăng xuất
+<img width="1919" height="909" alt="image" src="https://github.com/user-attachments/assets/661a6e1b-059e-473f-bda4-152197b9d58c" />
+
 
 ### Quản lý tài khoản cá nhân
 - Cập nhật thông tin cá nhân
 - Đổi mật khẩu
 - Đăng ký bán hàng
+<img width="1902" height="912" alt="image" src="https://github.com/user-attachments/assets/eb87e20b-bbc0-46be-8caa-f374cf78d0f9" />
+
 
 ### Quản lý giỏ hàng
 - Cập nhật số lượng sản phẩm
 - Xóa sản phẩm khỏi giỏ
+<img width="1898" height="910" alt="image" src="https://github.com/user-attachments/assets/c2cdc5c4-2146-4228-bb37-6dfd883180d7" />
 
 ### Quản lý mua hàng
 - Tra cứu sản phẩm
 - Xem chi tiết sản phẩm
+<img width="1895" height="909" alt="image" src="https://github.com/user-attachments/assets/da967984-ef7c-4257-b225-6bac9a8ef390" />
+
 - Thêm sản phẩm vào giỏ hàng
 - Đặt hàng
 - Thanh toán (COD / VNPay)
+<img width="1906" height="913" alt="image" src="https://github.com/user-attachments/assets/caca7d5d-c9c6-4166-ac11-28057413b91f" />
+
 
 ### Quản lý đơn hàng mua
 - Cập nhật thông tin đơn hàng
 - Hủy đơn hàng
 - Đánh giá sản phẩm
+<img width="1899" height="907" alt="image" src="https://github.com/user-attachments/assets/59457069-2f9d-4f09-aaf4-82fa4515af90" />
+
 
 ### Quản lý tin đăng (Seller)
 - Xem danh sách tin đăng
 - Tạo tin đăng sản phẩm
 - Cập nhật tin đăng
 - Phê duyệt tin đăng (Admin)
+<img width="1902" height="912" alt="image" src="https://github.com/user-attachments/assets/a929354e-5689-407e-bd64-303e3e5464f6" />
+
 
 ### Nhắn tin
 - Hiển thị chi tiết hộp thoại
 - Gửi tin nhắn văn bản
 - Gửi hình ảnh
 - Thương lượng giá
+<img width="1900" height="908" alt="image" src="https://github.com/user-attachments/assets/8c55f991-0dc2-442b-90e6-40e228fcf270" />
+
 
 ### Quản lý đơn hàng bán (Seller)
 - Tra cứu đơn bán
@@ -68,16 +87,25 @@
 - Xác nhận đơn bán
 - In phiếu giao hàng
 - Hủy đơn hàng
+<img width="1894" height="884" alt="image" src="https://github.com/user-attachments/assets/c561b702-ca8e-4ab2-a044-d28ee5baec41" />
+
 
 ### Báo cáo thống kê (Seller)
 - Lọc báo cáo
 - In báo cáo
 - Xuất dữ liệu
+<img width="1901" height="902" alt="image" src="https://github.com/user-attachments/assets/fe50b95d-e853-4599-a822-ae93dca72f64" />
+<img width="1892" height="907" alt="image" src="https://github.com/user-attachments/assets/d478fe66-c0b6-43b7-ade5-850d3cfe7a95" />
 
 ### Quản trị hệ thống (Admin)
 - Duyệt người bán
+<img width="1919" height="912" alt="image" src="https://github.com/user-attachments/assets/06879a58-99cc-49e3-8bb8-37c42594e6ab" />
+
 - Thêm / Xóa voucher
+<img width="1896" height="918" alt="image" src="https://github.com/user-attachments/assets/4dfc97ba-fc51-4f2c-899b-04af31766679" />
+
 - Phê duyệt tin đăng
+<img width="1912" height="908" alt="image" src="https://github.com/user-attachments/assets/21f70c63-9920-4812-b652-e44574ebd84c" />
 
 ---
 
