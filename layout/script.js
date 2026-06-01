@@ -1512,6 +1512,28 @@ window.adminConfirmDelete = function(url) {
     }
 };
 
+// Hàm mở Modal xác nhận xóa Voucher
+window.adminOpenDeleteModal = function(id, code) {
+    // 1. Cập nhật mã code hiển thị trong Modal
+    const codeElement = document.getElementById('modalVoucherCode');
+    if (codeElement) {
+        codeElement.textContent = code;
+    }
+
+    // 2. Gắn link gọi lệnh xóa vào nút "Xóa" màu đỏ trong Modal
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        // Lưu ý: Sửa lại action='deleteVoucher' hoặc action='delete' tùy theo code trong Controller của cậu nhé
+        confirmBtn.href = 'index.php?controller=voucher&action=deleteVoucher&id=' + id;
+    }
+
+    // 3. Kích hoạt mở Modal của Bootstrap
+    const deleteModalEl = document.getElementById('deleteModal');
+    if (deleteModalEl && typeof bootstrap !== 'undefined') {
+        const modalInstance = bootstrap.Modal.getInstance(deleteModalEl) || new bootstrap.Modal(deleteModalEl);
+        modalInstance.show();
+    }
+};
 /**
  * ========================================================================
  * 7. CÁC HÀM XỬ LÝ TRANG CHI TIẾT SẢN PHẨM (LISTING DETAIL)
@@ -1949,76 +1971,116 @@ if (document.getElementById('user-chatbox')) {
         };
 
         window.submitDealAPI = async function(action) {
-            let price = (action === 'create' || action === 'counter') ? document.getElementById('deal-price-input').value : actOfferPrice;
-            let qty = (action === 'create') ? document.getElementById('deal-qty-input').value : actOfferQty;
+    let price = (action === 'create' || action === 'counter') ? document.getElementById('deal-price-input').value : actOfferPrice;
+    let qty = (action === 'create') ? document.getElementById('deal-qty-input').value : actOfferQty;
+    
+    if ((action === 'create' || action === 'counter') && (!price || price <= 0)) {
+        if(typeof Swal !== 'undefined') Swal.fire('Lỗi', 'Vui lòng nhập mức giá hợp lệ!', 'error'); 
+        return;
+    }
+
+    // 1. Lưu lại nội dung gốc của các nút để phục hồi nếu xảy ra lỗi
+    let actionButtons = document.querySelectorAll('.deal-banner-actions button, #btn-submit-deal');
+    let originalTexts = [];
+    actionButtons.forEach((btn, index) => {
+        originalTexts[index] = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+    });
+
+    let fd = new FormData();
+    fd.append('listing_id', actListing); fd.append('buyer_id', actBuyer);
+    fd.append('conv_id', actConv); fd.append('offer_id', actOfferId);
+    fd.append('price', price); fd.append('quantity', qty); fd.append('action', action);
+
+    try {
+        let res = await fetch('index.php?controller=chat&action=dealAjax', { method: 'POST', body: fd });
+        let json = await res.json();
+        
+        if(json.status === 'success') {
+            let dealModalEl = document.getElementById('dealModal');
+            if (dealModalEl && dealModalEl.classList.contains('show')) {
+                bootstrap.Modal.getInstance(dealModalEl)?.hide();
+            }
+            if (action === 'reject') {
+                document.getElementById('dedicated-deal-zone').style.display = 'none';
+                if(document.getElementById('btn-deal-price')) document.getElementById('btn-deal-price').disabled = false;
+            }
+            window.fetchMessages(); // Gọi tải lại chat mới nhất
+        } else {
+            // 2. XỬ LÝ LỖI TỪ BACKEND: Hiển thị popup và phục hồi trạng thái nút
+            if(typeof Swal !== 'undefined') Swal.fire('Lỗi', json.msg || 'Thao tác thất bại!', 'error');
             
-            if ((action === 'create' || action === 'counter') && (!price || price <= 0)) {
-                Swal.fire('Lỗi', 'Vui lòng nhập mức giá hợp lệ!', 'error'); return;
-            }
-
-            let actionButtons = document.querySelectorAll('.deal-banner-actions button, #btn-submit-deal');
-            actionButtons.forEach(btn => {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+            actionButtons.forEach((btn, index) => {
+                btn.disabled = false;
+                btn.innerHTML = originalTexts[index];
             });
+        }
+    } catch(e) {
+        console.error(e);
+        // 3. XỬ LÝ LỖI MẠNG (MẤT KẾT NỐI)
+        if(typeof Swal !== 'undefined') Swal.fire('Lỗi', 'Mất kết nối máy chủ, vui lòng thử lại!', 'error');
+        
+        actionButtons.forEach((btn, index) => {
+            btn.disabled = false;
+            btn.innerHTML = originalTexts[index];
+        });
+    } finally {
+        // Đảm bảo nút trong Modal luôn được reset 
+        let btnSubmitModal = document.getElementById('btn-submit-deal');
+        if(btnSubmitModal) {
+            btnSubmitModal.disabled = false;
+            btnSubmitModal.innerHTML = 'Gửi Yêu Cầu';
+        }
+    }
+};
 
-            let fd = new FormData();
-            fd.append('listing_id', actListing); fd.append('buyer_id', actBuyer);
-            fd.append('conv_id', actConv); fd.append('offer_id', actOfferId);
-            fd.append('price', price); fd.append('quantity', qty); fd.append('action', action);
+       window.addDealToCart = async function(listingId, offerId, qty, isBuyNow) {
+    // 1. Hiển thị Loading ngay lập tức và khóa màn hình để chống spam click
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Đang xử lý...',
+            text: 'Vui lòng chờ trong giây lát',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+    }
 
-            try {
-                let res = await fetch('index.php?controller=chat&action=dealAjax', { method: 'POST', body: fd });
-                let json = await res.json();
-                if(json.status === 'success') {
-                    let dealModalEl = document.getElementById('dealModal');
-                    if (dealModalEl && dealModalEl.classList.contains('show')) {
-                        bootstrap.Modal.getInstance(dealModalEl)?.hide();
-                    }
-                    if (action === 'reject') {
-                        document.getElementById('dedicated-deal-zone').style.display = 'none';
-                        if(document.getElementById('btn-deal-price')) document.getElementById('btn-deal-price').disabled = false;
-                    }
-                    window.fetchMessages();
-                }
-            } catch(e) {
-                console.error(e);
-            } finally {
-                let btnSubmitModal = document.getElementById('btn-submit-deal');
-                if(btnSubmitModal) {
-                    btnSubmitModal.disabled = false;
-                    btnSubmitModal.innerHTML = 'Gửi Yêu Cầu';
-                }
+    let fd = new FormData();
+    fd.append('listing_id', listingId);
+    fd.append('quantity', qty);
+    fd.append('offer_id', offerId);
+
+    try {
+        let res = await fetch('index.php?controller=cart&action=addAjax', { method: 'POST', body: fd });
+        let json = await res.json();
+        
+        if(json.status === 'success') {
+            if (isBuyNow) {
+                // Đóng Swal (nếu có) và chuyển sang trang Thanh toán
+                window.location.href = `index.php?controller=checkout&selected_ids=${listingId}`;
+            } else {
+                // Đổi Swal loading thành Swal báo thành công
+                Swal.fire({
+                    icon: 'success', title: 'Đã thêm vào giỏ!', text: 'Sản phẩm áp dụng giá Deal đã nằm trong giỏ.',
+                    showCancelButton: true, confirmButtonText: 'Đến giỏ hàng', cancelButtonText: 'Ở lại chat',
+                    confirmButtonColor: '#FF7A3D', cancelButtonColor: '#6c757d'
+                }).then((result) => {
+                    if (result.isConfirmed) { window.location.href = 'index.php?controller=cart'; }
+                });
             }
-        };
-
-        window.addDealToCart = async function(listingId, offerId, qty, isBuyNow) {
-            let fd = new FormData();
-            fd.append('listing_id', listingId);
-            fd.append('quantity', qty);
-            fd.append('offer_id', offerId);
-
-            try {
-                let res = await fetch('index.php?controller=cart&action=addAjax', { method: 'POST', body: fd });
-                let json = await res.json();
-                
-                if(json.status === 'success') {
-                    if (isBuyNow) {
-                        window.location.href = `index.php?controller=checkout&selected_ids=${listingId}`;
-                    } else {
-                        Swal.fire({
-                            icon: 'success', title: 'Đã thêm vào giỏ!', text: 'Sản phẩm áp dụng giá Deal đã nằm trong giỏ.',
-                            showCancelButton: true, confirmButtonText: 'Đến giỏ hàng', cancelButtonText: 'Ở lại chat',
-                            confirmButtonColor: '#FF7A3D', cancelButtonColor: '#6c757d'
-                        }).then((result) => {
-                            if (result.isConfirmed) { window.location.href = 'index.php?controller=cart'; }
-                        });
-                    }
-                } else {
-                    Swal.fire('Lỗi', json.msg || 'Không thể thêm vào giỏ hàng.', 'error');
-                }
-            } catch (e) { console.error(e); }
-        };
+        } else {
+            // Đổi Swal loading thành báo lỗi từ Backend
+            Swal.fire('Lỗi', json.msg || 'Không thể thêm vào giỏ hàng.', 'error');
+        }
+    } catch (e) { 
+        console.error(e); 
+        // 2. Bắt lỗi rớt mạng hoặc sập Server thay vì để im lặng
+        if(typeof Swal !== 'undefined') {
+            Swal.fire('Lỗi kết nối', 'Hệ thống đang bận hoặc mất mạng, vui lòng thử lại sau!', 'error');
+        }
+    }
+};
 
         // ===================================================================
         // 3. GẮN SỰ KIỆN NÚT CLICK & SUBMIT FORM
